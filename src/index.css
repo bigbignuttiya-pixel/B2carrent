@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .6; cursor: pointer; }
+
+.scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+
+@media print {
+  body * { visibility: hidden; }
+  #print-receipt, #print-receipt * { visibility: visible; }
+  #print-receipt { position: absolute; inset: 0; background: #fff; color: #000; padding: 24px; }
+  .no-print { display: none !important; }
+}

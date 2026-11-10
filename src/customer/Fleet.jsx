@@ -1,0 +1,172 @@
+import React from 'react';
+import { Bike, Car, Star, Maximize2, ChevronRight, Flame, Search, Heart, Users, SlidersHorizontal, CalendarX } from 'lucide-react';
+import { CATEGORIES } from '../data';
+import { baht } from '../lib/pricing';
+import { SectionHeading } from '../components/ui';
+
+export function VehicleCard({ v, free, rentalDays, isFav, onToggleFav, onPreview, onBook }) {
+  const bookable = v.status === 'Available' && free;
+  const reason = v.status === 'Maintenance' ? 'ซ่อมบำรุง' : v.status === 'Rented' ? 'ติดคิวเช่า' : !free ? 'ไม่ว่างช่วงนี้' : '';
+  return (
+    <div className="group bg-slate-900/90 border border-slate-800/90 hover:border-yellow-400/70 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-blue-950 hover:-translate-y-1 flex flex-col relative">
+      <div className="relative h-56 overflow-hidden bg-slate-950">
+        <img src={v.image} alt={v.name} loading="lazy" className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${bookable ? '' : 'grayscale-[60%] opacity-70'}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+
+        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+          <span className="bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl border border-slate-700 text-xs font-bold text-yellow-300 flex items-center gap-1">
+            {v.type === 'Motorcycle' ? <Bike className="w-3.5 h-3.5" /> : <Car className="w-3.5 h-3.5" />}
+            {v.category}
+          </span>
+          {v.badgeTag && <span className="bg-yellow-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-xl shadow-md">{v.badgeTag}</span>}
+        </div>
+
+        <button
+          onClick={() => onToggleFav(v.id)}
+          aria-label="บันทึกรายการโปรด"
+          className={`absolute top-3 right-3 w-8 h-8 rounded-xl border backdrop-blur-md flex items-center justify-center transition ${isFav ? 'bg-rose-500/20 border-rose-400/50 text-rose-400' : 'bg-slate-950/70 border-slate-700 text-slate-300 hover:text-rose-300'}`}
+        >
+          <Heart className={`w-4 h-4 ${isFav ? 'fill-rose-400' : ''}`} />
+        </button>
+
+        <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-xl border border-slate-700 flex items-center gap-1 text-amber-400 text-xs font-bold">
+          <Star className="w-3.5 h-3.5 fill-amber-400" /> {v.rating}
+          <span className="text-slate-500 text-[10px]">({v.reviewsCount})</span>
+        </div>
+
+        {!bookable && (
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
+            <span className="bg-slate-950/90 border border-slate-700 text-slate-200 text-xs font-bold px-4 py-1.5 rounded-full">{reason}</span>
+          </div>
+        )}
+
+        <button onClick={() => onPreview(v)} className="absolute bottom-3 right-3 bg-blue-900/90 hover:bg-blue-800 text-yellow-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-yellow-400/30 backdrop-blur-md flex items-center gap-1 shadow-lg">
+          <Maximize2 className="w-3.5 h-3.5" /> ดูรูป & สเปก
+        </button>
+      </div>
+
+      <div className="p-6 flex-1 flex flex-col justify-between gap-4">
+        <div>
+          <h3 className="font-extrabold text-lg text-white group-hover:text-yellow-400 transition-colors">{v.name}</h3>
+          <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-3">
+            <span>ทะเบียน: <span className="font-mono text-slate-300 font-bold">{v.plateNumber}</span></span>
+            <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {v.seats}</span>
+          </p>
+          <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-800">
+            {[
+              ['ขุมพลัง', v.engineCc],
+              ['เกียร์', v.transmission],
+              ['เชื้อเพลิง', v.fuelType],
+            ].map(([k, val]) => (
+              <div key={k} className="bg-slate-950/80 p-2 rounded-xl text-center border border-slate-800" title={val}>
+                <span className="text-[10px] text-slate-500 block">{k}</span>
+                <span className="font-bold text-white text-[11px] truncate block">{val}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-2">
+          <div>
+            <span className="text-[10px] text-slate-400 block">ราคาเริ่มต้น</span>
+            <div className="text-2xl font-black text-yellow-400">
+              {baht(v.pricePerDay)}
+              <span className="text-xs font-normal text-slate-400"> /วัน</span>
+            </div>
+            {rentalDays > 1 && <span className="text-[10px] text-slate-500">{rentalDays} วัน ≈ {baht(v.pricePerDay * rentalDays)}</span>}
+          </div>
+          <button
+            onClick={() => onBook(v)}
+            disabled={!bookable}
+            className={`px-5 py-3 rounded-2xl text-xs font-black transition-all shadow-xl flex items-center gap-1.5 ${
+              bookable
+                ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-yellow-300 border border-yellow-400/30 hover:scale-105'
+                : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+            }`}
+          >
+            {bookable ? 'จองพาหนะนี้' : reason}
+            {bookable && <ChevronRight className="w-4 h-4 text-yellow-400" />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Fleet({ vehicles, list, filters, setFilters, freeMap, rentalDays, favorites, onToggleFav, onPreview, onBook }) {
+  const set = (patch) => setFilters({ ...filters, ...patch });
+  const cats = filters.type === 'All' ? [...CATEGORIES.Motorcycle, ...CATEGORIES.Car] : CATEGORIES[filters.type] || [];
+
+  return (
+    <section id="fleet-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 scroll-mt-24">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
+        <SectionHeading icon={Flame} eyebrow="B2 VEHICLE FLEET" title="กองยานพาหนะพร้อมส่งมอบ" desc="คัดสรรเฉพาะรถสภาพใหม่ ตรวจเช็กระยะสม่ำเสมอ ล้างฆ่าเชื้อสะอาดก่อนส่งทุกครั้ง" />
+        <div className="flex flex-wrap gap-2 items-center bg-slate-900 p-1.5 rounded-2xl border border-slate-800 text-xs font-bold w-full md:w-auto md:mb-8">
+          {[
+            ['All', `ทั้งหมด (${vehicles.length})`, null],
+            ['Motorcycle', `จักรยานยนต์ (${vehicles.filter((v) => v.type === 'Motorcycle').length})`, Bike],
+            ['Car', `รถยนต์ (${vehicles.filter((v) => v.type === 'Car').length})`, Car],
+          ].map(([val, label, Icon]) => (
+            <button key={val} onClick={() => set({ type: val, category: 'All' })} className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${filters.type === val ? 'bg-blue-700 text-yellow-300 shadow-md' : 'text-slate-400 hover:text-white'}`}>
+              {Icon && <Icon className="w-4 h-4" />} {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-3 mb-8 flex flex-col lg:flex-row gap-3 lg:items-center">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            value={filters.query}
+            onChange={(e) => set({ query: e.target.value })}
+            placeholder="ค้นหารุ่น / ยี่ห้อ เช่น PCX, Toyota, BYD"
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-xs text-white focus:border-yellow-400 focus:outline-none"
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5 text-[11px] font-bold">
+          {['All', ...cats].map((c) => (
+            <button key={c} onClick={() => set({ category: c })} className={`px-3 py-1.5 rounded-lg border transition ${filters.category === c ? 'border-yellow-400 bg-yellow-400/10 text-yellow-300' : 'border-slate-700 text-slate-400 hover:text-white'}`}>
+              {c === 'All' ? 'ทุกหมวด' : c}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 text-[11px]">
+          <SlidersHorizontal className="w-4 h-4 text-slate-500" />
+          <select value={filters.sort} onChange={(e) => set({ sort: e.target.value })} className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-yellow-400 focus:outline-none">
+            <option value="recommended">แนะนำ</option>
+            <option value="price-asc">ราคา: ต่ำ → สูง</option>
+            <option value="price-desc">ราคา: สูง → ต่ำ</option>
+            <option value="rating">คะแนนรีวิวสูงสุด</option>
+          </select>
+          <label className="flex items-center gap-1.5 text-slate-300 font-bold cursor-pointer whitespace-nowrap">
+            <input type="checkbox" checked={filters.onlyFree} onChange={(e) => set({ onlyFree: e.target.checked })} className="accent-yellow-400" />
+            เฉพาะคันว่าง
+          </label>
+          <label className="flex items-center gap-1.5 text-slate-300 font-bold cursor-pointer whitespace-nowrap">
+            <input type="checkbox" checked={filters.onlyFav} onChange={(e) => set({ onlyFav: e.target.checked })} className="accent-rose-400" />
+            ♥ ที่ชอบ ({favorites.length})
+          </label>
+        </div>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center">
+          <CalendarX className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+          <h3 className="text-sm font-bold text-slate-200">ไม่พบพาหนะที่ตรงกับเงื่อนไข</h3>
+          <p className="text-xs text-slate-500 mt-1">ลองเปลี่ยนวันที่ ประเภทรถ หรือล้างตัวกรอง</p>
+          <button onClick={() => setFilters({ type: 'All', category: 'All', query: '', sort: 'recommended', onlyFree: false, onlyFav: false })} className="mt-4 px-4 py-2 bg-blue-700 text-yellow-300 text-xs font-bold rounded-xl">
+            ล้างตัวกรองทั้งหมด
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {list.map((v) => (
+            <VehicleCard key={v.id} v={v} free={freeMap[v.id]} rentalDays={rentalDays} isFav={favorites.includes(v.id)} onToggleFav={onToggleFav} onPreview={onPreview} onBook={onBook} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
