@@ -3,10 +3,11 @@ import { Plus, Trash2, Pencil, X, Search } from 'lucide-react';
 import { CATEGORIES } from '../data';
 import { baht } from '../lib/pricing';
 import { Modal, inputCls } from '../components/ui';
+import PhotoManager from './PhotoManager';
 
 const BLANK = {
   name: '', type: 'Motorcycle', category: 'Scooter', brand: '', pricePerDay: 400, deposit: 1000, seats: 2,
-  engineCc: '125 cc', transmission: 'Automatic', fuelType: 'เบนซิน 95', plateNumber: '', image: '', gallery: '',
+  engineCc: '125 cc', transmission: 'Automatic', fuelType: 'เบนซิน 95', plateNumber: '', photos: [],
   badgeTag: 'มาใหม่', features: 'สภาพใหม่ 100%\nตรวจเช็กระยะพร้อม\nประกันภัยคุ้มครองมาตรฐาน', mileage: 0, nextServiceKm: 5000,
 };
 
@@ -15,27 +16,30 @@ const DEFAULT_IMG = {
   Car: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
 };
 
-export function VehicleForm({ open, initial, onClose, onSave }) {
+export function VehicleForm({ open, initial, onClose, onSave, notify }) {
   const [f, setF] = useState(BLANK);
   useEffect(() => {
     if (!open) return;
-    setF(initial ? { ...BLANK, ...initial, gallery: (initial.gallery || []).join('\n'), features: (initial.features || []).join('\n') } : BLANK);
+    if (!initial) return setF(BLANK);
+    // Main image first, then the rest of the gallery (deduplicated)
+    const photos = [...new Set([initial.image, ...(initial.gallery || [])].filter(Boolean))];
+    setF({ ...BLANK, ...initial, photos, features: (initial.features || []).join('\n') });
   }, [open, initial]);
 
   const set = (patch) => setF((cur) => ({ ...cur, ...patch }));
   const submit = (e) => {
     e.preventDefault();
-    const image = f.image.trim() || DEFAULT_IMG[f.type];
-    const gallery = f.gallery.split('\n').map((s) => s.trim()).filter(Boolean);
+    const { photos, ...rest } = f;
+    const image = photos[0] || DEFAULT_IMG[f.type];
     onSave({
-      ...f,
+      ...rest,
       pricePerDay: Number(f.pricePerDay) || 0,
       deposit: Number(f.deposit) || 0,
       seats: Number(f.seats) || 1,
       mileage: Number(f.mileage) || 0,
       nextServiceKm: Number(f.nextServiceKm) || 0,
       image,
-      gallery: gallery.length ? gallery : [image],
+      gallery: photos.length ? photos : [image],
       features: f.features.split('\n').map((s) => s.trim()).filter(Boolean),
     });
   };
@@ -94,16 +98,11 @@ export function VehicleForm({ open, initial, onClose, onSave }) {
         <label className="col-span-2"><span className="text-slate-400 block mb-1">เช็กระยะครั้งถัดไป (กม.)</span>
           <input className={inputCls} type="number" min="0" value={f.nextServiceKm} onChange={(e) => set({ nextServiceKm: e.target.value })} />
         </label>
-        <label className="col-span-2 sm:col-span-4"><span className="text-slate-400 block mb-1">URL รูปหลัก</span>
-          <div className="flex gap-3 items-center">
-            <input className={inputCls} value={f.image} onChange={(e) => set({ image: e.target.value })} placeholder="https://… (เว้นว่างเพื่อใช้รูปเริ่มต้น)" />
-            <img src={f.image || DEFAULT_IMG[f.type]} alt="" className="w-14 h-10 object-cover rounded-lg border border-slate-700 shrink-0" />
-          </div>
-        </label>
-        <label className="col-span-2"><span className="text-slate-400 block mb-1">แกลเลอรี (1 URL ต่อบรรทัด)</span>
-          <textarea className={`${inputCls} h-24`} value={f.gallery} onChange={(e) => set({ gallery: e.target.value })} />
-        </label>
-        <label className="col-span-2"><span className="text-slate-400 block mb-1">คุณสมบัติเด่น (1 ข้อต่อบรรทัด)</span>
+        <div className="col-span-2 sm:col-span-4">
+          <PhotoManager photos={f.photos} onChange={(photos) => set({ photos })} notify={notify} />
+          {f.photos.length === 0 && <p className="text-[10px] text-slate-500 mt-1">ยังไม่มีรูป — ระบบจะใช้รูปตัวอย่างของ{f.type === 'Car' ? 'รถยนต์' : 'จักรยานยนต์'}แทน</p>}
+        </div>
+        <label className="col-span-2 sm:col-span-4"><span className="text-slate-400 block mb-1">คุณสมบัติเด่น (1 ข้อต่อบรรทัด)</span>
           <textarea className={`${inputCls} h-24`} value={f.features} onChange={(e) => set({ features: e.target.value })} />
         </label>
         <div className="col-span-2 sm:col-span-4 pt-3 border-t border-slate-800 flex justify-end gap-2">
@@ -115,7 +114,7 @@ export function VehicleForm({ open, initial, onClose, onSave }) {
   );
 }
 
-export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDelete }) {
+export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDelete, notify }) {
   const [editing, setEditing] = useState(null); // null closed | 'new' | vehicle
   const [q, setQ] = useState('');
   const list = vehicles.filter((v) => !q || `${v.name} ${v.plateNumber} ${v.brand}`.toLowerCase().includes(q.toLowerCase()));
@@ -158,7 +157,7 @@ export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDel
                   <tr key={v.id} className="hover:bg-slate-950/50">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <img src={v.image} alt="" className="w-12 h-10 object-cover rounded-lg" />
+                        <button onClick={() => setEditing(v)} title="แก้ไข / เพิ่มรูป" className="relative shrink-0"><img src={v.image} alt="" className="w-12 h-10 object-cover rounded-lg" /><span className="absolute -bottom-1 -right-1 bg-slate-950 border border-slate-700 rounded-md px-1 text-[9px] text-slate-300">{(v.gallery || []).length || 1}📷</span></button>
                         <div>
                           <div className="font-bold text-white">{v.name}</div>
                           <div className="text-[10px] text-slate-500">{v.id} • ★ {v.rating} • คิวค้าง {active}</div>
@@ -214,6 +213,7 @@ export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDel
         open={editing !== null}
         initial={editing && editing !== 'new' ? editing : null}
         onClose={() => setEditing(null)}
+        notify={notify}
         onSave={(data) => {
           onSave(data, editing !== 'new' ? editing.id : null);
           setEditing(null);

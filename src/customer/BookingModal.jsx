@@ -5,6 +5,7 @@ import { ADDONS } from '../data';
 import { priceQuote, findCoupon, baht, formatThaiDate } from '../lib/pricing';
 import { buildPromptPayPayload } from '../lib/promptpay';
 import { Modal, inputCls } from '../components/ui';
+import { compressImage } from '../lib/image';
 
 const EMPTY_INFO = { name: '', phone: '', email: '', idCard: '', license: '', note: '' };
 
@@ -30,28 +31,6 @@ function Stepper({ step }) {
       })}
     </div>
   );
-}
-
-// Downscale a slip image so it fits comfortably in localStorage
-function compressImage(file, maxSize = 700) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 export default function BookingModal({ vehicle, searchParams, rentalDays, coupons, settings, onSubmit, onClose, onGoTracker, notify }) {
@@ -136,7 +115,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
     if (!file) return;
     if (!file.type.startsWith('image/')) return notify('กรุณาแนบไฟล์รูปภาพสลิปเท่านั้น', 'error');
     try {
-      setSlip(await compressImage(file));
+      setSlip(await compressImage(file, 700, 0.7));
     } catch {
       notify('ไม่สามารถอ่านไฟล์รูปได้', 'error');
     }
@@ -445,4 +424,3 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
   );
 }
 
-export { compressImage };

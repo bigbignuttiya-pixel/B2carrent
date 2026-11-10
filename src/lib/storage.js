@@ -13,8 +13,9 @@ export function usePersistentState(key, initial) {
   useEffect(() => {
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      /* storage unavailable or full — keep in memory */
+    } catch (err) {
+      // Storage blocked or quota exceeded (e.g. too many photos) — keep in memory and tell the UI
+      window.dispatchEvent(new CustomEvent('b2:storage-error', { detail: { key, name: err?.name } }));
     }
   }, [key, value]);
   return [value, setValue];
