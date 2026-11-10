@@ -64,6 +64,18 @@ export default function App() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
   }, []);
 
+  // Warn when browser storage is full (e.g. many large photos) — data stays in memory only
+  useEffect(() => {
+    let last = 0;
+    const onErr = () => {
+      if (Date.now() - last < 5000) return;
+      last = Date.now();
+      notify('พื้นที่เก็บข้อมูลในเบราว์เซอร์เต็ม — ลองลดจำนวนรูป ข้อมูลล่าสุดอาจหายเมื่อรีเฟรช', 'error');
+    };
+    window.addEventListener('b2:storage-error', onErr);
+    return () => window.removeEventListener('b2:storage-error', onErr);
+  }, [notify]);
+
   useEffect(() => {
     const t = setInterval(() => setSlideIndex((p) => (p + 1) % HERO_SLIDES.length), 6000);
     return () => clearInterval(t);
@@ -337,6 +349,7 @@ export default function App() {
               bookings={bookings}
               onStatus={(id, status) => setVehicles((cur) => cur.map((v) => (v.id === id ? { ...v, status } : v)))}
               onSave={saveVehicle}
+              notify={notify}
               onDelete={(id) => { setVehicles((cur) => cur.filter((v) => v.id !== id)); notify('ลบพาหนะออกจากฟลีตแล้ว', 'info'); }}
             />
           )}

@@ -3,7 +3,7 @@ import { FileText, Search, AlertTriangle, MapPin, Calendar, Upload, XCircle, Che
 import { BOOKING_FLOW } from '../data';
 import { baht, formatThaiDate } from '../lib/pricing';
 import { StatusBadge } from '../components/ui';
-import { compressImage } from './BookingModal';
+import { compressImage } from '../lib/image';
 
 function Timeline({ status }) {
   if (status === 'Cancelled') {
@@ -50,7 +50,7 @@ export default function Tracker({ bookings, myBookingIds, onCancel, onAttachSlip
   const attach = async (id, file) => {
     if (!file) return;
     try {
-      onAttachSlip(id, await compressImage(file));
+      onAttachSlip(id, await compressImage(file, 700, 0.7));
     } catch {
       notify('ไม่สามารถอ่านไฟล์รูปได้', 'error');
     }
