@@ -30,3 +30,6 @@ export function compressImage(file, maxSize = 1000, quality = 0.72) {
 
 // Approximate decoded byte size of a data URL (for UI hints)
 export const dataUrlKB = (s) => (s && s.startsWith('data:') ? Math.round((s.length * 3) / 4 / 1024) : 0);
+
+// Photos with a transparent background (cut-outs) are shown "contained" on a soft backdrop
+export const isCutout = (url) => typeof url === 'string' && (/^data:image\/png/.test(url) || /\.png(\?|$)/i.test(url));

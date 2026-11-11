@@ -3,6 +3,7 @@ import { Bike, Car, Star, Maximize2, ChevronRight, Flame, Search, Heart, Users, 
 import { CATEGORIES } from '../data';
 import { baht } from '../lib/pricing';
 import { SectionHeading } from '../components/ui';
+import { isCutout } from '../lib/image';
 
 export function VehicleCard({ v, free, units = 1, freeUnits = free ? 1 : 0, rentalDays, isFav, onToggleFav, onPreview, onBook }) {
   const bookable = v.status === 'Available' && free;
@@ -10,7 +11,7 @@ export function VehicleCard({ v, free, units = 1, freeUnits = free ? 1 : 0, rent
   return (
     <div className="group bg-slate-900/90 border border-slate-800/90 hover:border-yellow-400/70 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-blue-950 hover:-translate-y-1 flex flex-col relative">
       <div className="relative h-56 overflow-hidden bg-slate-950">
-        <img src={v.image} alt={v.name} loading="lazy" className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${bookable ? '' : 'grayscale-[60%] opacity-70'}`} />
+        <img src={v.image} alt={v.name} loading="lazy" className={`w-full h-full group-hover:scale-110 transition-transform duration-700 ${isCutout(v.image) ? `object-contain px-6 pt-10 pb-8 drop-shadow-[0_18px_18px_rgba(0,0,0,0.6)] bg-[radial-gradient(ellipse_at_center,_#334155_0%,_#0f172a_70%)]` : 'object-cover'} ${bookable ? '' : 'grayscale-[60%] opacity-70'}`} />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
 
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">

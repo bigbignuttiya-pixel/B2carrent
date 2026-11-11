@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, CheckCircle2, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 import { Modal } from '../components/ui';
 import { baht } from '../lib/pricing';
+import { isCutout } from '../lib/image';
 
 export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose, onBook }) {
   const [idx, setIdx] = useState(0);
@@ -15,7 +16,7 @@ export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose
       <div className="flex flex-col md:flex-row">
         <div className="md:w-1/2 p-6 bg-slate-950 flex flex-col gap-4">
           <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden border border-slate-800">
-            <img src={gallery[idx]} alt={vehicle.name} className="w-full h-full object-cover" />
+            <img src={gallery[idx]} alt={vehicle.name} className={`w-full h-full ${isCutout(gallery[idx]) ? 'object-contain p-6 drop-shadow-[0_18px_18px_rgba(0,0,0,0.6)] bg-[radial-gradient(ellipse_at_center,_#334155_0%,_#0f172a_70%)]' : 'object-cover'}`} />
             <span className="absolute top-3 left-3 bg-yellow-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg">{vehicle.badgeTag || vehicle.category}</span>
             {gallery.length > 1 && (
               <>
@@ -32,7 +33,7 @@ export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin">
             {gallery.map((img, i) => (
               <button key={i} onClick={() => setIdx(i)} className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${i === idx ? 'border-yellow-400 scale-105' : 'border-slate-800 opacity-60'}`}>
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img src={img} alt="" className={`w-full h-full ${isCutout(img) ? 'object-contain p-1 bg-slate-800' : 'object-cover'}`} />
               </button>
             ))}
           </div>

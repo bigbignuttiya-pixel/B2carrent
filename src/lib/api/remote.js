@@ -49,8 +49,9 @@ async function uploadPhotos(vehicleId, urls) {
   return Promise.all(
     urls.map(async (u) => {
       if (!u?.startsWith('data:')) return u;
-      const path = `${vehicleId}/${uuid()}.jpg`;
-      unwrap(await supabase.storage.from(PHOTO_BUCKET).upload(path, await dataUrlToBlob(u), { contentType: 'image/jpeg' }));
+      const png = u.startsWith('data:image/png'); // background-removed cut-outs keep transparency
+      const path = `${vehicleId}/${uuid()}.${png ? 'png' : 'jpg'}`;
+      unwrap(await supabase.storage.from(PHOTO_BUCKET).upload(path, await dataUrlToBlob(u), { contentType: png ? 'image/png' : 'image/jpeg' }));
       return supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path).data.publicUrl;
     })
   );
