@@ -109,6 +109,11 @@ export const remoteApi = {
   },
 
   // ----- admin (allowed only for users in public.admins — enforced by RLS) -----
+  // Booking made on another channel (DriveHub, phone, LINE…): blocks the dates, no slip/price rules
+  async addExternalBooking(p) {
+    return unwrap(await supabase.rpc('admin_add_booking', { p }));
+  },
+
   async setBookingStatus(id, status) {
     unwrap(await supabase.from('bookings').update({ status }).eq('id', id).select('id').single());
   },

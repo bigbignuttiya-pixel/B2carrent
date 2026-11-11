@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Download, X, Phone, MapPin, Calendar, CreditCard, FileImage, Clock } from 'lucide-react';
+import { Search, Download, Plus, Link2, X, Phone, MapPin, Calendar, CreditCard, FileImage, Clock } from 'lucide-react';
 import { BOOKING_STATUS, ADDONS } from '../data';
 import { baht, formatThaiDate } from '../lib/pricing';
 import { StatusBadge } from '../components/ui';
+import { SourceBadge } from './ExternalBookingModal';
 
 const NEXT_ACTIONS = {
   Pending: [['Confirmed', 'ตรวจสลิปผ่าน / อนุมัติ', 'bg-emerald-600 hover:bg-emerald-500 text-white']],
@@ -35,7 +36,7 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
         <div className="sticky top-0 bg-slate-950/95 backdrop-blur px-5 py-4 border-b border-slate-800 flex justify-between items-center">
           <div>
             <div className="font-mono text-yellow-400 font-bold text-sm">{b.id}</div>
-            <div className="text-[10px] text-slate-500">สร้างเมื่อ {b.createdAt}</div>
+            <div className="text-[10px] text-slate-500">สร้างเมื่อ {b.createdAt} {b.source && <SourceBadge source={b.source} className="ml-1" />}</div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white" aria-label="ปิด"><X className="w-5 h-5" /></button>
         </div>
@@ -46,9 +47,16 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
             <span className="text-yellow-400 text-xl font-black">{baht(b.totalPrice)}</span>
           </div>
 
+          {b.source && (
+            <div className="bg-sky-500/10 border border-sky-500/30 rounded-2xl p-3 text-sky-200 flex items-center gap-2">
+              <Link2 className="w-4 h-4 shrink-0" />
+              <span>จองผ่าน <b>{b.source}</b>{b.externalRef && <> • เลขอ้างอิง <span className="font-mono">{b.externalRef}</span></>}</span>
+            </div>
+          )}
+
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
             <div className="text-sm font-bold text-white">{b.customerName}</div>
-            <a href={`tel:${b.phone}`} className="flex items-center gap-2 text-slate-300 hover:text-yellow-300"><Phone className="w-3.5 h-3.5" /> {b.phone}</a>
+            {b.phone && <a href={`tel:${b.phone}`} className="flex items-center gap-2 text-slate-300 hover:text-yellow-300"><Phone className="w-3.5 h-3.5" /> {b.phone}</a>}
             {b.email && <div className="text-slate-400">✉ {b.email}</div>}
             <div className="text-slate-400">บัตร/Passport: <span className="font-mono text-slate-200">{b.idCard || '-'}</span></div>
             <div className="text-slate-400">ใบขับขี่: <span className="font-mono text-slate-200">{b.license || '-'}</span></div>
@@ -74,7 +82,7 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
             <div className="flex items-center gap-2 text-slate-500 pt-1"><CreditCard className="w-3.5 h-3.5" /> {b.paymentMethod}</div>
           </div>
 
-          <div>
+          {!b.source && <div>
             <div className="font-bold text-slate-300 mb-2 flex items-center gap-1.5"><FileImage className="w-4 h-4" /> สลิปการโอน</div>
             {slipUrl ? (
               <a href={slipUrl} target="_blank" rel="noreferrer"><img src={slipUrl} alt="สลิป" className="rounded-xl border border-slate-700 max-h-80 mx-auto" /></a>
@@ -83,7 +91,7 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
             ) : (
               <div className="border border-dashed border-slate-700 rounded-xl p-6 text-center text-slate-500">ลูกค้ายังไม่ได้แนบสลิป</div>
             )}
-          </div>
+          </div>}
 
           <div className="space-y-2 pt-2">
             {actions.map(([to, label, cls]) => (
@@ -100,19 +108,19 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
 }
 
 function toCsv(rows) {
-  const cols = ['id', 'customerName', 'phone', 'vehicleName', 'startDate', 'endDate', 'totalDays', 'subtotal', 'discount', 'totalPrice', 'status', 'createdAt'];
+  const cols = ['id', 'source', 'externalRef', 'customerName', 'phone', 'vehicleName', 'startDate', 'endDate', 'totalDays', 'subtotal', 'discount', 'totalPrice', 'status', 'createdAt'];
   const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   return '﻿' + [cols.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\n');
 }
 
-export default function Bookings({ bookings, onOpen, onStatus }) {
+export default function Bookings({ bookings, onOpen, onStatus, onAddExternal }) {
   const [status, setStatus] = useState('All');
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
     return bookings
       .filter((b) => status === 'All' || b.status === status)
-      .filter((b) => !s || [b.id, b.customerName, b.phone, b.vehicleName].some((x) => String(x).toLowerCase().includes(s)))
+      .filter((b) => !s || [b.id, b.customerName, b.phone, b.vehicleName, b.source, b.externalRef].some((x) => String(x).toLowerCase().includes(s)))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [bookings, status, q]);
 
@@ -130,9 +138,16 @@ export default function Bookings({ bookings, onOpen, onStatus }) {
     <div className="space-y-5">
       <div className="flex flex-wrap justify-between items-center gap-3">
         <h3 className="text-lg font-bold text-white">รายการจองของลูกค้า</h3>
+        <div className="flex flex-wrap gap-2">
+        {onAddExternal && (
+          <button onClick={onAddExternal} className="bg-sky-600 hover:bg-sky-500 text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
+            <Plus className="w-4 h-4" /> การจองจาก DriveHub / ช่องทางอื่น
+          </button>
+        )}
         <button onClick={exportCsv} className="bg-slate-900 border border-slate-700 hover:border-yellow-400/50 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5">
           <Download className="w-4 h-4" /> ส่งออก CSV ({list.length})
         </button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-3">
@@ -173,6 +188,7 @@ export default function Bookings({ bookings, onOpen, onStatus }) {
                   <tr key={b.id} className="hover:bg-slate-950/50 cursor-pointer" onClick={() => onOpen(b.id)}>
                     <td className="p-4 font-mono font-bold text-yellow-400 whitespace-nowrap">
                       {b.id}
+                      {b.source && <SourceBadge source={b.source} className="ml-2" />}
                       {b.status === 'Pending' && b.hasSlip && <span className="ml-2 text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">มีสลิป</span>}
                     </td>
                     <td className="p-4">

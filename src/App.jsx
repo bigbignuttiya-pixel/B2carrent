@@ -18,6 +18,7 @@ import { HowItWorks, Destinations, WhyB2, Reviews, RequirementsAndFaq, Footer, F
 import Dashboard from './admin/Dashboard';
 import Schedule from './admin/Schedule';
 import Bookings, { BookingDrawer } from './admin/Bookings';
+import ExternalBookingModal from './admin/ExternalBookingModal';
 import FleetAdmin from './admin/FleetAdmin';
 import Settings from './admin/Settings';
 import AdminLogin from './admin/AdminLogin';
@@ -40,6 +41,7 @@ export default function App() {
   // Admin-only data
   const [adminState, setAdminState] = useState({ checked: false, signedIn: false, isAdmin: false, email: null });
   const [bookings, setBookings] = useState([]);
+  const [externalOpen, setExternalOpen] = useState(false);
   const [coupons, setCoupons] = useState([]);
 
   // Per-device conveniences
@@ -335,6 +337,14 @@ export default function App() {
     await Promise.all([refreshAdmin(), refreshPublic()]);
   };
 
+  const addExternalBooking = async (payload) => {
+    const b = await run(() => api.addExternalBooking(payload));
+    if (!b) return false;
+    notify(`บันทึกการจองจาก ${b.source} แล้ว (${b.id}) — กันคิว ${b.vehicleName} เรียบร้อย`);
+    await Promise.all([refreshAdmin(), refreshPublic()]);
+    return true;
+  };
+
   const saveVehicle = async (data, id) => {
     let vehicle;
     if (id) {
@@ -537,8 +547,8 @@ export default function App() {
           </div>
 
           {adminTab === 'dashboard' && <Dashboard bookings={bookings} vehicles={vehicles} onOpenBooking={setDrawerBookingId} />}
-          {adminTab === 'schedule' && <Schedule vehicles={vehicles} bookings={bookings} onOpenBooking={setDrawerBookingId} />}
-          {adminTab === 'bookings' && <Bookings bookings={bookings} onOpen={setDrawerBookingId} onStatus={changeBookingStatus} />}
+          {adminTab === 'schedule' && <Schedule vehicles={vehicles} bookings={bookings} onOpenBooking={setDrawerBookingId} onAddExternal={() => setExternalOpen(true)} />}
+          {adminTab === 'bookings' && <Bookings bookings={bookings} onOpen={setDrawerBookingId} onStatus={changeBookingStatus} onAddExternal={() => setExternalOpen(true)} />}
           {adminTab === 'vehicles' && (
             <FleetAdmin
               vehicles={vehicles}
@@ -560,6 +570,8 @@ export default function App() {
           )}
         </main>
       )}
+
+      <ExternalBookingModal open={externalOpen} onClose={() => setExternalOpen(false)} vehicles={vehicles} bookings={bookings} onSubmit={addExternalBooking} />
 
       <BookingDrawer booking={drawerBooking} onClose={() => setDrawerBookingId(null)} onStatus={changeBookingStatus} getSlipUrl={api.getSlipUrl} />
 

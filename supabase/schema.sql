@@ -284,6 +284,61 @@ begin
   return public.booking_json(row);
 end $$;
 
+-- Admin: record a booking made on another channel (DriveHub, phone, LINE, walk-in).
+-- It blocks the vehicle's dates like a website booking, so the site cannot double-book it.
+create or replace function public.admin_add_booking(p jsonb)
+returns jsonb language plpgsql volatile security definer set search_path = public as $$
+declare
+  v jsonb; s date; e date; st time; et time; days int; new_id text;
+  phone text := regexp_replace(coalesce(p->>'phone', ''), '[^0-9]', '', 'g');
+  name text := trim(coalesce(p->>'name', ''));
+  src text := coalesce(nullif(trim(p->>'source'), ''), 'DriveHub');
+  price int;
+  today date := (now() at time zone 'Asia/Bangkok')::date;
+  row public.bookings;
+begin
+  if not public.is_admin() then raise exception 'not_allowed'; end if;
+  if src not in ('DriveHub', 'โทรศัพท์', 'LINE', 'Facebook', 'Walk-in', 'อื่น ๆ') then raise exception 'invalid_source'; end if;
+  if name = '' then name := 'ลูกค้า ' || src; end if;
+  if length(name) > 120 then raise exception 'invalid_name'; end if;
+  if phone <> '' and phone !~ '^[0-9]{6,15}$' then raise exception 'invalid_phone'; end if;
+  begin
+    s := (p->>'startDate')::date; e := (p->>'endDate')::date;
+    st := coalesce(nullif(p->>'pickupTime', ''), '09:00')::time; et := coalesce(nullif(p->>'returnTime', ''), '09:00')::time;
+    price := coalesce(nullif(p->>'totalPrice', '')::numeric, 0)::int;
+  exception when others then raise exception 'invalid_dates';
+  end;
+  if price < 0 or price > 10000000 then raise exception 'invalid_price'; end if;
+  if s < today - 60 or e - s > 120 or (e + et) <= (s + st) then raise exception 'invalid_dates'; end if;
+  days := greatest(1, ceil(extract(epoch from ((e + et) - (s + st))) / 86400.0)::int);
+
+  perform pg_advisory_xact_lock(hashtext('b2-vehicle:' || (p->>'vehicleId')));
+  select data into v from public.vehicles where id = p->>'vehicleId';
+  if v is null then raise exception 'vehicle_not_found'; end if;
+  if exists (select 1 from public.bookings b where b.vehicle_id = p->>'vehicleId'
+              and b.status in ('Pending', 'Confirmed', 'Picked Up') and b.start_date < e and s < b.end_date) then
+    raise exception 'vehicle_unavailable';
+  end if;
+
+  new_id := 'B2-' || to_char(today, 'YYYY') || '-' || lpad(nextval('public.booking_seq')::text, 4, '0');
+  insert into public.bookings (id, vehicle_id, start_date, end_date, status, phone, total_price, data)
+  values (new_id, p->>'vehicleId', s, e, 'Confirmed', phone, price,
+    jsonb_strip_nulls(jsonb_build_object(
+      'vehicleName', v->>'name', 'vehicleType', v->>'type', 'customerName', name,
+      'source', src, 'externalRef', nullif(left(trim(p->>'externalRef'), 60), ''),
+      'note', nullif(left(p->>'note', 500), ''),
+      'pickupLocation', coalesce(nullif(left(p->>'location', 200), ''), 'ร้านบีทูรถเช่า'),
+      'returnLocation', coalesce(nullif(left(p->>'location', 200), ''), 'ร้านบีทูรถเช่า'),
+      'pickupTime', to_char(st, 'HH24:MI'), 'returnTime', to_char(et, 'HH24:MI'), 'totalDays', days,
+      'addons', '[]'::jsonb, 'subtotal', price, 'discount', 0,
+      'paymentMethod', 'ชำระผ่าน ' || src, 'idCard', '-'
+    )))
+  returning * into row;
+  return public.booking_json(row);
+end $$;
+revoke all on function public.admin_add_booking(jsonb) from public, anon;
+grant execute on function public.admin_add_booking(jsonb) to authenticated;
+
 -- Function permissions: only what the website needs
 revoke all on function public.booked_ranges() from public;
 revoke all on function public.check_coupon(text, text) from public;
