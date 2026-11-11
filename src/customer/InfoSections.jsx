@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Mail, Navigation, Route, Facebook } from 'lucide-react';
+import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Navigation, Route, Facebook } from 'lucide-react';
 import { DESTINATIONS, REVIEWS, REQUIREMENTS, FAQS } from '../data';
 import { SectionHeading } from '../components/ui';
 
@@ -181,7 +181,6 @@ export function Footer({ settings, onNav }) {
               <Facebook className="w-4 h-4" /> Facebook: {settings.facebookName || 'แฟนเพจ'}
             </a>
           )}
-          <a href={`mailto:${settings.storeEmail}`} className="flex items-center gap-2 text-slate-400 hover:text-yellow-300"><Mail className="w-4 h-4" /> {settings.storeEmail}</a>
           <div className="flex gap-2 pt-2">
             {settings.facebookUrl && (
               <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" title="แฟนเพจ Facebook" aria-label="แฟนเพจ Facebook" className="w-9 h-9 rounded-xl bg-[#1877F2] text-white flex items-center justify-center hover:scale-110 transition">

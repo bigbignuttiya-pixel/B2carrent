@@ -53,14 +53,13 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
           <h3 className="text-base font-bold text-white border-b border-slate-800 pb-3">ข้อมูลร้าน & ช่องทางติดต่อ</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <label><span className="text-slate-400 block mb-1">เบอร์โทรหน้าร้าน</span><input className={inputCls} value={form.storePhone} onChange={(e) => set({ storePhone: e.target.value })} /></label>
-            <label><span className="text-slate-400 block mb-1">อีเมล</span><input className={inputCls} value={form.storeEmail} onChange={(e) => set({ storeEmail: e.target.value })} /></label>
+            <label><span className="text-slate-400 block mb-1">เวลาเปิดทำการ</span><input className={inputCls} value={form.openHours} onChange={(e) => set({ openHours: e.target.value })} /></label>
             <label><span className="text-slate-400 block mb-1">LINE Official Account ID</span><input className={inputCls} value={form.lineOaId} onChange={(e) => set({ lineOaId: e.target.value })} placeholder="@b2rental" /></label>
             <label><span className="text-slate-400 block mb-1">ลิงก์แฟนเพจ Facebook</span>
               <input className={`${inputCls} ${fbValid ? '' : 'border-rose-500'}`} value={form.facebookUrl} onChange={(e) => set({ facebookUrl: e.target.value })} placeholder="https://www.facebook.com/…" />
               {!fbValid && <span className="text-[10px] text-rose-400">ต้องเป็นลิงก์ facebook.com หรือ fb.com (เว้นว่างเพื่อซ่อนปุ่ม)</span>}
             </label>
             <label><span className="text-slate-400 block mb-1">ชื่อแฟนเพจ (แสดงใน footer)</span><input className={inputCls} value={form.facebookName} onChange={(e) => set({ facebookName: e.target.value })} placeholder="B2 Rental" /></label>
-            <label><span className="text-slate-400 block mb-1">เวลาเปิดทำการ</span><input className={inputCls} value={form.openHours} onChange={(e) => set({ openHours: e.target.value })} /></label>
             <label className="sm:col-span-2"><span className="text-slate-400 block mb-1">ที่อยู่ร้าน</span><textarea className={`${inputCls} h-16`} value={form.storeAddress} onChange={(e) => set({ storeAddress: e.target.value })} /></label>
             <label className="sm:col-span-2"><span className="text-slate-400 block mb-1">LINE Messaging API — Channel Access Token (แจ้งเตือนเมื่อมีการจองใหม่)</span>
               <input className={`${inputCls} font-mono`} type="password" autoComplete="off" value={form.lineChannelToken} onChange={(e) => set({ lineChannelToken: e.target.value })} placeholder="เก็บไว้ที่ฝั่งเซิร์ฟเวอร์เท่านั้น" />
