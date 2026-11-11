@@ -118,7 +118,10 @@ export default function ExternalBookingModal({ open, onClose, vehicles, bookings
             <select value={f.model} onChange={set('model')} className={inputCls}>
               <option value="">— เลือกรุ่นรถ —</option>
               {models.map((m) => (
-                <option key={m.key} value={m.key}>{m.type === 'Motorcycle' ? '🛵' : '🚗'} {m.name} ({m.units.length} คัน)</option>
+                <option key={m.key} value={m.key}>
+                  {m.type === 'Motorcycle' ? '🛵' : '🚗'} {m.name} ({m.units.length} คัน){' '}
+                  {m.units.map((u) => u.plateNumber).filter((p) => p && !/^รอระบุ/.test(p)).join(', ')}
+                </option>
               ))}
             </select>
           </Field>
@@ -136,7 +139,7 @@ export default function ExternalBookingModal({ open, onClose, vehicles, bookings
                 {!freeUnits.length && <option value="">ไม่มีคันว่างในช่วงนี้</option>}
                 {units.map((u) => (
                   <option key={u.id} value={u.id} disabled={!u.free}>
-                    {u.id} • {u.plateNumber || 'ไม่ระบุทะเบียน'} {u.free ? '' : '— ไม่ว่าง'}{u.status === 'Maintenance' ? ' (ซ่อมบำรุง)' : ''}
+                    {u.plateNumber || 'ไม่ระบุทะเบียน'} • {u.id}{u.driveHubName ? ` • DH: ${u.driveHubName}` : ''} {u.free ? '' : '— ไม่ว่าง'}{u.status === 'Maintenance' ? ' (ซ่อมบำรุง)' : ''}
                   </option>
                 ))}
               </select>
