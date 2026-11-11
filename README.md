@@ -15,7 +15,7 @@ src/
   data.js                 ข้อมูลตัวอย่าง (รถ, การจอง, บริการเสริม, โค้ดส่วนลด, FAQ, รีวิว)
   lib/pricing.js          คำนวณวันเช่า, ส่วนลด, เช็กรถว่างตามช่วงวัน
   lib/promptpay.js        สร้าง PromptPay QR payload มาตรฐาน EMVCo (สแกนจากแอปธนาคารได้จริง)
-  lib/supabase.js         เชื่อมต่อ Supabase (ใช้เมื่อตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)
+  lib/supabase.js         เชื่อมต่อ Supabase ของร้าน (ตั้งค่าไว้ในโค้ดแล้ว — env ใช้เปลี่ยนโปรเจกต์ได้)
   lib/api/                ชั้นข้อมูลกลาง: remote.js = ฐานข้อมูลคลาวด์, local.js = โหมดเดโมในเบราว์เซอร์
   lib/storage.js          เก็บค่าเฉพาะเครื่อง (รายการโปรด, เบอร์ที่เคยจอง)
 supabase/
@@ -50,8 +50,8 @@ scripts/make-seed.mjs     สร้าง seed.sql ใหม่จาก src/dat
 ## ฐานข้อมูลกลาง (ทุกเบราว์เซอร์/ทุกเครื่องเห็นข้อมูลเดียวกัน)
 
 เว็บมี 2 โหมด:
-- **โหมดคลาวด์ (Supabase)** — เมื่อตั้งค่า `VITE_SUPABASE_URL` และ `VITE_SUPABASE_ANON_KEY` ข้อมูลรถ รูป การจอง สลิป และการตั้งค่า อยู่บนฐานข้อมูลกลาง แอดมินต้องล็อกอินก่อนเข้าหลังบ้าน
-- **โหมดเดโม** — ถ้าไม่ได้ตั้งค่า ข้อมูลอยู่ในเบราว์เซอร์นั้นเท่านั้น (หลังบ้านจะแสดงป้าย "โหมดเดโม")
+- **โหมดคลาวด์ (Supabase)** — ค่าเริ่มต้น เชื่อมต่อโปรเจกต์ของร้านที่ตั้งไว้ใน `src/lib/supabase.js` (ไม่ต้องตั้งค่าใน Vercel) ข้อมูลรถ รูป การจอง สลิป และการตั้งค่า อยู่บนฐานข้อมูลกลาง แอดมินต้องล็อกอินก่อนเข้าหลังบ้าน
+- **โหมดเดโม** — ตั้ง `VITE_DEMO_MODE=true` ข้อมูลจะอยู่ในเบราว์เซอร์นั้นเท่านั้น (หลังบ้านจะแสดงป้าย "โหมดเดโม")
 
 ### ขั้นตอนตั้งค่า (ทำครั้งเดียว ~15 นาที)
 1. สมัครที่ https://supabase.com → **New project** (Region แนะนำ *Southeast Asia (Singapore)*) ตั้งรหัสผ่านฐานข้อมูลแล้วเก็บไว้
@@ -65,9 +65,7 @@ scripts/make-seed.mjs     สร้าง seed.sql ใหม่จาก src/dat
    ```
 6. ปิดการสมัครสมาชิกเอง: **Authentication → Sign In / Providers → ปิด "Allow new users to sign up"** (ให้มีแต่บัญชีที่คุณสร้างเอง)
 7. คัดลอกคีย์: **Project Settings → API** → *Project URL* และ *anon public key*
-8. ใส่คีย์:
-   - เครื่องตัวเอง: คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ค่า → `npm run dev`
-   - เว็บจริง (Vercel / Netlify / Cloudflare Pages ฯลฯ): เพิ่ม Environment Variables ชื่อ `VITE_SUPABASE_URL` และ `VITE_SUPABASE_ANON_KEY` แล้ว **Deploy ใหม่** (ค่าเหล่านี้ถูกฝังตอน build)
+8. ใส่คีย์ใน `src/lib/supabase.js` (`DEFAULT_URL`, `DEFAULT_ANON_KEY`) — หรือตั้ง Environment Variables `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` ที่โฮสต์แทนก็ได้ (ค่า env ใช้แทนค่าในโค้ด)
 9. เปิดเว็บ → หลังบ้าน → ล็อกอิน → ควรเห็นป้าย "ข้อมูลกลางบนคลาวด์"
 
 > `anon key` เปิดเผยได้ (ออกแบบมาให้อยู่ในหน้าเว็บ) ความปลอดภัยมาจากสิทธิ์ใน `schema.sql` — **ห้าม** ใส่ `service_role key` ในหน้าเว็บเด็ดขาด
