@@ -30,27 +30,30 @@ function Timeline({ status }) {
 
 const hoursUntil = (b) => (new Date(`${b.startDate}T${b.pickupTime || '09:00'}`) - Date.now()) / 36e5;
 
-export default function Tracker({ bookings, myBookingIds, onCancel, onAttachSlip, onBrowse, notify }) {
-  const [input, setInput] = useState('');
+export default function Tracker({ myBookings, onSearch, onCancel, onAttachSlip, onBrowse, notify }) {
+  const [phone, setPhone] = useState('');
+  const [bookingId, setBookingId] = useState('');
   const [results, setResults] = useState(null);
+  const [searching, setSearching] = useState(false);
 
-  const search = (e) => {
+  // Phone number is required — a booking id alone is guessable and would expose other customers
+  const search = async (e) => {
     e.preventDefault();
-    const q = input.trim().toLowerCase();
-    if (!q) return setResults(null);
-    const digits = q.replace(/[^0-9]/g, '');
-    // Exact match only — avoids exposing other customers' bookings by partial search
-    setResults(bookings.filter((b) => b.id.toLowerCase() === q || (digits.length >= 9 && b.phone === digits)));
+    const digits = phone.replace(/[^0-9]/g, '');
+    if (!digits && !bookingId.trim()) return setResults(null);
+    if (!/^0\d{8,9}$/.test(digits)) return notify('กรุณากรอกเบอร์โทรศัพท์ที่ใช้จองให้ถูกต้อง', 'error');
+    setSearching(true);
+    setResults(await onSearch(digits, bookingId.trim()));
+    setSearching(false);
   };
 
-  const mine = bookings.filter((b) => myBookingIds.includes(b.id));
-  const list = results ?? mine;
-  const live = (id) => bookings.find((b) => b.id === id);
+  const list = results ?? myBookings;
+  const replaceResult = (b) => b && setResults((cur) => (cur ? cur.map((x) => (x.id === b.id ? b : x)) : cur));
 
-  const attach = async (id, file) => {
+  const attach = async (b, file) => {
     if (!file) return;
     try {
-      onAttachSlip(id, await compressImage(file, 700, 0.7));
+      replaceResult(await onAttachSlip(b, await compressImage(file, 700, 0.7)));
     } catch {
       notify('ไม่สามารถอ่านไฟล์รูปได้', 'error');
     }
@@ -63,7 +66,7 @@ export default function Tracker({ bookings, myBookingIds, onCancel, onAttachSlip
           <h2 className="text-2xl font-bold text-white flex items-center">
             <FileText className="w-6 h-6 mr-2 text-yellow-400" /> ติดตามสถานะการจอง
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">ค้นหาด้วยเบอร์โทรศัพท์ หรือรหัสอ้างอิงการจอง (เช่น B2-2026-0881)</p>
+          <p className="text-xs text-slate-400 mt-0.5">ค้นหาด้วยเบอร์โทรศัพท์ที่ใช้จอง (ใส่รหัสจองเพิ่มได้ถ้าต้องการ)</p>
         </div>
         <button onClick={onBrowse} className="px-4 py-2 bg-blue-700 text-yellow-300 text-xs font-bold rounded-xl hover:bg-blue-600 border border-yellow-400/30">+ จองพาหนะเพิ่ม</button>
       </div>
@@ -72,20 +75,30 @@ export default function Tracker({ bookings, myBookingIds, onCancel, onAttachSlip
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
-            type="text"
-            placeholder="เบอร์โทรศัพท์ (0819998877) หรือ รหัสจอง (B2-2026-0881)"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            type="tel"
+            inputMode="numeric"
+            placeholder="เบอร์โทรศัพท์ที่ใช้จอง เช่น 0819998877"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:border-yellow-400 focus:outline-none"
           />
         </div>
-        <button type="submit" className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-lg">ค้นหารายการ</button>
-        {results && <button type="button" onClick={() => { setResults(null); setInput(''); }} className="text-xs text-slate-400 hover:text-white px-2">ล้าง</button>}
+        <input
+          type="text"
+          placeholder="รหัสจอง (ไม่บังคับ)"
+          value={bookingId}
+          onChange={(e) => setBookingId(e.target.value)}
+          className="sm:w-48 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white font-mono uppercase focus:border-yellow-400 focus:outline-none"
+        />
+        <button type="submit" disabled={searching} className="bg-yellow-400 hover:bg-yellow-300 disabled:opacity-60 text-slate-950 text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-lg">
+          {searching ? 'กำลังค้นหา…' : 'ค้นหารายการ'}
+        </button>
+        {results && <button type="button" onClick={() => { setResults(null); setPhone(''); setBookingId(''); }} className="text-xs text-slate-400 hover:text-white px-2">ล้าง</button>}
       </form>
 
       {!results && (
         <p className="text-[11px] text-slate-500 mb-3 flex items-center gap-1.5">
-          <ShieldAlert className="w-3.5 h-3.5" /> แสดงเฉพาะรายการที่จองจากอุปกรณ์นี้ — ค้นหาด้วยเบอร์โทรเพื่อดูรายการอื่นของคุณ
+          <ShieldAlert className="w-3.5 h-3.5" /> แสดงรายการของเบอร์ที่เคยจองจากอุปกรณ์นี้ — ค้นหาด้วยเบอร์โทรเพื่อดูจากเครื่องอื่น
         </p>
       )}
 
@@ -93,12 +106,12 @@ export default function Tracker({ bookings, myBookingIds, onCancel, onAttachSlip
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center">
           <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-2" />
           <h3 className="text-sm font-bold text-slate-200">{results ? 'ไม่พบข้อมูลการจองตามที่ค้นหา' : 'ยังไม่มีรายการจองบนอุปกรณ์นี้'}</h3>
-          <p className="text-xs text-slate-500 mt-1">{results ? 'โปรดตรวจสอบเบอร์โทรศัพท์หรือรหัสจองอีกครั้ง' : 'ลองค้นหาด้วยเบอร์ 0819998877 เพื่อดูตัวอย่าง'}</p>
+          <p className="text-xs text-slate-500 mt-1">{results ? 'โปรดตรวจสอบเบอร์โทรศัพท์หรือรหัสจองอีกครั้ง' : 'ค้นหาด้วยเบอร์โทรศัพท์ที่ใช้จองด้านบน'}</p>
         </div>
       ) : (
         <div className="space-y-4">
           {list.map((row) => {
-            const b = live(row.id) || row;
+            const b = row;
             const cancellable = ['Pending', 'Confirmed'].includes(b.status);
             const freeCancel = hoursUntil(b) >= 48;
             return (
@@ -136,22 +149,22 @@ export default function Tracker({ bookings, myBookingIds, onCancel, onAttachSlip
                   <div className="flex flex-wrap gap-2 pt-1">
                     {b.status === 'Pending' && (
                       <label className="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer bg-blue-700/80 text-yellow-300 border border-yellow-400/30 flex items-center gap-1.5 hover:bg-blue-600">
-                        <Upload className="w-3.5 h-3.5" /> {b.slip ? 'เปลี่ยนสลิป' : 'แนบสลิปโอนเงิน'}
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => attach(b.id, e.target.files?.[0])} />
+                        <Upload className="w-3.5 h-3.5" /> {b.hasSlip ? 'เปลี่ยนสลิป' : 'แนบสลิปโอนเงิน'}
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => attach(b, e.target.files?.[0])} />
                       </label>
                     )}
                     {cancellable && (
                       <button
                         onClick={() => {
                           const msg = freeCancel ? 'ยืนยันยกเลิกการจองนี้? (ยกเลิกฟรี)' : 'ยกเลิกภายใน 48 ชม. ก่อนรับรถ จะมีค่าธรรมเนียม 1 วัน ยืนยันหรือไม่?';
-                          if (window.confirm(msg)) onCancel(b.id);
+                          if (window.confirm(msg)) onCancel(b).then(replaceResult);
                         }}
                         className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-rose-300 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/40"
                       >
                         ยกเลิกการจอง {freeCancel ? '(ฟรี)' : '(มีค่าธรรมเนียม)'}
                       </button>
                     )}
-                    {b.slip && <span className="text-[11px] text-emerald-400 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> แนบสลิปแล้ว รอตรวจสอบ</span>}
+                    {b.hasSlip && <span className="text-[11px] text-emerald-400 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> แนบสลิปแล้ว รอตรวจสอบ</span>}
                   </div>
                 )}
               </div>

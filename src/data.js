@@ -387,7 +387,6 @@ export const DEFAULT_SETTINGS = {
   lineOaId: '@b2rental',
   facebookUrl: 'https://www.facebook.com/share/1FQRbQSLXY/',
   facebookName: 'B2 Rental',
-  lineChannelToken: '',
   storePhone: '081-999-8877',
   storeAddress: '123/45 ถนนพัฒนาการคูขวาง ต.ในเมือง อ.เมือง จ.นครศรีธรรมราช 80000',
   openHours: '07:00 - 21:00 ทุกวัน',

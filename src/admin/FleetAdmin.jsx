@@ -18,6 +18,7 @@ const DEFAULT_IMG = {
 
 export function VehicleForm({ open, initial, onClose, onSave, notify }) {
   const [f, setF] = useState(BLANK);
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (!open) return;
     if (!initial) return setF(BLANK);
@@ -27,11 +28,13 @@ export function VehicleForm({ open, initial, onClose, onSave, notify }) {
   }, [open, initial]);
 
   const set = (patch) => setF((cur) => ({ ...cur, ...patch }));
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     const { photos, ...rest } = f;
     const image = photos[0] || DEFAULT_IMG[f.type];
-    onSave({
+    setSaving(true);
+    await onSave({
       ...rest,
       pricePerDay: Number(f.pricePerDay) || 0,
       deposit: Number(f.deposit) || 0,
@@ -42,6 +45,7 @@ export function VehicleForm({ open, initial, onClose, onSave, notify }) {
       gallery: photos.length ? photos : [image],
       features: f.features.split('\n').map((s) => s.trim()).filter(Boolean),
     });
+    setSaving(false);
   };
 
   return (
@@ -107,7 +111,7 @@ export function VehicleForm({ open, initial, onClose, onSave, notify }) {
         </label>
         <div className="col-span-2 sm:col-span-4 pt-3 border-t border-slate-800 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl">ยกเลิก</button>
-          <button type="submit" className="px-5 py-2 bg-yellow-400 text-slate-950 font-black rounded-xl hover:bg-yellow-300">{initial ? 'บันทึกการแก้ไข' : 'บันทึกเข้าฟลีตร้าน'}</button>
+          <button type="submit" disabled={saving} className="px-5 py-2 disabled:opacity-60 bg-yellow-400 text-slate-950 font-black rounded-xl hover:bg-yellow-300">{saving ? 'กำลังบันทึก / อัปโหลดรูป…' : initial ? 'บันทึกการแก้ไข' : 'บันทึกเข้าฟลีตร้าน'}</button>
         </div>
       </form>
     </Modal>
@@ -214,9 +218,9 @@ export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDel
         initial={editing && editing !== 'new' ? editing : null}
         onClose={() => setEditing(null)}
         notify={notify}
-        onSave={(data) => {
-          onSave(data, editing !== 'new' ? editing.id : null);
-          setEditing(null);
+        onSave={async (data) => {
+          const saved = await onSave(data, editing !== 'new' ? editing.id : null);
+          if (saved) setEditing(null);
         }}
       />
     </div>

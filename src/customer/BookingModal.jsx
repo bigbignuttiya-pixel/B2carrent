@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle } from 'lucide-react';
+import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { ADDONS } from '../data';
-import { priceQuote, findCoupon, baht, formatThaiDate } from '../lib/pricing';
+import { priceQuote, baht, formatThaiDate } from '../lib/pricing';
 import { buildPromptPayPayload } from '../lib/promptpay';
 import { Modal, inputCls } from '../components/ui';
 import { compressImage } from '../lib/image';
@@ -33,7 +33,7 @@ function Stepper({ step }) {
   );
 }
 
-export default function BookingModal({ vehicle, searchParams, rentalDays, coupons, settings, onSubmit, onClose, onGoTracker, notify }) {
+export default function BookingModal({ vehicle, searchParams, rentalDays, checkCoupon, settings, onSubmit, onAttachSlip, onClose, onGoTracker, notify }) {
   const [step, setStep] = useState(1);
   const [addons, setAddons] = useState([]);
   const [info, setInfo] = useState(EMPTY_INFO);
@@ -45,6 +45,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
   const [deadline, setDeadline] = useState(0);
   const [now, setNow] = useState(Date.now());
   const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   // Reset whenever a new vehicle is opened
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
     setAgree(false);
     setSlip(null);
     setResult(null);
+    setBusy(false);
   }, [vehicle?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -68,7 +70,8 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
 
   const availableAddons = useMemo(() => ADDONS.filter((a) => !a.onlyFor || a.onlyFor === vehicle?.type), [vehicle?.type]);
   const quote = useMemo(() => priceQuote(vehicle, rentalDays, addons, coupon), [vehicle, rentalDays, addons, coupon]);
-  const payload = useMemo(() => buildPromptPayPayload(settings.promptPayId, quote.total), [settings.promptPayId, quote.total]);
+  const amount = result?.totalPrice ?? quote.total; // server-calculated once the booking exists
+  const payload = useMemo(() => buildPromptPayPayload(settings.promptPayId, amount), [settings.promptPayId, amount]);
 
   if (!vehicle) return null;
 
@@ -79,8 +82,13 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
 
   const toggleAddon = (id) => setAddons((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
-  const applyCoupon = () => {
-    const c = findCoupon(coupons, couponInput, vehicle);
+  const applyCoupon = async () => {
+    let c = null;
+    try {
+      c = await checkCoupon(couponInput, vehicle);
+    } catch {
+      return notify('ตรวจสอบโค้ดไม่สำเร็จ กรุณาลองใหม่', 'error');
+    }
     if (c) {
       setCoupon(c);
       notify(`ใช้โค้ด ${c.code} สำเร็จ — ${c.label}`);
@@ -101,10 +109,22 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
     return Object.keys(e).length === 0;
   };
 
-  const goPayment = (ev) => {
+  // Create the booking first (reserves the dates and fixes the price on the server), then show the QR
+  const goPayment = async (ev) => {
     ev.preventDefault();
+    if (busy) return;
     if (rentalDays <= 0) return notify('ช่วงวันที่เช่าไม่ถูกต้อง', 'error');
     if (!validate()) return;
+    setBusy(true);
+    const booking = await onSubmit({
+      vehicle,
+      info: { ...info, phone: info.phone.replace(/[^0-9]/g, '') },
+      addons,
+      couponCode: coupon?.code || '',
+    });
+    setBusy(false);
+    if (!booking) return;
+    setResult(booking);
     setDeadline(Date.now() + settings.paymentWindowMin * 60000);
     setNow(Date.now());
     setStep(2);
@@ -121,19 +141,16 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
     }
   };
 
-  const finalize = () => {
-    const booking = onSubmit({
-      vehicle,
-      info: { ...info, phone: info.phone.replace(/[^0-9]/g, '') },
-      addons,
-      quote,
-      couponCode: coupon?.code || '',
-      slip,
-    });
-    if (booking) {
-      setResult(booking);
-      setStep(3);
+  const finalize = async () => {
+    if (busy) return;
+    if (slip) {
+      setBusy(true);
+      const updated = await onAttachSlip(result, slip);
+      setBusy(false);
+      if (!updated) return;
+      setResult(updated);
     }
+    setStep(3);
   };
 
   const copy = async (text, msg) => {
@@ -277,8 +294,8 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
             </label>
             {err('agree')}
 
-            <button type="submit" className="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-yellow-300 font-extrabold py-3.5 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 border border-yellow-400/30">
-              <QrCode className="w-4 h-4 text-yellow-400" /> ไปที่หน้าสแกนชำระเงิน PromptPay QR
+            <button type="submit" disabled={busy} className="w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 disabled:opacity-60 text-yellow-300 font-extrabold py-3.5 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 border border-yellow-400/30">
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4 text-yellow-400" />} {busy ? 'กำลังจองคิวรถ…' : 'ยืนยันการจอง & ไปหน้าชำระเงิน PromptPay'}
             </button>
           </div>
         </form>
@@ -292,7 +309,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
               <div className={`relative bg-white p-5 rounded-3xl border-4 border-blue-900 inline-block shadow-2xl ${expired ? 'opacity-30' : ''}`}>
                 <div className="bg-[#0e3a5c] text-white text-[11px] font-black tracking-wider rounded-xl py-1.5 mb-3">THAI QR PAYMENT • พร้อมเพย์</div>
                 <QRCodeSVG value={payload} size={208} level="M" includeMargin={false} />
-                <div className="mt-3 text-slate-950 font-black text-lg">{baht(quote.total)}</div>
+                <div className="mt-3 text-slate-950 font-black text-lg">{baht(amount)}</div>
               </div>
               <div className={`flex items-center justify-center gap-2 text-xs font-bold ${expired ? 'text-rose-400' : remaining < 120000 ? 'text-amber-400' : 'text-slate-300'}`}>
                 <Timer className="w-4 h-4" />
@@ -319,9 +336,13 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
                 </div>
                 <div className="flex justify-between pt-1 font-bold text-white">
                   <span>ยอดโอนชำระเงิน</span>
-                  <span className="text-yellow-400 text-base font-black">{baht(quote.total)}</span>
+                  <span className="text-yellow-400 text-base font-black">{baht(amount)}</span>
                 </div>
+                {result && <div className="text-[10px] text-slate-500">รหัสจอง <span className="font-mono text-yellow-400">{result.id}</span> — จองคิวรถไว้ให้แล้ว รอชำระเงิน</div>}
               </div>
+              {result && result.totalPrice !== quote.total && (
+                <div className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2">ยอดชำระถูกปรับตามราคาล่าสุดของร้าน กรุณาโอนตามยอดนี้</div>
+              )}
 
               <ol className="text-[11px] text-slate-400 space-y-1 list-decimal list-inside">
                 <li>เปิดแอปธนาคาร เลือก “สแกนจ่าย”</li>
@@ -349,14 +370,13 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
               </label>
 
               <div className="flex gap-3">
-                <button type="button" onClick={() => setStep(1)} className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs">ย้อนกลับ</button>
                 <button
                   type="button"
-                  disabled={expired}
+                  disabled={busy}
                   onClick={finalize}
                   className="flex-[2] py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-black rounded-xl text-xs shadow-lg flex items-center justify-center gap-1.5"
                 >
-                  <CheckCircle2 className="w-4 h-4" /> {slip ? 'ส่งสลิป & ยืนยันการจอง' : 'ชำระแล้ว (แนบสลิปภายหลัง)'}
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} {slip ? 'ส่งสลิปให้ร้านตรวจสอบ' : 'ชำระแล้ว (แนบสลิปภายหลัง)'}
                 </button>
               </div>
             </div>
@@ -404,7 +424,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, coupon
             <div className="text-[10px] text-slate-500 pt-1">สถานะ: รอตรวจสอบการชำระเงิน • ติดต่อ {settings.storePhone}</div>
           </div>
 
-          {!result.slip && (
+          {!result.hasSlip && (
             <div className="max-w-md mx-auto text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2 flex gap-2 text-left no-print">
               <AlertTriangle className="w-4 h-4 shrink-0" /> ยังไม่ได้แนบสลิป — สามารถแนบได้ที่หน้า “ตรวจสถานะการจอง” หรือส่งทาง LINE {settings.lineOaId}
             </div>
