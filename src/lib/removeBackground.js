@@ -27,6 +27,34 @@ function getSegmenter() {
 
 export const preloadBackgroundRemover = () => getSegmenter().then(() => true);
 
+// Light-coloured vehicles on light backgrounds (white scooter on white) can get see-through
+// "holes" inside the body. Any transparent area that is NOT connected to the image border is
+// enclosed by the vehicle, so make it opaque again.
+function fillHoles(px, w, h) {
+  const outside = new Uint8Array(w * h);
+  const stack = [];
+  const push = (x, y) => {
+    const k = y * w + x;
+    if (outside[k] || px[k * 4 + 3] >= 128) return;
+    outside[k] = 1;
+    stack.push(k);
+  };
+  for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
+  for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+  while (stack.length) {
+    const k = stack.pop();
+    const x = k % w;
+    const y = (k - x) / w;
+    if (x > 0) push(x - 1, y);
+    if (x < w - 1) push(x + 1, y);
+    if (y > 0) push(x, y - 1);
+    if (y < h - 1) push(x, y + 1);
+  }
+  for (let k = 0; k < w * h; k++) {
+    if (!outside[k] && px[k * 4 + 3] < 128) px[k * 4 + 3] = 255; // only real holes; soft edges keep their alpha
+  }
+}
+
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -83,6 +111,7 @@ export async function removeBackground(src, point = { x: 0.5, y: 0.55 }, { maxSi
   }
   result.close?.();
   if (!kept || kept < w * h * 0.01) throw new Error('nothing_found');
+  fillHoles(data.data, w, h);
   ctx.putImageData(data, 0, 0);
 
   // Crop to the vehicle with a 4% margin
