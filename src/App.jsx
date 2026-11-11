@@ -35,7 +35,9 @@ export default function App() {
   // Persistent data (demo backend)
   const [vehicles, setVehicles] = usePersistentState(K('vehicles'), INITIAL_VEHICLES);
   const [bookings, setBookings] = usePersistentState(K('bookings'), INITIAL_BOOKINGS);
-  const [settings, setSettings] = usePersistentState(K('settings'), DEFAULT_SETTINGS);
+  const [storedSettings, setSettings] = usePersistentState(K('settings'), DEFAULT_SETTINGS);
+  // Fill in fields added after a browser first saved its settings (e.g. facebookUrl)
+  const settings = useMemo(() => ({ ...DEFAULT_SETTINGS, ...storedSettings }), [storedSettings]);
   const [coupons, setCoupons] = usePersistentState(K('coupons'), DEFAULT_COUPONS);
   const [favorites, setFavorites] = usePersistentState(K('favorites'), []);
   const [myBookingIds, setMyBookingIds] = usePersistentState(K('my-bookings'), []);
