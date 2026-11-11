@@ -175,7 +175,12 @@ export const remoteApi = {
   },
 
   onAuthChange(cb) {
-    const { data } = supabase.auth.onAuthStateChange(() => cb());
+    // supabase-js runs this callback while it holds its auth lock (e.g. when the tab becomes
+    // visible again after the phone's camera/photo picker). Calling supabase from inside it
+    // would wait for that same lock and freeze every later request, so defer the work.
+    const { data } = supabase.auth.onAuthStateChange(() => {
+      setTimeout(() => cb(), 0);
+    });
     return () => data.subscription.unsubscribe();
   },
 

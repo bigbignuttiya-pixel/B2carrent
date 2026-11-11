@@ -230,15 +230,24 @@ export default function App() {
   const availableCount = vehicles.filter((v) => (searchParams.vehicleType === 'All' || v.type === searchParams.vehicleType) && bookable(v)).length;
   const pendingCount = bookings.filter((b) => b.status === 'Pending').length;
 
-  // Run an async action with error toast
-  const run = async (fn, successMsg, type = 'success') => {
+  // Run an async action with error toast. A hard time limit makes sure a stalled request
+  // (lost connection, frozen client) ends with a clear message instead of an endless spinner.
+  const run = async (fn, successMsg, type = 'success', timeoutMs = 90000) => {
+    let timer;
     try {
-      const out = await fn();
+      const out = await Promise.race([
+        fn(),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('การเชื่อมต่อใช้เวลานานเกินไป — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ (ถ้ายังไม่ได้ ให้รีเฟรชหน้าเว็บ)')), timeoutMs);
+        }),
+      ]);
       if (successMsg) notify(successMsg, type);
       return out;
     } catch (err) {
       notify(errorMessage(err), 'error');
       return null;
+    } finally {
+      clearTimeout(timer);
     }
   };
 
