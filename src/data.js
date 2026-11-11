@@ -385,6 +385,8 @@ export const DEFAULT_SETTINGS = {
   promptPayId: '0819998877',
   accountName: 'บริษัท บี2 เร้นท์ทัล จำกัด (B2 Rental Co., Ltd.)',
   lineOaId: '@b2rental',
+  facebookUrl: 'https://www.facebook.com/share/1FQRbQSLXY/',
+  facebookName: 'B2 Rental',
   lineChannelToken: '',
   storePhone: '081-999-8877',
   storeEmail: 'hello@b2rental.example',

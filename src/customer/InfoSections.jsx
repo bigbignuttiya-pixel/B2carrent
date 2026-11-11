@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Mail, Navigation, Route } from 'lucide-react';
+import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Mail, Navigation, Route, Facebook } from 'lucide-react';
 import { DESTINATIONS, REVIEWS, REQUIREMENTS, FAQS } from '../data';
 import { SectionHeading } from '../components/ui';
 
@@ -176,7 +176,25 @@ export function Footer({ settings, onNav }) {
           <h4 className="font-bold text-white text-sm mb-2">ติดต่อเรา</h4>
           <a href={`tel:${settings.storePhone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-2 text-slate-400 hover:text-yellow-300"><Phone className="w-4 h-4" /> {settings.storePhone}</a>
           <a href={`https://line.me/R/ti/p/${encodeURIComponent(settings.lineOaId)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-slate-400 hover:text-emerald-300"><MessageCircle className="w-4 h-4" /> LINE {settings.lineOaId}</a>
+          {settings.facebookUrl && (
+            <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-slate-400 hover:text-[#4c8dff]" aria-label="เปิดแฟนเพจ Facebook">
+              <Facebook className="w-4 h-4" /> Facebook: {settings.facebookName || 'แฟนเพจ'}
+            </a>
+          )}
           <a href={`mailto:${settings.storeEmail}`} className="flex items-center gap-2 text-slate-400 hover:text-yellow-300"><Mail className="w-4 h-4" /> {settings.storeEmail}</a>
+          <div className="flex gap-2 pt-2">
+            {settings.facebookUrl && (
+              <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" title="แฟนเพจ Facebook" aria-label="แฟนเพจ Facebook" className="w-9 h-9 rounded-xl bg-[#1877F2] text-white flex items-center justify-center hover:scale-110 transition">
+                <Facebook className="w-4 h-4" />
+              </a>
+            )}
+            <a href={`https://line.me/R/ti/p/${encodeURIComponent(settings.lineOaId)}`} target="_blank" rel="noopener noreferrer" title="LINE" aria-label="LINE" className="w-9 h-9 rounded-xl bg-[#06C755] text-white flex items-center justify-center hover:scale-110 transition">
+              <MessageCircle className="w-4 h-4" />
+            </a>
+            <a href={`tel:${settings.storePhone.replace(/[^0-9+]/g, '')}`} title="โทร" aria-label="โทร" className="w-9 h-9 rounded-xl bg-yellow-400 text-slate-950 flex items-center justify-center hover:scale-110 transition">
+              <Phone className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </div>
       <div className="border-t border-slate-900 py-5 text-center text-[11px] text-slate-600">© 2026 B2 MOTORCYCLE & CAR RENTAL SERVICES. All rights reserved.</div>
@@ -187,6 +205,12 @@ export function Footer({ settings, onNav }) {
 export function FloatingContact({ settings }) {
   return (
     <div className="fixed bottom-5 right-5 z-30 flex flex-col gap-3 no-print">
+      {settings.facebookUrl && (
+        <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#1877F2] text-white rounded-full shadow-2xl shadow-blue-900/50 pl-3 pr-4 py-3 text-xs font-black hover:scale-105 transition" aria-label="แฟนเพจ Facebook">
+          <Facebook className="w-5 h-5" />
+          <span className="hidden sm:inline">Facebook</span>
+        </a>
+      )}
       <a href={`https://line.me/R/ti/p/${encodeURIComponent(settings.lineOaId)}`} target="_blank" rel="noreferrer" className="group flex items-center gap-2 bg-[#06C755] text-white rounded-full shadow-2xl shadow-emerald-900/50 pl-3 pr-4 py-3 text-xs font-black hover:scale-105 transition" aria-label="แชท LINE">
         <MessageCircle className="w-5 h-5" />
         <span className="hidden sm:inline">แชท LINE</span>

@@ -13,6 +13,7 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
 
   const set = (patch) => setForm({ ...form, ...patch });
   const ppValid = isValidPromptPayId(form.promptPayId);
+  const fbValid = !form.facebookUrl || /^https:\/\/(www\.|m\.|web\.)?(facebook\.com|fb\.com|fb\.me)\/\S+$/i.test(form.facebookUrl.trim());
   const dirty = JSON.stringify(form) !== JSON.stringify(settings);
 
   const addCoupon = () => {
@@ -54,6 +55,11 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
             <label><span className="text-slate-400 block mb-1">เบอร์โทรหน้าร้าน</span><input className={inputCls} value={form.storePhone} onChange={(e) => set({ storePhone: e.target.value })} /></label>
             <label><span className="text-slate-400 block mb-1">อีเมล</span><input className={inputCls} value={form.storeEmail} onChange={(e) => set({ storeEmail: e.target.value })} /></label>
             <label><span className="text-slate-400 block mb-1">LINE Official Account ID</span><input className={inputCls} value={form.lineOaId} onChange={(e) => set({ lineOaId: e.target.value })} placeholder="@b2rental" /></label>
+            <label><span className="text-slate-400 block mb-1">ลิงก์แฟนเพจ Facebook</span>
+              <input className={`${inputCls} ${fbValid ? '' : 'border-rose-500'}`} value={form.facebookUrl} onChange={(e) => set({ facebookUrl: e.target.value })} placeholder="https://www.facebook.com/…" />
+              {!fbValid && <span className="text-[10px] text-rose-400">ต้องเป็นลิงก์ facebook.com หรือ fb.com (เว้นว่างเพื่อซ่อนปุ่ม)</span>}
+            </label>
+            <label><span className="text-slate-400 block mb-1">ชื่อแฟนเพจ (แสดงใน footer)</span><input className={inputCls} value={form.facebookName} onChange={(e) => set({ facebookName: e.target.value })} placeholder="B2 Rental" /></label>
             <label><span className="text-slate-400 block mb-1">เวลาเปิดทำการ</span><input className={inputCls} value={form.openHours} onChange={(e) => set({ openHours: e.target.value })} /></label>
             <label className="sm:col-span-2"><span className="text-slate-400 block mb-1">ที่อยู่ร้าน</span><textarea className={`${inputCls} h-16`} value={form.storeAddress} onChange={(e) => set({ storeAddress: e.target.value })} /></label>
             <label className="sm:col-span-2"><span className="text-slate-400 block mb-1">LINE Messaging API — Channel Access Token (แจ้งเตือนเมื่อมีการจองใหม่)</span>
@@ -63,7 +69,7 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
           </div>
           <div className="flex justify-end gap-2">
             {dirty && <button onClick={() => setForm(settings)} className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold">ยกเลิกการแก้ไข</button>}
-            <button disabled={!dirty} onClick={() => onSave(form)} className="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5">
+            <button disabled={!dirty || !fbValid} onClick={() => onSave({ ...form, facebookUrl: form.facebookUrl.trim() })} className="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5">
               <Save className="w-4 h-4" /> บันทึกการเปลี่ยนแปลง
             </button>
           </div>
