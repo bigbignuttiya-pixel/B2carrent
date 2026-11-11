@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Trash2, Pencil, X, Search } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Search, ClipboardList } from 'lucide-react';
 import { CATEGORIES } from '../data';
 import { baht } from '../lib/pricing';
 import { Modal, inputCls } from '../components/ui';
 import PhotoManager from './PhotoManager';
+import PlateSheet from './PlateSheet';
 
 const BLANK = {
   name: '', type: 'Motorcycle', category: 'Scooter', brand: '', pricePerDay: 400, deposit: 1000, seats: 2,
@@ -153,7 +154,8 @@ export function VehicleForm({ open, initial, onClose, onSave, notify }) {
   );
 }
 
-export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDelete, notify }) {
+export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDelete, notify, onSavePlates }) {
+  const [platesOpen, setPlatesOpen] = useState(false);
   const [editing, setEditing] = useState(null); // null closed | 'new' | vehicle
   const [q, setQ] = useState('');
   const list = vehicles.filter((v) => !q || `${v.name} ${v.plateNumber} ${v.brand}`.toLowerCase().includes(q.toLowerCase()));
@@ -161,13 +163,19 @@ export default function FleetAdmin({ vehicles, bookings, onStatus, onSave, onDel
 
   return (
     <div className="space-y-5">
+      {onSavePlates && <PlateSheet open={platesOpen} onClose={() => setPlatesOpen(false)} vehicles={vehicles} onSave={onSavePlates} />}
       <div className="flex flex-wrap justify-between items-center gap-3">
         <h3 className="text-lg font-bold text-white">จัดการฟลีตรถทั้งหมด</h3>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ค้นหารุ่น / ทะเบียน" className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:border-yellow-400 focus:outline-none" />
           </div>
+          {onSavePlates && (
+            <button onClick={() => setPlatesOpen(true)} className="bg-slate-900 border border-slate-700 hover:border-yellow-400/50 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1 whitespace-nowrap">
+              <ClipboardList className="w-4 h-4" /> ทะเบียนรถทั้งหมด
+            </button>
+          )}
           <button onClick={() => setEditing('new')} className="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1 shadow-lg whitespace-nowrap">
             <Plus className="w-4 h-4" /> เพิ่มรถคันใหม่
           </button>

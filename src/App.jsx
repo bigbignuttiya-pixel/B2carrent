@@ -345,6 +345,20 @@ export default function App() {
     return true;
   };
 
+  // Bulk plate update (cars only — motorcycles are never changed here)
+  const savePlates = async (changes) => {
+    const cars = changes.filter((c) => vehicles.find((v) => v.id === c.id)?.type === 'Car');
+    const ok = await run(async () => {
+      for (const c of cars) {
+        const current = vehicles.find((v) => v.id === c.id);
+        await api.saveVehicle({ ...current, plateNumber: c.plateNumber, driveHubName: c.driveHubName || undefined }, false);
+      }
+      return true;
+    }, `บันทึกทะเบียนรถ ${cars.length} คันแล้ว`);
+    await refreshPublic();
+    return Boolean(ok);
+  };
+
   const saveVehicle = async (data, id) => {
     let vehicle;
     if (id) {
@@ -557,6 +571,7 @@ export default function App() {
               onSave={saveVehicle}
               notify={notify}
               onDelete={deleteVehicle}
+              onSavePlates={savePlates}
             />
           )}
           {adminTab === 'settings' && (
