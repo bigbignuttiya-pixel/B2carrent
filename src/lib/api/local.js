@@ -125,6 +125,46 @@ export const localApi = {
   },
 
   // ----- admin -----
+  async addExternalBooking(p) {
+    const v = vehicles().find((x) => x.id === p.vehicleId);
+    if (!v) throw new ApiError('vehicle_not_found');
+    const days = calculateDays(p.startDate, p.endDate, p.pickupTime, p.returnTime);
+    if (days <= 0) throw new ApiError('invalid_dates');
+    if (!isVehicleFree(v.id, bookings(), p.startDate, p.endDate)) throw new ApiError('vehicle_unavailable');
+    const all = bookings();
+    const max = all.reduce((m, b) => Math.max(m, Number(b.id.split('-').pop()) || 0), 1000);
+    const source = p.source || 'DriveHub';
+    const price = Math.max(0, Math.round(Number(p.totalPrice) || 0));
+    const booking = {
+      id: `B2-${new Date().getFullYear()}-${String(max + 1).padStart(4, '0')}`,
+      vehicleId: v.id,
+      vehicleName: v.name,
+      vehicleType: v.type,
+      customerName: (p.name || '').trim() || `ลูกค้า ${source}`,
+      phone: digits(p.phone),
+      idCard: '-',
+      note: p.note,
+      source,
+      externalRef: (p.externalRef || '').trim() || undefined,
+      pickupLocation: p.location || 'ร้านบีทูรถเช่า',
+      returnLocation: p.location || 'ร้านบีทูรถเช่า',
+      startDate: p.startDate,
+      endDate: p.endDate,
+      pickupTime: p.pickupTime,
+      returnTime: p.returnTime,
+      totalDays: days,
+      addons: [],
+      subtotal: price,
+      discount: 0,
+      totalPrice: price,
+      status: 'Confirmed',
+      createdAt: nowStamp(),
+      paymentMethod: `ชำระผ่าน ${source}`,
+    };
+    write('bookings', [booking, ...all]);
+    return withSlipFlag(booking);
+  },
+
   async setBookingStatus(id, status) {
     const target = bookings().find((b) => b.id === id);
     if (!target) throw new ApiError('not_allowed');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, Plus } from 'lucide-react';
 import { addDaysISO, todayISO } from '../lib/pricing';
 
 const COLORS = {
@@ -10,7 +10,7 @@ const COLORS = {
 };
 const DAYS = 14;
 
-export default function Schedule({ vehicles, bookings, onOpenBooking }) {
+export default function Schedule({ vehicles, bookings, onOpenBooking, onAddExternal }) {
   const [start, setStart] = useState(addDaysISO(todayISO(), -2));
   const today = todayISO();
   const days = Array.from({ length: DAYS }, (_, i) => addDaysISO(start, i));
@@ -22,6 +22,9 @@ export default function Schedule({ vehicles, bookings, onOpenBooking }) {
       <div className="flex flex-wrap justify-between items-center gap-3">
         <h3 className="text-lg font-bold text-white flex items-center gap-2"><CalendarDays className="w-5 h-5 text-yellow-400" /> ตารางคิวรถ (Fleet Schedule)</h3>
         <div className="flex items-center gap-2 text-xs">
+          {onAddExternal && (
+            <button onClick={onAddExternal} className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-black flex items-center gap-1"><Plus className="w-4 h-4" /> จองจาก DriveHub</button>
+          )}
           <button onClick={() => setStart(addDaysISO(start, -7))} className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white" aria-label="ก่อนหน้า"><ChevronLeft className="w-4 h-4" /></button>
           <button onClick={() => setStart(addDaysISO(todayISO(), -2))} className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 font-bold hover:text-white">วันนี้</button>
           <button onClick={() => setStart(addDaysISO(start, 7))} className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white" aria-label="ถัดไป"><ChevronRight className="w-4 h-4" /></button>
@@ -75,10 +78,11 @@ export default function Schedule({ vehicles, bookings, onOpenBooking }) {
                     <button
                       key={b.id}
                       onClick={() => onOpenBooking(b.id)}
-                      title={`${b.id} • ${b.customerName}`}
+                      title={`${b.id} • ${b.customerName}${b.source ? ` • ${b.source}` : ''}`}
                       className={`absolute top-3 h-8 rounded-lg px-2 text-[10px] font-bold truncate text-left shadow-md hover:ring-2 hover:ring-yellow-300 ${COLORS[b.status] || 'bg-slate-600'}`}
                       style={{ left: `calc(200px + (100% - 200px) * ${s / DAYS} + 2px)`, width: `calc((100% - 200px) * ${(e - s + 1) / DAYS} - 4px)` }}
                     >
+                      {b.source && <span className="mr-1 px-1 rounded bg-sky-900/70 text-sky-200 text-[9px]">{b.source === 'DriveHub' ? 'DH' : b.source}</span>}
                       {b.customerName}
                     </button>
                   );
