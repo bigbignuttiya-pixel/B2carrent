@@ -37,7 +37,7 @@ export const LOCATIONS = [
 
 export const CATEGORIES = {
   Motorcycle: ['Scooter', 'Bigbike'],
-  Car: ['Sedan', 'EV', 'SUV'],
+  Car: ['Sedan', 'Hatchback', 'EV', 'SUV'],
 };
 
 export const INITIAL_VEHICLES = [

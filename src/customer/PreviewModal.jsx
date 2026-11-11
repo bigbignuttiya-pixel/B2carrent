@@ -3,7 +3,7 @@ import { X, CheckCircle2, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-
 import { Modal } from '../components/ui';
 import { baht } from '../lib/pricing';
 
-export default function PreviewModal({ vehicle, bookable, onClose, onBook }) {
+export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose, onBook }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => setIdx(0), [vehicle?.id]);
   if (!vehicle) return null;
@@ -48,7 +48,7 @@ export default function PreviewModal({ vehicle, bookable, onClose, onBook }) {
               <div>
                 <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider">{vehicle.brand}</span>
                 <h3 className="text-2xl font-black text-white">{vehicle.name}</h3>
-                <p className="text-xs text-slate-400">เลขทะเบียน: {vehicle.plateNumber}</p>
+                <p className="text-xs text-slate-400">{unitCount > 1 ? `ร้านมีรุ่นนี้ ${unitCount} คัน` : `เลขทะเบียน: ${vehicle.plateNumber}`}</p>
               </div>
               <button onClick={onClose} className="text-slate-400 hover:text-white p-1" aria-label="ปิด">
                 <X className="w-6 h-6" />

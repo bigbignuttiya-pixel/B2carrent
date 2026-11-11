@@ -194,24 +194,38 @@ export default function App() {
 
   const bookable = (v) => v && v.status === 'Available' && freeMap[v.id];
 
+  // Each physical vehicle is its own row (own plate, mileage, schedule). Customers see one card per
+  // model with how many units are free; booking picks a free unit automatically.
   const fleetList = useMemo(() => {
     const q = filters.query.trim().toLowerCase();
-    const list = vehicles.filter(
+    const matching = vehicles.filter(
       (v) =>
         (filters.type === 'All' || v.type === filters.type) &&
         (filters.category === 'All' || v.category === filters.category) &&
-        (!q || `${v.name} ${v.brand} ${v.category}`.toLowerCase().includes(q)) &&
-        (!filters.onlyFree || bookable(v)) &&
-        (!filters.onlyFav || favorites.includes(v.id))
+        (!q || `${v.name} ${v.brand} ${v.category}`.toLowerCase().includes(q))
     );
+    const groups = new Map();
+    matching.forEach((v) => {
+      const key = `${v.type}|${(v.name || '').trim().toLowerCase()}`;
+      if (!groups.has(key)) groups.set(key, { key, units: [] });
+      groups.get(key).units.push(v);
+    });
+    const list = [...groups.values()]
+      .map((g) => {
+        const free = g.units.filter((u) => bookable(u));
+        return { ...g, rep: free[0] || g.units[0], freeCount: free.length };
+      })
+      .filter((g) => (!filters.onlyFree || g.freeCount > 0) && (!filters.onlyFav || favorites.includes(g.key)));
     const sorters = {
-      'price-asc': (a, b) => a.pricePerDay - b.pricePerDay,
-      'price-desc': (a, b) => b.pricePerDay - a.pricePerDay,
-      rating: (a, b) => b.rating - a.rating,
-      recommended: (a, b) => Number(bookable(b)) - Number(bookable(a)) || b.reviewsCount - a.reviewsCount,
+      'price-asc': (a, b) => a.rep.pricePerDay - b.rep.pricePerDay,
+      'price-desc': (a, b) => b.rep.pricePerDay - a.rep.pricePerDay,
+      rating: (a, b) => b.rep.rating - a.rep.rating,
+      recommended: (a, b) => Number(b.freeCount > 0) - Number(a.freeCount > 0) || b.units.length - a.units.length || b.rep.reviewsCount - a.rep.reviewsCount,
     };
-    return [...list].sort(sorters[filters.sort]);
+    return list.sort(sorters[filters.sort]);
   }, [vehicles, filters, favorites, freeMap]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const unitsOfModel = (v) => (v ? vehicles.filter((u) => u.type === v.type && (u.name || '').trim().toLowerCase() === (v.name || '').trim().toLowerCase()) : []);
 
   const availableCount = vehicles.filter((v) => (searchParams.vehicleType === 'All' || v.type === searchParams.vehicleType) && bookable(v)).length;
   const pendingCount = bookings.filter((b) => b.status === 'Pending').length;
@@ -241,8 +255,10 @@ export default function App() {
 
   const toggleFav = (id) => setFavorites((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
 
-  const openBooking = (v) => {
-    if (!bookable(v)) return notify('รถคันนี้ไม่ว่างในช่วงวันที่เลือก กรุณาเปลี่ยนวันหรือเลือกคันอื่น', 'error');
+  const openBooking = (picked) => {
+    // Any free unit of the same model will do
+    const v = bookable(picked) ? picked : unitsOfModel(picked).find((u) => bookable(u));
+    if (!v) return notify('รถรุ่นนี้ไม่ว่างในช่วงวันที่เลือก กรุณาเปลี่ยนวันหรือเลือกรุ่นอื่น', 'error');
     setPreviewVehicle(null);
     setBookingVehicle(v);
   };
@@ -452,7 +468,7 @@ export default function App() {
         </>
       )}
 
-      <PreviewModal vehicle={previewVehicle} bookable={bookable(previewVehicle)} onClose={() => setPreviewVehicle(null)} onBook={openBooking} />
+      <PreviewModal vehicle={previewVehicle} unitCount={unitsOfModel(previewVehicle).length} bookable={unitsOfModel(previewVehicle).some((u) => bookable(u))} onClose={() => setPreviewVehicle(null)} onBook={openBooking} />
       <BookingModal
         vehicle={bookingVehicle}
         searchParams={searchParams}
