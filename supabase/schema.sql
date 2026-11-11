@@ -72,7 +72,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 create or replace function public.touch_updated_at() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
   return new;
@@ -87,7 +87,7 @@ create trigger settings_touch before update on public.settings for each row exec
 
 -- Booking row → object shape used by the web app
 create or replace function public.booking_json(b public.bookings) returns jsonb
-language sql stable as $$
+language sql stable set search_path = public as $$
   select (b.data - 'slipPath')
     || jsonb_build_object(
       'id', b.id, 'vehicleId', b.vehicle_id, 'startDate', b.start_date, 'endDate', b.end_date,
@@ -301,6 +301,19 @@ grant execute on function public.cancel_booking(text, text) to anon, authenticat
 grant execute on function public.attach_slip(text, text, text) to anon, authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
 grant usage on sequence public.booking_seq to authenticated;
+-- Supabase grants EXECUTE to anon/authenticated directly (not only via PUBLIC),
+-- so internal helpers are revoked from those roles explicitly
+revoke execute on function public.price_quote(text, int, text[], text) from anon, authenticated;
+revoke execute on function public.sync_vehicle_status() from public, anon, authenticated;
+revoke execute on function public.touch_updated_at() from public, anon, authenticated;
+revoke execute on function public.booking_json(public.bookings) from public, anon, authenticated;
+
+-- Table privileges (explicit, in case the project does not grant them by default).
+-- Row level security above still decides which rows each role can see or change.
+grant usage on schema public to anon, authenticated;
+grant select on public.vehicles, public.settings, public.addon_prices to anon;
+grant select, insert, update, delete on public.vehicles, public.settings, public.addon_prices,
+  public.coupons, public.bookings, public.admins to authenticated;
 
 -- ---------- Storage (photos & payment slips) ----------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
