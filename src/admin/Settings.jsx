@@ -61,10 +61,7 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
             </label>
             <label><span className="text-slate-400 block mb-1">ชื่อแฟนเพจ (แสดงใน footer)</span><input className={inputCls} value={form.facebookName} onChange={(e) => set({ facebookName: e.target.value })} placeholder="B2 Rental" /></label>
             <label className="sm:col-span-2"><span className="text-slate-400 block mb-1">ที่อยู่ร้าน</span><textarea className={`${inputCls} h-16`} value={form.storeAddress} onChange={(e) => set({ storeAddress: e.target.value })} /></label>
-            <label className="sm:col-span-2"><span className="text-slate-400 block mb-1">LINE Messaging API — Channel Access Token (แจ้งเตือนเมื่อมีการจองใหม่)</span>
-              <input className={`${inputCls} font-mono`} type="password" autoComplete="off" value={form.lineChannelToken} onChange={(e) => set({ lineChannelToken: e.target.value })} placeholder="เก็บไว้ที่ฝั่งเซิร์ฟเวอร์เท่านั้น" />
-              <span className="text-[10px] text-slate-500 mt-1 flex gap-1.5"><Info className="w-3.5 h-3.5 shrink-0" /> LINE Notify ปิดให้บริการแล้วตั้งแต่ 31 มี.ค. 2025 — ใช้ LINE Messaging API ผ่าน Official Account แทน และห้ามฝัง Token ไว้ในโค้ดฝั่งหน้าเว็บ</span>
-            </label>
+            <p className="sm:col-span-2 text-[10px] text-slate-500 flex gap-1.5"><Info className="w-3.5 h-3.5 shrink-0" /> การแจ้งเตือน LINE เมื่อมีการจองใหม่ ต้องทำผ่าน LINE Messaging API บนเซิร์ฟเวอร์ (เช่น Supabase Edge Function) — ห้ามใส่ Token ไว้ในหน้าเว็บ เพราะทุกคนจะมองเห็นได้</p>
           </div>
           <div className="flex justify-end gap-2">
             {dirty && <button onClick={() => setForm(settings)} className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold">ยกเลิกการแก้ไข</button>}
@@ -107,13 +104,20 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
           </div>
           <p className="text-[11px] text-slate-400">ลองสแกนด้วยแอปธนาคารเพื่อตรวจสอบว่าชื่อบัญชีถูกต้องก่อนเปิดใช้งานจริง</p>
         </div>
-        <div className="bg-slate-900 border border-rose-900/40 rounded-3xl p-6 space-y-3">
-          <h4 className="text-sm font-bold text-white">ข้อมูลตัวอย่าง (Demo)</h4>
-          <p className="text-[11px] text-slate-400">ข้อมูลทั้งหมดถูกบันทึกไว้ในเบราว์เซอร์นี้ (localStorage) — ระบบจริงควรเชื่อมต่อฐานข้อมูลและ API หลังบ้าน</p>
-          <button onClick={() => window.confirm('รีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น?') && onResetDemo()} className="w-full py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-rose-300 hover:bg-rose-500/10 flex items-center justify-center gap-1.5">
-            <RotateCcw className="w-4 h-4" /> รีเซ็ตข้อมูลตัวอย่าง
-          </button>
-        </div>
+        {onResetDemo ? (
+          <div className="bg-slate-900 border border-rose-900/40 rounded-3xl p-6 space-y-3">
+            <h4 className="text-sm font-bold text-white">โหมดเดโม</h4>
+            <p className="text-[11px] text-slate-400">ยังไม่ได้เชื่อมต่อฐานข้อมูลกลาง (Supabase) — ข้อมูลอยู่ในเบราว์เซอร์นี้เท่านั้น เบราว์เซอร์หรือเครื่องอื่นจะเห็นไม่ตรงกัน ดูวิธีตั้งค่าใน README</p>
+            <button onClick={() => window.confirm('รีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น?') && onResetDemo()} className="w-full py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-rose-300 hover:bg-rose-500/10 flex items-center justify-center gap-1.5">
+              <RotateCcw className="w-4 h-4" /> รีเซ็ตข้อมูลตัวอย่าง
+            </button>
+          </div>
+        ) : (
+          <div className="bg-slate-900 border border-emerald-900/40 rounded-3xl p-6 space-y-2">
+            <h4 className="text-sm font-bold text-white">ฐานข้อมูลกลาง (Supabase)</h4>
+            <p className="text-[11px] text-slate-400">ทุกการแก้ไขบันทึกบนคลาวด์ ทุกเบราว์เซอร์และทุกเครื่องเห็นข้อมูลเดียวกัน • สำรองข้อมูลได้จาก Supabase Dashboard</p>
+          </div>
+        )}
       </aside>
     </div>
   );

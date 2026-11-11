@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Download, X, Phone, MapPin, Calendar, CreditCard, FileImage, Clock } from 'lucide-react';
 import { BOOKING_STATUS, ADDONS } from '../data';
 import { baht, formatThaiDate } from '../lib/pricing';
@@ -10,7 +10,21 @@ const NEXT_ACTIONS = {
   'Picked Up': [['Completed', 'รับคืนรถสำเร็จ', 'bg-blue-700 hover:bg-blue-600 text-yellow-300']],
 };
 
-export function BookingDrawer({ booking, onClose, onStatus }) {
+export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
+  const [slipUrl, setSlipUrl] = useState(null);
+  const [slipLoading, setSlipLoading] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    setSlipUrl(null);
+    if (!booking?.hasSlip) return undefined;
+    setSlipLoading(true);
+    Promise.resolve(getSlipUrl(booking))
+      .then((u) => alive && setSlipUrl(u))
+      .finally(() => alive && setSlipLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [booking?.id, booking?.hasSlip]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!booking) return null;
   const b = booking;
   const actions = NEXT_ACTIONS[b.status] || [];
@@ -62,8 +76,10 @@ export function BookingDrawer({ booking, onClose, onStatus }) {
 
           <div>
             <div className="font-bold text-slate-300 mb-2 flex items-center gap-1.5"><FileImage className="w-4 h-4" /> สลิปการโอน</div>
-            {b.slip ? (
-              <a href={b.slip} target="_blank" rel="noreferrer"><img src={b.slip} alt="สลิป" className="rounded-xl border border-slate-700 max-h-80 mx-auto" /></a>
+            {slipUrl ? (
+              <a href={slipUrl} target="_blank" rel="noreferrer"><img src={slipUrl} alt="สลิป" className="rounded-xl border border-slate-700 max-h-80 mx-auto" /></a>
+            ) : slipLoading ? (
+              <div className="border border-dashed border-slate-700 rounded-xl p-6 text-center text-slate-500">กำลังโหลดสลิป…</div>
             ) : (
               <div className="border border-dashed border-slate-700 rounded-xl p-6 text-center text-slate-500">ลูกค้ายังไม่ได้แนบสลิป</div>
             )}
@@ -157,7 +173,7 @@ export default function Bookings({ bookings, onOpen, onStatus }) {
                   <tr key={b.id} className="hover:bg-slate-950/50 cursor-pointer" onClick={() => onOpen(b.id)}>
                     <td className="p-4 font-mono font-bold text-yellow-400 whitespace-nowrap">
                       {b.id}
-                      {b.status === 'Pending' && b.slip && <span className="ml-2 text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">มีสลิป</span>}
+                      {b.status === 'Pending' && b.hasSlip && <span className="ml-2 text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">มีสลิป</span>}
                     </td>
                     <td className="p-4">
                       <div className="font-bold text-white whitespace-nowrap">{b.customerName}</div>
