@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { X, CheckCircle2, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 import { Modal } from '../components/ui';
 import { baht } from '../lib/pricing';
+import { isCutout, STUDIO_BG, STUDIO_SHADOW } from '../lib/image';
 
-export default function PreviewModal({ vehicle, bookable, onClose, onBook }) {
+export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose, onBook }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => setIdx(0), [vehicle?.id]);
   if (!vehicle) return null;
@@ -15,7 +16,7 @@ export default function PreviewModal({ vehicle, bookable, onClose, onBook }) {
       <div className="flex flex-col md:flex-row">
         <div className="md:w-1/2 p-6 bg-slate-950 flex flex-col gap-4">
           <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden border border-slate-800">
-            <img src={gallery[idx]} alt={vehicle.name} className="w-full h-full object-cover" />
+            <img src={gallery[idx]} alt={vehicle.name} className={`w-full h-full ${isCutout(gallery[idx]) ? `object-contain p-6 ${STUDIO_SHADOW} ${STUDIO_BG}` : 'object-cover'}`} />
             <span className="absolute top-3 left-3 bg-yellow-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg">{vehicle.badgeTag || vehicle.category}</span>
             {gallery.length > 1 && (
               <>
@@ -32,7 +33,7 @@ export default function PreviewModal({ vehicle, bookable, onClose, onBook }) {
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin">
             {gallery.map((img, i) => (
               <button key={i} onClick={() => setIdx(i)} className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${i === idx ? 'border-yellow-400 scale-105' : 'border-slate-800 opacity-60'}`}>
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img src={img} alt="" className={`w-full h-full ${isCutout(img) ? `object-contain p-1 ${STUDIO_BG}` : 'object-cover'}`} />
               </button>
             ))}
           </div>
@@ -48,7 +49,7 @@ export default function PreviewModal({ vehicle, bookable, onClose, onBook }) {
               <div>
                 <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider">{vehicle.brand}</span>
                 <h3 className="text-2xl font-black text-white">{vehicle.name}</h3>
-                <p className="text-xs text-slate-400">เลขทะเบียน: {vehicle.plateNumber}</p>
+                <p className="text-xs text-slate-400">{unitCount > 1 ? `ร้านมีรุ่นนี้ ${unitCount} คัน` : `เลขทะเบียน: ${vehicle.plateNumber}`}</p>
               </div>
               <button onClick={onClose} className="text-slate-400 hover:text-white p-1" aria-label="ปิด">
                 <X className="w-6 h-6" />

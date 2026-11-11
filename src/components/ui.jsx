@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
 import { BOOKING_STATUS } from '../data';
 
@@ -45,7 +46,9 @@ export function Modal({ open, onClose, children, maxWidth = 'max-w-3xl', z = 'z-
     };
   }, [open, onClose]);
   if (!open) return null;
-  return (
+  // Portal to <body> so a modal opened from inside another modal (e.g. camera / background remover
+  // inside the vehicle form) is not trapped by the parent's CSS transform
+  return createPortal(
     <div
       className={`fixed inset-0 ${z} bg-black/85 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in`}
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
@@ -53,7 +56,8 @@ export function Modal({ open, onClose, children, maxWidth = 'max-w-3xl', z = 'z-
       <div className={`bg-slate-900 border border-slate-800 w-full ${maxWidth} rounded-3xl shadow-2xl overflow-hidden my-6 animate-slide-up`}>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

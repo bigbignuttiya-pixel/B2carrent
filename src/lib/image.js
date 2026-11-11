@@ -30,3 +30,10 @@ export function compressImage(file, maxSize = 1000, quality = 0.72) {
 
 // Approximate decoded byte size of a data URL (for UI hints)
 export const dataUrlKB = (s) => (s && s.startsWith('data:') ? Math.round((s.length * 3) / 4 / 1024) : 0);
+
+// Photos with a transparent background (cut-outs) are shown "contained" on a soft backdrop
+export const isCutout = (url) => typeof url === 'string' && (/^data:image\/png/.test(url) || /\.png(\?|$)/i.test(url));
+
+// One uniform light "studio" backdrop for every cut-out photo, so all vehicles look consistent
+export const STUDIO_BG = 'bg-[linear-gradient(180deg,#f8fafc_0%,#eef1f5_62%,#dfe4ea_100%)]';
+export const STUDIO_SHADOW = 'drop-shadow-[0_14px_12px_rgba(15,23,42,0.28)]';

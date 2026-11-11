@@ -19,19 +19,51 @@ const DEFAULT_IMG = {
 export function VehicleForm({ open, initial, onClose, onSave, notify }) {
   const [f, setF] = useState(BLANK);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
   useEffect(() => {
     if (!open) return;
+    setErrors({});
     if (!initial) return setF(BLANK);
     // Main image first, then the rest of the gallery (deduplicated)
     const photos = [...new Set([initial.image, ...(initial.gallery || [])].filter(Boolean))];
     setF({ ...BLANK, ...initial, photos, features: (initial.features || []).join('\n') });
   }, [open, initial]);
 
-  const set = (patch) => setF((cur) => ({ ...cur, ...patch }));
+  const set = (patch) => {
+    setF((cur) => ({ ...cur, ...patch }));
+    setErrors((cur) => {
+      const next = { ...cur };
+      Object.keys(patch).forEach((k) => delete next[k]);
+      return next;
+    });
+  };
+
+  // Validate in code (not browser bubbles, which are easy to miss on phones) and jump to the first problem
+  const validate = () => {
+    const e = {};
+    if (!f.name.trim()) e.name = 'กรุณากรอกชื่อรุ่นพาหนะ';
+    if (!f.plateNumber.trim()) e.plateNumber = 'กรุณากรอกทะเบียนรถ';
+    if (!(Number(f.pricePerDay) > 0)) e.pricePerDay = 'กรุณากรอกราคาต่อวัน';
+    setErrors(e);
+    const first = Object.keys(e)[0];
+    if (first) {
+      notify(`ยังบันทึกไม่ได้ — ${Object.values(e).join(', ')}`, 'error');
+      setTimeout(() => {
+        const el = document.querySelector(`[data-field="${first}"]`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el?.focus({ preventScroll: true });
+      }, 50);
+    }
+    return !first;
+  };
+
   const submit = async (e) => {
     e.preventDefault();
-    if (saving) return;
+    if (saving || !validate()) return;
     const { photos, ...rest } = f;
+    rest.name = f.name.trim();
+    rest.plateNumber = f.plateNumber.trim();
+    rest.brand = f.brand.trim() || rest.name.split(/\s+/)[0]; // brand is optional: default to first word of the name
     const image = photos[0] || DEFAULT_IMG[f.type];
     setSaving(true);
     await onSave({
@@ -54,7 +86,7 @@ export function VehicleForm({ open, initial, onClose, onSave, notify }) {
         <h3 className="font-bold text-white text-base">{initial ? `แก้ไขพาหนะ ${initial.id}` : 'เพิ่มพาหนะใหม่เข้าฟลีตร้าน B2'}</h3>
         <button onClick={onClose} className="text-slate-400 hover:text-white" aria-label="ปิด"><X className="w-5 h-5" /></button>
       </div>
-      <form onSubmit={submit} className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+      <form onSubmit={submit} noValidate className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <label className="col-span-1"><span className="text-slate-400 block mb-1">ประเภท</span>
           <select className={inputCls} value={f.type} onChange={(e) => set({ type: e.target.value, category: CATEGORIES[e.target.value][0], seats: e.target.value === 'Car' ? 5 : 2 })}>
             <option value="Motorcycle">🛵 จักรยานยนต์</option>
@@ -66,20 +98,23 @@ export function VehicleForm({ open, initial, onClose, onSave, notify }) {
             {CATEGORIES[f.type].map((c) => <option key={c}>{c}</option>)}
           </select>
         </label>
-        <label className="col-span-1"><span className="text-slate-400 block mb-1">ยี่ห้อ</span>
-          <input className={inputCls} required value={f.brand} onChange={(e) => set({ brand: e.target.value })} placeholder="Honda" />
+        <label className="col-span-1"><span className="text-slate-400 block mb-1">ยี่ห้อ <span className="text-slate-600">(ไม่บังคับ)</span></span>
+          <input className={inputCls} value={f.brand} onChange={(e) => set({ brand: e.target.value })} placeholder="Honda" />
         </label>
         <label className="col-span-1"><span className="text-slate-400 block mb-1">ป้ายกำกับ</span>
           <input className={inputCls} value={f.badgeTag} onChange={(e) => set({ badgeTag: e.target.value })} />
         </label>
-        <label className="col-span-2 sm:col-span-3"><span className="text-slate-400 block mb-1">ชื่อรุ่นพาหนะ</span>
-          <input className={inputCls} required value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Honda Click 160" />
+        <label className="col-span-2 sm:col-span-3"><span className="text-slate-400 block mb-1">ชื่อรุ่นพาหนะ <span className="text-rose-400">*</span></span>
+          <input data-field="name" className={`${inputCls} ${errors.name ? 'border-rose-500' : ''}`} value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Honda Click 160" />
+          {errors.name && <span className="text-[10px] text-rose-400 mt-1 block">{errors.name}</span>}
         </label>
-        <label className="col-span-2 sm:col-span-1"><span className="text-slate-400 block mb-1">ทะเบียนรถ</span>
-          <input className={inputCls} required value={f.plateNumber} onChange={(e) => set({ plateNumber: e.target.value })} placeholder="1กข-9999 นครศรีธรรมราช" />
+        <label className="col-span-2 sm:col-span-1"><span className="text-slate-400 block mb-1">ทะเบียนรถ <span className="text-rose-400">*</span></span>
+          <input data-field="plateNumber" className={`${inputCls} ${errors.plateNumber ? 'border-rose-500' : ''}`} value={f.plateNumber} onChange={(e) => set({ plateNumber: e.target.value })} placeholder="1กข-9999 นครศรีธรรมราช" />
+          {errors.plateNumber && <span className="text-[10px] text-rose-400 mt-1 block">{errors.plateNumber}</span>}
         </label>
-        <label><span className="text-slate-400 block mb-1">ราคา/วัน (฿)</span>
-          <input className={inputCls} type="number" min="0" required value={f.pricePerDay} onChange={(e) => set({ pricePerDay: e.target.value })} />
+        <label><span className="text-slate-400 block mb-1">ราคา/วัน (฿) <span className="text-rose-400">*</span></span>
+          <input data-field="pricePerDay" className={`${inputCls} ${errors.pricePerDay ? 'border-rose-500' : ''}`} type="number" inputMode="numeric" min="0" value={f.pricePerDay} onChange={(e) => set({ pricePerDay: e.target.value })} />
+          {errors.pricePerDay && <span className="text-[10px] text-rose-400 mt-1 block">{errors.pricePerDay}</span>}
         </label>
         <label><span className="text-slate-400 block mb-1">เงินมัดจำ (฿)</span>
           <input className={inputCls} type="number" min="0" value={f.deposit} onChange={(e) => set({ deposit: e.target.value })} />

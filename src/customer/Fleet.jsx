@@ -3,15 +3,16 @@ import { Bike, Car, Star, Maximize2, ChevronRight, Flame, Search, Heart, Users, 
 import { CATEGORIES } from '../data';
 import { baht } from '../lib/pricing';
 import { SectionHeading } from '../components/ui';
+import { isCutout, STUDIO_BG, STUDIO_SHADOW } from '../lib/image';
 
-export function VehicleCard({ v, free, rentalDays, isFav, onToggleFav, onPreview, onBook }) {
+export function VehicleCard({ v, free, units = 1, freeUnits = free ? 1 : 0, rentalDays, isFav, onToggleFav, onPreview, onBook }) {
   const bookable = v.status === 'Available' && free;
-  const reason = v.status === 'Maintenance' ? 'ซ่อมบำรุง' : v.status === 'Rented' ? 'ติดคิวเช่า' : !free ? 'ไม่ว่างช่วงนี้' : '';
+  const reason = units > 1 && freeUnits === 0 ? 'เต็มทุกคันช่วงนี้' : v.status === 'Maintenance' ? 'ซ่อมบำรุง' : v.status === 'Rented' ? 'ติดคิวเช่า' : !free ? 'ไม่ว่างช่วงนี้' : '';
   return (
     <div className="group bg-slate-900/90 border border-slate-800/90 hover:border-yellow-400/70 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-blue-950 hover:-translate-y-1 flex flex-col relative">
-      <div className="relative h-56 overflow-hidden bg-slate-950">
-        <img src={v.image} alt={v.name} loading="lazy" className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${bookable ? '' : 'grayscale-[60%] opacity-70'}`} />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+      <div className={`relative h-56 overflow-hidden ${isCutout(v.image) ? STUDIO_BG : 'bg-slate-950'}`}>
+        <img src={v.image} alt={v.name} loading="lazy" className={`w-full h-full group-hover:scale-110 transition-transform duration-700 ${isCutout(v.image) ? `object-contain px-6 pt-12 pb-6 ${STUDIO_SHADOW}` : 'object-cover'} ${bookable ? '' : 'grayscale-[60%] opacity-70'}`} />
+        {!isCutout(v.image) && <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />}
 
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
           <span className="bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl border border-slate-700 text-xs font-bold text-yellow-300 flex items-center gap-1">
@@ -22,7 +23,7 @@ export function VehicleCard({ v, free, rentalDays, isFav, onToggleFav, onPreview
         </div>
 
         <button
-          onClick={() => onToggleFav(v.id)}
+          onClick={() => onToggleFav()}
           aria-label="บันทึกรายการโปรด"
           className={`absolute top-3 right-3 w-8 h-8 rounded-xl border backdrop-blur-md flex items-center justify-center transition ${isFav ? 'bg-rose-500/20 border-rose-400/50 text-rose-400' : 'bg-slate-950/70 border-slate-700 text-slate-300 hover:text-rose-300'}`}
         >
@@ -49,7 +50,11 @@ export function VehicleCard({ v, free, rentalDays, isFav, onToggleFav, onPreview
         <div>
           <h3 className="font-extrabold text-lg text-white group-hover:text-yellow-400 transition-colors">{v.name}</h3>
           <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-3">
-            <span>ทะเบียน: <span className="font-mono text-slate-300 font-bold">{v.plateNumber}</span></span>
+            {units > 1 ? (
+              <span className={`font-bold ${freeUnits > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>ว่าง {freeUnits}/{units} คัน</span>
+            ) : (
+              <span>ทะเบียน: <span className="font-mono text-slate-300 font-bold">{v.plateNumber}</span></span>
+            )}
             <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {v.seats}</span>
           </p>
           <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-800">
@@ -162,8 +167,19 @@ export default function Fleet({ vehicles, list, filters, setFilters, freeMap, re
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {list.map((v) => (
-            <VehicleCard key={v.id} v={v} free={freeMap[v.id]} rentalDays={rentalDays} isFav={favorites.includes(v.id)} onToggleFav={onToggleFav} onPreview={onPreview} onBook={onBook} />
+          {list.map((g) => (
+            <VehicleCard
+              key={g.key}
+              v={g.rep}
+              free={g.freeCount > 0}
+              units={g.units.length}
+              freeUnits={g.freeCount}
+              rentalDays={rentalDays}
+              isFav={favorites.includes(g.key)}
+              onToggleFav={() => onToggleFav(g.key)}
+              onPreview={onPreview}
+              onBook={onBook}
+            />
           ))}
         </div>
       )}

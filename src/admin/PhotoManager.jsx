@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, ImagePlus, Link2, Star, Trash2, ChevronLeft, ChevronRight, Loader2, X, SwitchCamera, Aperture } from 'lucide-react';
+import { Camera, ImagePlus, Link2, Star, Trash2, ChevronLeft, ChevronRight, Loader2, X, SwitchCamera, Aperture, Scissors, Check, RotateCcw } from 'lucide-react';
 import { compressImage, dataUrlKB } from '../lib/image';
+import { removeBackground } from '../lib/removeBackground';
+import { isCutout, STUDIO_BG, STUDIO_SHADOW } from '../lib/image';
 import { Modal } from '../components/ui';
 
 const isTouchDevice = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
@@ -73,6 +75,87 @@ function WebcamModal({ open, onClose, onCapture, notify }) {
   );
 }
 
+// Tap the vehicle → model cuts it out of the background (runs in this browser, free)
+function BackgroundRemoverModal({ src, onClose, onApply, notify }) {
+  const [point, setPoint] = useState({ x: 0.5, y: 0.55 });
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
+
+  const run = async (p) => {
+    setPoint(p);
+    setBusy(true);
+    setResult(null);
+    try {
+      setResult(await removeBackground(src, p));
+    } catch (err) {
+      const msg = err?.message === 'nothing_found'
+        ? 'หาตัวรถตรงจุดที่แตะไม่เจอ — ลองแตะกลางตัวรถอีกครั้ง'
+        : err?.message === 'image_load_failed'
+          ? 'เปิดรูปนี้ไม่ได้ (รูปจากลิงก์ภายนอกบางแห่งไม่อนุญาต) — ลองอัปโหลดรูปจากเครื่องแทน'
+          : 'ตัดพื้นหลังไม่สำเร็จ — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
+      notify(msg, 'error');
+    } finally {
+      setBusy(false);
+      setFirstLoad(false);
+    }
+  };
+
+  // Auto-run once with the centre of the photo (vehicles are usually centred)
+  useEffect(() => {
+    if (src) run({ x: 0.5, y: 0.55 });
+  }, [src]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onTap = (e) => {
+    if (busy) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    run({ x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) });
+  };
+
+
+  return (
+    <Modal open={!!src} onClose={onClose} maxWidth="max-w-3xl" z="z-[60]">
+      <div className="px-5 py-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+        <h4 className="text-sm font-bold text-white flex items-center gap-2"><Scissors className="w-4 h-4 text-yellow-400" /> ตัดพื้นหลังรูปรถ</h4>
+        <button onClick={onClose} className="text-slate-400 hover:text-white" aria-label="ปิดหน้าตัดพื้นหลัง"><X className="w-5 h-5" /></button>
+      </div>
+      <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div className="space-y-2">
+          <div className="text-slate-400 font-bold">1. แตะที่ตัวรถในรูป</div>
+          <div className="relative rounded-xl overflow-hidden border border-slate-700 cursor-crosshair select-none" onClick={onTap} role="button" aria-label="แตะตำแหน่งตัวรถ">
+            <img src={src} alt="รูปต้นฉบับ" className="w-full h-auto block" draggable={false} />
+            <span className="absolute w-6 h-6 -ml-3 -mt-3 rounded-full border-2 border-yellow-400 bg-yellow-400/30 shadow-lg pointer-events-none" style={{ left: `${point.x * 100}%`, top: `${point.y * 100}%` }} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="text-slate-400 font-bold">2. ผลลัพธ์ (แสดงบนพื้นหลังมาตรฐานของเว็บ)</div>
+          <div className={`rounded-xl border border-slate-700 min-h-[180px] flex items-center justify-center p-4 ${STUDIO_BG}`}>
+            {busy ? (
+              <div className="text-slate-300 flex flex-col items-center gap-2 py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-yellow-400" />
+                {firstLoad ? 'กำลังโหลดตัวตัดพื้นหลัง (ครั้งแรกประมาณ 6 MB)…' : 'กำลังตัดพื้นหลัง…'}
+              </div>
+            ) : result ? (
+              <img src={result.dataUrl} alt="รูปที่ตัดพื้นหลังแล้ว" className={`max-h-72 w-auto ${STUDIO_SHADOW}`} />
+            ) : (
+              <span className="text-slate-500 py-8">ยังไม่มีผลลัพธ์</span>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-500">ถ้าตัดไม่ครบหรือเกิน ให้แตะตรงกลางตัวรถใหม่อีกครั้ง • รูปที่ดีที่สุด: ถ่ายรถทั้งคันเต็มเฟรม พื้นหลังโล่ง</p>
+        </div>
+      </div>
+      <div className="px-5 pb-5 flex flex-wrap justify-end gap-2 text-xs">
+        <button onClick={() => run({ x: 0.5, y: 0.55 })} disabled={busy} className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-200 font-bold flex items-center gap-1.5 disabled:opacity-50">
+          <RotateCcw className="w-4 h-4" /> ลองใหม่จากกลางรูป
+        </button>
+        <button onClick={() => result && onApply(result.dataUrl)} disabled={!result || busy} className="px-5 py-2.5 rounded-xl bg-yellow-400 text-slate-950 font-black flex items-center gap-1.5 disabled:opacity-40">
+          <Check className="w-4 h-4" /> ใช้รูปนี้
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
 export default function PhotoManager({ photos, onChange, notify, max = 8 }) {
   const fileRef = useRef(null);
   const cameraRef = useRef(null);
@@ -129,6 +212,12 @@ export default function PhotoManager({ photos, onChange, notify, max = 8 }) {
   };
   const makeMain = (i) => onChange([photos[i], ...photos.filter((_, k) => k !== i)]);
   const remove = (i) => onChange(photos.filter((_, k) => k !== i));
+  const [cutIndex, setCutIndex] = useState(null);
+  const applyCut = (dataUrl) => {
+    onChange(photos.map((p, k) => (k === cutIndex ? dataUrl : p)));
+    setCutIndex(null);
+    notify('ตัดพื้นหลังแล้ว — กดบันทึกเพื่ออัปโหลดรูปใหม่');
+  };
 
   const totalKB = photos.reduce((s, p) => s + dataUrlKB(p), 0);
 
@@ -179,7 +268,7 @@ export default function PhotoManager({ photos, onChange, notify, max = 8 }) {
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {photos.map((src, i) => (
             <div key={`${i}-${src.slice(-24)}`} className={`relative group rounded-xl overflow-hidden border-2 aspect-[4/3] bg-slate-950 ${i === 0 ? 'border-yellow-400' : 'border-slate-800'}`}>
-              <img src={src} alt={`รูปที่ ${i + 1}`} className="w-full h-full object-cover" />
+              <img src={src} alt={`รูปที่ ${i + 1}`} className={`w-full h-full ${isCutout(src) ? `object-contain p-1 ${STUDIO_BG}` : 'object-cover'}`} />
               {i === 0 && <span className="absolute top-1 left-1 bg-yellow-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded">รูปหลัก</span>}
               <div className="absolute inset-x-0 bottom-0 flex justify-between items-center bg-slate-950/85 px-1 py-1 sm:opacity-0 sm:group-hover:opacity-100 transition">
                 <div className="flex">
@@ -188,6 +277,7 @@ export default function PhotoManager({ photos, onChange, notify, max = 8 }) {
                 </div>
                 <div className="flex">
                   {i !== 0 && <button type="button" onClick={() => makeMain(i)} className="p-1 text-yellow-300" aria-label="ตั้งเป็นรูปหลัก" title="ตั้งเป็นรูปหลัก"><Star className="w-3.5 h-3.5" /></button>}
+                  <button type="button" onClick={() => setCutIndex(i)} className="p-1 text-sky-300" aria-label="ตัดพื้นหลัง" title="ตัดพื้นหลัง"><Scissors className="w-3.5 h-3.5" /></button>
                   <button type="button" onClick={() => remove(i)} className="p-1 text-rose-400" aria-label="ลบรูป"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
@@ -201,6 +291,7 @@ export default function PhotoManager({ photos, onChange, notify, max = 8 }) {
         </div>
       )}
 
+      <BackgroundRemoverModal src={cutIndex === null ? null : photos[cutIndex]} onClose={() => setCutIndex(null)} onApply={applyCut} notify={notify} />
       <WebcamModal open={webcam} onClose={() => setWebcam(false)} onCapture={(d) => push([d])} notify={notify} />
     </div>
   );
