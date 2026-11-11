@@ -302,6 +302,13 @@ grant execute on function public.attach_slip(text, text, text) to anon, authenti
 grant execute on function public.is_admin() to anon, authenticated;
 grant usage on sequence public.booking_seq to authenticated;
 
+-- Table privileges (explicit, in case the project does not grant them by default).
+-- Row level security above still decides which rows each role can see or change.
+grant usage on schema public to anon, authenticated;
+grant select on public.vehicles, public.settings, public.addon_prices to anon;
+grant select, insert, update, delete on public.vehicles, public.settings, public.addon_prices,
+  public.coupons, public.bookings, public.admins to authenticated;
+
 -- ---------- Storage (photos & payment slips) ----------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('vehicle-photos', 'vehicle-photos', true, 3145728, array['image/jpeg', 'image/png', 'image/webp'])
