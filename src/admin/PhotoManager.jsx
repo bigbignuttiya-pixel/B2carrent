@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Camera, ImagePlus, Link2, Star, Trash2, ChevronLeft, ChevronRight, Loader2, X, SwitchCamera, Aperture, Scissors, Check, RotateCcw } from 'lucide-react';
 import { compressImage, dataUrlKB } from '../lib/image';
 import { removeBackground } from '../lib/removeBackground';
-import { isCutout } from '../lib/image';
+import { isCutout, STUDIO_BG, STUDIO_SHADOW } from '../lib/image';
 import { Modal } from '../components/ui';
 
 const isTouchDevice = () => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
@@ -112,7 +112,6 @@ function BackgroundRemoverModal({ src, onClose, onApply, notify }) {
     run({ x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) });
   };
 
-  const checker = 'bg-[length:20px_20px] bg-[linear-gradient(45deg,#1e293b_25%,transparent_25%),linear-gradient(-45deg,#1e293b_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#1e293b_75%),linear-gradient(-45deg,transparent_75%,#1e293b_75%)] bg-[position:0_0,0_10px,10px_-10px,-10px_0] bg-slate-900';
 
   return (
     <Modal open={!!src} onClose={onClose} maxWidth="max-w-3xl" z="z-[60]">
@@ -129,15 +128,15 @@ function BackgroundRemoverModal({ src, onClose, onApply, notify }) {
           </div>
         </div>
         <div className="space-y-2">
-          <div className="text-slate-400 font-bold">2. ผลลัพธ์ (พื้นหลังโปร่งใส)</div>
-          <div className={`rounded-xl border border-slate-700 min-h-[180px] flex items-center justify-center p-3 ${checker}`}>
+          <div className="text-slate-400 font-bold">2. ผลลัพธ์ (แสดงบนพื้นหลังมาตรฐานของเว็บ)</div>
+          <div className={`rounded-xl border border-slate-700 min-h-[180px] flex items-center justify-center p-4 ${STUDIO_BG}`}>
             {busy ? (
               <div className="text-slate-300 flex flex-col items-center gap-2 py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-yellow-400" />
                 {firstLoad ? 'กำลังโหลดตัวตัดพื้นหลัง (ครั้งแรกประมาณ 6 MB)…' : 'กำลังตัดพื้นหลัง…'}
               </div>
             ) : result ? (
-              <img src={result.dataUrl} alt="รูปที่ตัดพื้นหลังแล้ว" className="max-h-72 w-auto" />
+              <img src={result.dataUrl} alt="รูปที่ตัดพื้นหลังแล้ว" className={`max-h-72 w-auto ${STUDIO_SHADOW}`} />
             ) : (
               <span className="text-slate-500 py-8">ยังไม่มีผลลัพธ์</span>
             )}
@@ -269,7 +268,7 @@ export default function PhotoManager({ photos, onChange, notify, max = 8 }) {
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {photos.map((src, i) => (
             <div key={`${i}-${src.slice(-24)}`} className={`relative group rounded-xl overflow-hidden border-2 aspect-[4/3] bg-slate-950 ${i === 0 ? 'border-yellow-400' : 'border-slate-800'}`}>
-              <img src={src} alt={`รูปที่ ${i + 1}`} className={`w-full h-full ${isCutout(src) ? 'object-contain p-1 bg-gradient-to-b from-slate-700 to-slate-900' : 'object-cover'}`} />
+              <img src={src} alt={`รูปที่ ${i + 1}`} className={`w-full h-full ${isCutout(src) ? `object-contain p-1 ${STUDIO_BG}` : 'object-cover'}`} />
               {i === 0 && <span className="absolute top-1 left-1 bg-yellow-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded">รูปหลัก</span>}
               <div className="absolute inset-x-0 bottom-0 flex justify-between items-center bg-slate-950/85 px-1 py-1 sm:opacity-0 sm:group-hover:opacity-100 transition">
                 <div className="flex">
