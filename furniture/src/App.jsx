@@ -28,6 +28,7 @@ const pageFromHash = () => {
   if (window.location.hash.startsWith('#login=')) return 'studio';
   // …/admin (path) also opens the back office — same as …/#admin
   if (/^\/admin\/?$/.test(window.location.pathname)) return 'admin';
+  if (window.location.hash.startsWith('#studio')) return 'studio'; // #studio?showcase=… opens a sample design
   return PAGES.find((p) => window.location.hash === `#${p}`) || 'home';
 };
 

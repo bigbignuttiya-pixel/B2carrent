@@ -5,13 +5,14 @@ import {
   Undo2, Redo2, Save, FolderOpen, FilePlus2, Lock, Loader2, Upload, FileJson, PencilRuler, Box, Scissors, Calculator, Camera,
   DoorOpen, DoorClosed, Eye, Maximize, ImageDown, Layers, Archive, Shirt,
 } from 'lucide-react';
-import { newPiece, newStudioDesign, normalizePiece, freeSpot, DEFAULT_PRICING, DEFAULT_MATERIALS, uid, matById, innerHeight } from './model';
+import { buildPiece, newPiece, newStudioDesign, normalizePiece, freeSpot, DEFAULT_PRICING, DEFAULT_MATERIALS, uid, matById, innerHeight } from './model';
 import { analyzeProject } from './costing';
 import FrontView from './FrontView';
 import { PiecesPanel, PropsPanel } from './Panels';
 import { CutListView, CostView, QuoteModal } from './CutCost';
 import PhotoMeasure from './PhotoMeasure';
 import Configurator from './Configurator';
+import { HERO_SHOTS, PRODUCTS, PORTFOLIO } from '../customer/showcase';
 import { printQuotation, printCutSheet, downloadCutCsv, downloadBlob, safeName } from './printDocs';
 import { usePersistentState } from '../lib/storage';
 import { api } from '../lib/api';
@@ -178,6 +179,30 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
       setSelection({ col: ci, item: null });
     },
   };
+
+  // Landing page "ออกแบบชิ้นนี้": #studio?showcase=<id> adds that sample's pieces to the project
+  useEffect(() => {
+    const open = () => {
+      const m = window.location.hash.match(/^#studio\?showcase=([\w-]+)/);
+      if (!m) return;
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#studio`);
+      const shot = [...PRODUCTS, ...PORTFOLIO, ...HERO_SHOTS].find((x) => x.id === m[1]);
+      if (!shot) return;
+      const pieces = shot.pieces.map((x) => newPiece(x.template, x));
+      change((d) => {
+        // fixed positions (wall cabinets over base cabinets) are relative to where this set starts in the row
+        const start = d.items.reduce((x, p) => (p.posX == null ? x + buildPiece(p, d.pricing.materials).outer.outerW + (p.gap ?? 30) : x), 0);
+        return { ...d, items: [...d.items, ...pieces.map((p) => (p.posX == null ? p : { ...p, posX: p.posX + start }))] };
+      });
+      setTimeout(() => viewerRef.current?.fit(), 400);
+      selectPiece(pieces[0].id);
+      setTab('3d');
+      notify(`เพิ่ม "${shot.name || shot.title}" ในโปรเจกต์แล้ว — ปรับขนาด สี และวัสดุได้เลย`);
+    };
+    open();
+    window.addEventListener('hashchange', open);
+    return () => window.removeEventListener('hashchange', open);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // keyboard: undo / redo / delete element
   useEffect(() => {
