@@ -9,7 +9,7 @@ import SheetLayout from '../studio/SheetLayout';
 import { newPiece, newStudioDesign, DEFAULT_MATERIALS } from '../studio/model';
 import { analyzeProject, money } from '../studio/costing';
 import { lineChatUrl } from '../lib/line';
-import { HeroBanner, Products, Portfolio } from './LandingShowcase';
+import { HeroBanner, Services, Templates, Portfolio } from './LandingShowcase';
 import { baht, daysLabel } from '../data';
 
 // A small sample living room shown on the landing page
@@ -185,7 +185,8 @@ export default function Landing({ settings, plans, onBuy }) {
         </div>
       </section>
 
-      <Products />
+      <Services plans={plans} />
+      <Templates />
       <Portfolio />
 
       {/* ---------- showcase ---------- */}
@@ -217,7 +218,7 @@ export default function Landing({ settings, plans, onBuy }) {
             </div>
             <div className={`reveal ${glass} p-5`} style={{ transitionDelay: '240ms' }}>
               <p className="text-sm text-stone-400">
-                <span className="text-orange-300 font-semibold mr-2">03</span>ใบเสนอราคาพร้อมส่ง
+                <span className="text-orange-300 font-semibold mr-2">03</span>ใบเสนอราคาสำหรับงานของคุณ
               </p>
               <div className="mt-4 rounded-2xl bg-white text-stone-800 p-5 h-64 flex flex-col text-sm">
                 <div className="flex justify-between items-baseline border-b-2 border-stone-900 pb-2">

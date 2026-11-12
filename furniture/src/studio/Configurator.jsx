@@ -115,7 +115,9 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
   const t = piece ? matById(materials, piece.carcass).t : 1.8;
   const sliding = piece?.doorStyle === 'sliding';
   const doorMode = !isBox ? null : sliding ? 'sliding' : piece.columns.every((c) => c.door === 'none') ? 'none' : 'hinged';
-  const price = analysis.piecePrices.find((x) => x.id === piece?.id)?.price || 0;
+  const pp = analysis.piecePrices.find((x) => x.id === piece?.id);
+  const price = pp?.price || 0;
+  const cost = pp?.cost || 0;
 
   const setCounts = (patch) => update((p) => autoLayout(p, materials, ci, { ...countItems(p.columns[ci]), ...patch }));
   const setColumns = (n) =>
@@ -299,9 +301,11 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
 
   const priceCard = (
     <div className={`${card} p-4 w-full lg:w-72`}>
-      <p className="text-xs text-stone-500">ราคาชิ้นนี้ · {piece?.name}</p>
-      <p className="text-3xl font-semibold tracking-tight text-stone-900">฿{money(price)}</p>
-      <p className="text-xs text-stone-500 mt-0.5">ทั้งโปรเจกต์ ฿{money(analysis.total)} · ไม้ {analysis.totalSheets} แผ่น</p>
+      <p className="text-xs text-stone-500">ต้นทุนชิ้นนี้ (วัสดุ + อุปกรณ์ + ค่าแรง) · {piece?.name}</p>
+      <p className="text-3xl font-semibold tracking-tight text-stone-900">฿{money(cost)}</p>
+      <p className="text-xs text-stone-500 mt-0.5">
+        ราคาเสนอ (กำไร {design.pricing.marginPct}%) ฿{money(price)} · ทั้งโปรเจกต์ทุน ฿{money(analysis.cost)} · ไม้ {analysis.totalSheets} แผ่น
+      </p>
       <button onClick={onQuote} className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 shadow-[0_10px_30px_-10px_rgba(234,88,12,.8)] hover:-translate-y-0.5 transition">
         <FileText className="w-4 h-4" /> สร้างใบเสนอราคา {locked && <Lock className="w-3.5 h-3.5" />}
       </button>
@@ -346,7 +350,7 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
             ['inside', 'จัดภายใน'],
             ['size', 'ขนาด'],
             ['door', 'ประตู / วัสดุ'],
-            ['price', `฿${money(price)}`],
+            ['price', `ทุน ฿${money(cost)}`],
           ].map(([id, label]) => (
             <button key={id} onClick={() => setMobileTab(id)} className={`flex-1 py-2.5 ${mobileTab === id ? 'border-b-2 border-orange-500 font-medium text-stone-900' : 'text-stone-500'}`}>
               {label}

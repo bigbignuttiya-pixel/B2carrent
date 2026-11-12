@@ -26,7 +26,7 @@ const TABS = [
   { id: '3d', label: 'ห้องโชว์ 3D', icon: Box },
   { id: 'design', label: 'ออกแบบ 2D', icon: PencilRuler },
   { id: 'cut', label: 'ใบตัดไม้', icon: Scissors },
-  { id: 'cost', label: 'ราคา / ใบเสนอราคา', icon: Calculator },
+  { id: 'cost', label: 'ต้นทุน / ใบเสนอราคา', icon: Calculator },
   { id: 'photo', label: 'วัดจากรูป', icon: Camera },
 ];
 const ELEMENTS = [
@@ -466,7 +466,7 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
         {TABS.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)} className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 ${tab === id ? 'border-amber-600 text-stone-900 font-medium' : 'border-transparent text-stone-500 hover:text-stone-800'}`}>
             <Icon className="w-4 h-4" /> {label}
-            {id === 'cost' && <span className="text-xs text-stone-400">฿{analysis.total.toLocaleString('th-TH')}</span>}
+            {id === 'cost' && <span className="text-xs text-stone-400">ทุน ฿{Math.round(analysis.cost).toLocaleString('th-TH')}</span>}
           </button>
         ))}
       </nav>
