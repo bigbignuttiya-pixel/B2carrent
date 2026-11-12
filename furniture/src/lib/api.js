@@ -42,6 +42,14 @@ export const api = {
   async account(code) {
     return unwrap(await supabase.rpc('furniture_account', { p_code: code }));
   },
+  // follow a payment with its claim token — returns { payment, code, expiresAt } (code only once approved)
+  async claim(id, token) {
+    return unwrap(await supabase.rpc('furniture_claim', { p_id: id, p_token: token }));
+  },
+  async claimSlip(id, token, dataUrl) {
+    const path = await uploadSlip(dataUrl);
+    return unwrap(await supabase.rpc('furniture_claim_slip', { p_id: id, p_token: token, p_path: path }));
+  },
   async attachSlip(code, paymentId, dataUrl) {
     const path = await uploadSlip(dataUrl);
     return unwrap(await supabase.rpc('furniture_attach_slip', { p_code: code, p_payment_id: paymentId, p_path: path }));

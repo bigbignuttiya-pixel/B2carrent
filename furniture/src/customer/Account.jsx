@@ -4,8 +4,9 @@ import { baht, daysLabel, formatCode } from '../data';
 import { inputCls, btnPrimary, btnGhost, btnAccent, StatusBadge, Spinner } from '../components/ui';
 import { api } from '../lib/api';
 import { errorMessage } from '../lib/errors';
-import { CodeBox } from './BuyModal';
+import AccessCard from '../components/AccessCard';
 import Payment from './Payment';
+import ClaimStatus from './ClaimStatus';
 
 export function CodeLogin({ onSession, onBuy }) {
   const [code, setCode] = useState('');
@@ -30,7 +31,7 @@ export function CodeLogin({ onSession, onBuy }) {
           <KeyRound className="w-6 h-6" />
         </div>
         <h1 className="text-lg font-semibold">เข้าใช้งานด้วยรหัส</h1>
-        <p className="text-sm text-stone-500">ใส่รหัสเข้าใช้งาน 10 หลักที่ได้รับตอนซื้อแพ็กเกจ</p>
+        <p className="text-sm text-stone-500">ใส่รหัส 10 หลักที่ได้รับหลังชำระเงิน หรือสแกน QR เข้าใช้งานด้วยกล้องมือถือ</p>
       </div>
       <form onSubmit={submit} className="space-y-3">
         <input className={`${inputCls} text-center font-mono tracking-[0.2em] uppercase text-lg`} required placeholder="XXXXX-XXXXX" value={code} onChange={(e) => setCode(e.target.value)} />
@@ -49,9 +50,27 @@ export function CodeLogin({ onSession, onBuy }) {
   );
 }
 
-export default function Account({ session, settings, onSession, onSignOut, onBuy, notify }) {
+export default function Account({ session, settings, claims, onSession, onSignOut, onBuy, onForgetClaim, notify }) {
   const [refreshing, setRefreshing] = useState(false);
-  if (!session) return <main className="px-4 py-12"><CodeLogin onSession={onSession} onBuy={() => onBuy()} /></main>;
+  if (!session)
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-12 space-y-8">
+        {claims.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">รายการชำระเงินบนเครื่องนี้</h2>
+            {claims.map((c) => (
+              <div key={c.id} className="rounded-2xl bg-white border border-stone-200 p-5">
+                <ClaimStatus claim={c} settings={settings} notify={notify} compact onApproved={(code) => onSession(code)} />
+                <button onClick={() => onForgetClaim(c.id)} className="mt-3 text-xs text-stone-400 hover:text-stone-600">
+                  ซ่อนรายการนี้
+                </button>
+              </div>
+            ))}
+          </section>
+        )}
+        <CodeLogin onSession={onSession} onBuy={() => onBuy()} />
+      </main>
+    );
 
   const { account, payments, projectCount } = session;
   const pending = payments.filter((p) => p.status === 'Pending');
@@ -84,7 +103,7 @@ export default function Account({ session, settings, onSession, onSignOut, onBuy
       </div>
 
       <section className="grid sm:grid-cols-2 gap-4">
-        <CodeBox code={session.code} />
+        <AccessCard code={session.code} expiresAt={account.active ? account.expiresAt : null} />
         <div className={`rounded-2xl border p-4 ${account.active ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
           <p className="font-medium flex items-center gap-1.5">
             {account.active ? <ShieldCheck className="w-5 h-5 text-emerald-700" /> : <Clock className="w-5 h-5 text-amber-700" />}
@@ -99,7 +118,7 @@ export default function Account({ session, settings, onSession, onSignOut, onBuy
               <PencilRuler className="w-4 h-4" /> ออกแบบ
             </a>
             <button onClick={() => onBuy()} className={`${btnAccent} py-2`}>
-              {account.active ? 'ต่ออายุ' : 'ซื้อแพ็กเกจ'}
+              {account.active ? 'ซื้อเพิ่มวัน' : 'ซื้อแพ็กเกจ'}
             </button>
           </div>
         </div>

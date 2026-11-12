@@ -6,8 +6,9 @@
 --
 -- Business model: nothing is sold except access to the designer.
 --   * A customer picks a plan (e.g. 1 day / 7 days / 30 days) and pays by PromptPay.
---   * They receive a secret access code (no sign-up / password needed).
---   * When an admin approves the payment slip, the code's access is extended by the plan's days.
+--   * After paying they get a claim token for that payment (kept in their browser) to watch its status.
+--   * When an admin approves the slip, the customer receives their secret access code (shown as text and
+--     as a QR login link to scan); the code's access is extended by the plan's days.
 --   * With an active code the customer can save designs to the cloud and export them.
 --
 -- Security model
@@ -63,6 +64,7 @@ create table if not exists public.furniture_payments (
   amount int not null,
   status text not null default 'Pending' check (status in ('Pending', 'Approved', 'Rejected')),
   slip_path text,
+  claim_token text not null default '',      -- secret that lets the buyer follow this payment and receive the code
   created_at timestamptz not null default now(),
   decided_at timestamptz
 );
@@ -181,9 +183,9 @@ begin
   if (select count(*) from public.furniture_payments where account_id = p_account and status = 'Pending') >= 3 then
     raise exception 'too_many_pending';
   end if;
-  insert into public.furniture_payments (id, account_id, plan_id, plan_name, days, amount)
+  insert into public.furniture_payments (id, account_id, plan_id, plan_name, days, amount, claim_token)
   values ('FD-' || to_char(today, 'YYYY') || '-' || lpad(nextval('public.furniture_payment_seq')::text, 4, '0'),
-          p_account, pl.id, pl.name, pl.days, pl.price)
+          p_account, pl.id, pl.name, pl.days, pl.price, public.furniture_new_code() || public.furniture_new_code())
   returning * into row;
   return row;
 end $$;
@@ -223,7 +225,8 @@ create policy furniture_projects_admin on public.furniture_projects for all to a
   using (public.furniture_is_admin()) with check (public.furniture_is_admin());
 
 -- ---------- Public RPCs (customers) ----------
--- New customer: create an access code + the first payment for the chosen plan
+-- New customer: create the account + the first payment. The access code is NOT returned here —
+-- the buyer gets it from furniture_claim once the payment is approved.
 create or replace function public.furniture_start(p jsonb)
 returns jsonb language plpgsql volatile security definer set search_path = public as $$
 declare
@@ -245,15 +248,45 @@ begin
   values (c, v_name, v_phone, nullif(left(regexp_replace(coalesce(p->>'lineId', ''), '[^A-Za-z0-9._@-]', '', 'g'), 40), ''))
   returning * into a;
   pay := public.furniture_new_payment(a.id, p->>'planId');
-  return jsonb_build_object('account', public.furniture_account_json(a), 'payment', public.furniture_payment_json(pay));
+  return jsonb_build_object('payment', public.furniture_payment_json(pay), 'claimToken', pay.claim_token);
 end $$;
 
 -- Existing customer: buy / renew a plan with their code
 create or replace function public.furniture_buy(p_code text, p_plan_id text)
 returns jsonb language plpgsql volatile security definer set search_path = public as $$
-declare a public.furniture_accounts := public.furniture_account_by_code(p_code);
+declare a public.furniture_accounts := public.furniture_account_by_code(p_code); pay public.furniture_payments;
 begin
-  return public.furniture_payment_json(public.furniture_new_payment(a.id, p_plan_id));
+  pay := public.furniture_new_payment(a.id, p_plan_id);
+  return jsonb_build_object('payment', public.furniture_payment_json(pay), 'claimToken', pay.claim_token);
+end $$;
+
+-- Buyer follows a payment with its claim token; once approved the access code is handed over
+create or replace function public.furniture_claim(p_id text, p_token text)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare pay public.furniture_payments; a public.furniture_accounts;
+begin
+  select * into pay from public.furniture_payments
+   where id = upper(trim(p_id)) and claim_token = public.furniture_norm_code(p_token) and length(claim_token) = 20;
+  if pay.id is null then raise exception 'not_found'; end if;
+  select * into a from public.furniture_accounts where id = pay.account_id;
+  return jsonb_build_object(
+    'payment', public.furniture_payment_json(pay),
+    'code', case when pay.status = 'Approved' then a.code end,
+    'expiresAt', case when pay.status = 'Approved' then to_char(a.expires_at at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI') end
+  );
+end $$;
+
+create or replace function public.furniture_claim_slip(p_id text, p_token text, p_path text)
+returns jsonb language plpgsql volatile security definer set search_path = public as $$
+declare row public.furniture_payments;
+begin
+  if p_path !~ '^pending/[A-Za-z0-9_-]+\.jpg$' then raise exception 'invalid_slip'; end if;
+  update public.furniture_payments set slip_path = p_path
+   where id = upper(trim(p_id)) and claim_token = public.furniture_norm_code(p_token) and length(claim_token) = 20
+     and status = 'Pending'
+  returning * into row;
+  if row.id is null then raise exception 'not_allowed'; end if;
+  return public.furniture_payment_json(row);
 end $$;
 
 -- Account status, payments and number of saved designs
@@ -336,6 +369,7 @@ declare f text;
 begin
   foreach f in array array[
     'furniture_start(jsonb)', 'furniture_buy(text, text)', 'furniture_account(text)',
+    'furniture_claim(text, text)', 'furniture_claim_slip(text, text, text)',
     'furniture_attach_slip(text, text, text)', 'furniture_projects_list(text)',
     'furniture_project_get(text, uuid)', 'furniture_project_save(text, uuid, text, jsonb)',
     'furniture_project_delete(text, uuid)', 'furniture_is_admin()'

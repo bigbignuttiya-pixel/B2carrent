@@ -5,6 +5,7 @@ import { Modal, ModalHeader, StatusBadge, inputCls, btnPrimary, btnGhost, Spinne
 import { api } from '../lib/api';
 import { errorMessage } from '../lib/errors';
 import { lineChatUrl } from '../lib/line';
+import AccessCard from '../components/AccessCard';
 
 export function PaymentDrawer({ payment, onClose, onChanged, notify }) {
   const [slipUrl, setSlipUrl] = useState(null);
@@ -74,10 +75,15 @@ export function PaymentDrawer({ payment, onClose, onChanged, notify }) {
             <p className="h-48 grid place-items-center rounded-xl bg-stone-50 border border-dashed border-stone-300 text-stone-500">ยังไม่มีสลิป</p>
           )}
         </div>
+        {payment.status === 'Approved' && a && (
+          <div className="sm:col-span-2 space-y-2">
+            <AccessCard code={a.code} expiresAt={a.active ? a.expiresAt : null} title="รหัสเข้าใช้งานของลูกค้า (ลูกค้าเห็นในเว็บแล้ว — ส่งซ้ำให้ได้)" compact />
+          </div>
+        )}
         <div className="sm:col-span-2 flex flex-wrap gap-2 border-t border-stone-100 pt-4">
           {payment.status !== 'Approved' && (
-            <button disabled={busy} onClick={() => setStatus('Approved', `อนุมัติแล้ว — เพิ่มสิทธิ์ ${daysLabel(payment.days)}`)} className={btnPrimary}>
-              {busy && <Spinner className="w-4 h-4" />} อนุมัติ (เพิ่มสิทธิ์ {daysLabel(payment.days)})
+            <button disabled={busy} onClick={() => setStatus('Approved', `อนุมัติแล้ว — ออกรหัสให้ลูกค้า ${daysLabel(payment.days)}`)} className={btnPrimary}>
+              {busy && <Spinner className="w-4 h-4" />} อนุมัติและออกรหัส ({daysLabel(payment.days)})
             </button>
           )}
           {payment.status === 'Pending' && (

@@ -4,6 +4,7 @@ import { formatCode } from '../data';
 import { Modal, ModalHeader, inputCls, btnPrimary, btnGhost, Spinner } from '../components/ui';
 import { api } from '../lib/api';
 import { errorMessage } from '../lib/errors';
+import AccessCard from '../components/AccessCard';
 
 function CustomerDrawer({ account, onClose, onChanged, notify }) {
   const [busy, setBusy] = useState(false);
@@ -47,6 +48,7 @@ function CustomerDrawer({ account, onClose, onChanged, notify }) {
           <p>แบบที่บันทึก {account.projectCount} แบบ</p>
         </div>
 
+        {account.expiresAt && <AccessCard code={account.code} expiresAt={account.active ? account.expiresAt : null} title="รหัสเข้าใช้งาน (ส่งให้ลูกค้าได้ถ้าลืม)" compact />}
         <div className="rounded-xl bg-stone-50 border border-stone-200 p-4 space-y-3">
           <p className="font-medium">ปรับสิทธิ์ด้วยตนเอง (เช่น แถมวัน / ชดเชย)</p>
           <div className="flex flex-wrap items-center gap-2">

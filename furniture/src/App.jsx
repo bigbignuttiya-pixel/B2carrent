@@ -20,7 +20,7 @@ import Settings from './admin/Settings';
 
 // Pages: "#" landing, "#design" designer, "#account" customer account, "#admin" back office (not linked for customers)
 const PAGES = ['design', 'account', 'admin'];
-const pageFromHash = () => PAGES.find((p) => window.location.hash === `#${p}`) || 'home';
+const pageFromHash = () => (window.location.hash.startsWith('#login=') ? 'design' : PAGES.find((p) => window.location.hash === `#${p}`) || 'home');
 
 const ADMIN_TABS = [
   { id: 'dashboard', label: 'ภาพรวม', icon: LayoutDashboard },
@@ -40,6 +40,10 @@ export default function App() {
   const [code, setCode] = usePersistentState('furniture:code', '');
   const [session, setSession] = useState(null); // { code, account, payments, projectCount }
   const [buy, setBuy] = useState(null); // { planId, reason } when the plan picker is open
+  // Purchases made on this device ({ id, token }) — followed until the shop approves and the code is issued
+  const [claims, setClaims] = usePersistentState('furniture:claims', []);
+  const addClaim = useCallback((c) => setClaims((l) => [c, ...l.filter((x) => x.id !== c.id)].slice(0, 10)), [setClaims]);
+  const forgetClaim = (id) => setClaims((l) => l.filter((x) => x.id !== id));
 
   const [adminState, setAdminState] = useState({ checked: false, signedIn: false, isAdmin: false, email: null });
   const [adminTab, setAdminTab] = useState('dashboard');
@@ -97,8 +101,28 @@ export default function App() {
   useEffect(() => {
     refreshPublic();
   }, [refreshPublic]);
+  // Scanned QR / login link: …/#login=CODE signs this device in and opens the designer
   useEffect(() => {
-    if (code) loadSession(code);
+    const tryLogin = async () => {
+      const m = window.location.hash.match(/^#login=([A-Za-z0-9-]+)/);
+      if (!m) return false;
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#design`);
+      setPage('design');
+      try {
+        await loadSession(m[1], true);
+        notify('เข้าใช้งานเรียบร้อย');
+      } catch (err) {
+        notify(errorMessage(err), 'error');
+        window.location.hash = '#account';
+      }
+      return true;
+    };
+    tryLogin().then((did) => {
+      if (!did && code) loadSession(code);
+    });
+    const onHash = () => tryLogin();
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // While a payment is waiting for approval, re-check every 30 s so the designer unlocks by itself
@@ -242,7 +266,7 @@ export default function App() {
             <Spinner className="w-8 h-8" />
           </div>
         ) : active || settings.allowTrial ? (
-          <Designer settings={settings} session={session} notify={notify} onNeedAccess={(reason) => (session && !active && session.payments.some((p) => p.status === 'Pending') ? (window.location.hash = '#account') : openBuy(undefined, reason))} />
+          <Designer settings={settings} session={session} notify={notify} onNeedAccess={(reason) => ((session ? session.payments.some((p) => p.status === 'Pending') : claims.length > 0) && !active ? (window.location.hash = '#account') : openBuy(undefined, reason))} />
         ) : (
           <main className="px-4 py-16">
             <div className="max-w-md mx-auto rounded-3xl bg-white border border-stone-200 p-8 text-center space-y-4">
@@ -263,7 +287,7 @@ export default function App() {
           </main>
         )
       ) : page === 'account' ? (
-        <Account session={session} settings={settings} notify={notify} onSession={loadSession} onSignOut={signOutCustomer} onBuy={(planId) => openBuy(planId)} />
+        <Account session={session} settings={settings} claims={claims} notify={notify} onSession={loadSession} onSignOut={signOutCustomer} onBuy={(planId) => openBuy(planId)} onForgetClaim={forgetClaim} />
       ) : (
         <Landing settings={settings} plans={plans} onBuy={(planId) => openBuy(planId)} />
       )}
@@ -278,6 +302,7 @@ export default function App() {
         notify={notify}
         onClose={() => setBuy(null)}
         onSession={(c) => loadSession(c)}
+        onClaim={addClaim}
       />
       {toastsEl}
     </div>

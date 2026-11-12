@@ -22,10 +22,10 @@ const SAMPLE = {
 };
 
 const STEPS = [
-  ['เลือกแพ็กเกจ', 'รายวัน รายสัปดาห์ หรือรายเดือน ตามระยะเวลาที่ต้องใช้'],
-  ['ชำระผ่าน PromptPay', 'สแกน QR แล้วแนบสลิป รับรหัสเข้าใช้งานทันที'],
-  ['ร้านยืนยันการชำระ', 'เมื่อยืนยันแล้ว รหัสพร้อมบันทึกและส่งออกแบบ'],
-  ['ออกแบบห้องของคุณ', 'จัดวางเฟอร์นิเจอร์ตามขนาดจริง บันทึกได้หลายแบบ'],
+  ['เลือกจำนวนวัน', 'คิดค่าบริการรายวัน จ่ายเฉพาะวันที่ใช้'],
+  ['ชำระผ่าน PromptPay', 'สแกน QR จ่ายเงิน แล้วแนบสลิปในเว็บ'],
+  ['รับรหัส + QR เข้าใช้งาน', 'เมื่อร้านยืนยันการชำระ รหัสและ QR จะแสดงให้ทันที'],
+  ['สแกนแล้วเริ่มออกแบบ', 'สแกน QR หรือใส่รหัส ใช้ได้ทุกเครื่องจนครบกำหนด'],
 ];
 
 const FEATURES = [
@@ -95,8 +95,8 @@ export default function Landing({ settings, plans, onBuy }) {
 
       <section id="plans" className="mx-auto max-w-5xl px-4 py-14 scroll-mt-16">
         <h2 className="text-2xl font-semibold text-center">แพ็กเกจค่าบริการ</h2>
-        <p className="text-center text-stone-500 mt-1">จ่ายเฉพาะช่วงที่ใช้ ไม่มีรายเดือนผูกมัด</p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <p className="text-center text-stone-500 mt-1">คิดเป็นรายวัน จ่ายเฉพาะวันที่ใช้ ไม่มีสมาชิกรายเดือนผูกมัด</p>
+        <div className={`mt-8 grid gap-4 sm:grid-cols-2 ${plans.length > 2 ? 'lg:grid-cols-3' : 'max-w-2xl mx-auto'}`}>
           {plans.map((p) => (
             <PlanCard key={p.id} plan={p} onClick={() => onBuy(p.id)} cta="เลือกแพ็กเกจนี้" />
           ))}

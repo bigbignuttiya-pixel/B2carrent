@@ -15,8 +15,8 @@ insert into public.furniture_settings (id, data) values (1, '{
   "allowTrial": true
 }') on conflict (id) do nothing;
 
+-- Daily pricing (edit in the back office → แพ็กเกจ)
 insert into public.furniture_plans (id, name, days, price, description, sort_order) values
-  ('day', 'รายวัน', 1, 59, 'ใช้งานได้ 24 ชั่วโมง เหมาะกับออกแบบห้องเดียว', 1),
-  ('week', 'รายสัปดาห์', 7, 199, 'ใช้งานได้ 7 วัน ออกแบบได้หลายห้อง', 2),
-  ('month', 'รายเดือน', 30, 490, 'ใช้งานได้ 30 วัน คุ้มที่สุดสำหรับรีโนเวตทั้งบ้าน', 3)
+  ('day1', '1 วัน', 1, 50, 'ใช้งานได้ 24 ชั่วโมง', 1),
+  ('day3', '3 วัน', 3, 100, 'ใช้งานได้ 72 ชั่วโมง คุ้มกว่า', 2)
 on conflict (id) do nothing;
