@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
-import { ORDER_STATUS, categoryOf } from '../data';
+import { PAYMENT_STATUS } from '../data';
 
 export function StatusBadge({ status }) {
-  const meta = ORDER_STATUS[status] || ORDER_STATUS.Pending;
+  const meta = PAYMENT_STATUS[status] || PAYMENT_STATUS.Pending;
   return <span className={`px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${meta.cls}`}>{meta.short}</span>;
 }
 
@@ -80,19 +80,6 @@ export function Field({ label, hint, children }) {
       {children}
       {hint && <span className="text-xs text-stone-500 mt-1 block">{hint}</span>}
     </label>
-  );
-}
-
-const TINTS = { living: 'bg-amber-100', bedroom: 'bg-sky-100', dining: 'bg-emerald-100', office: 'bg-indigo-100', outdoor: 'bg-lime-100', decor: 'bg-rose-100' };
-
-// Product photo, or a tinted placeholder with the category emoji when there is no photo yet
-export function ProductImage({ product, className = '', index = 0 }) {
-  const src = product.images?.[index];
-  if (src) return <img src={src} alt={product.name} loading="lazy" className={`w-full h-full object-cover ${className}`} />;
-  return (
-    <div className={`w-full h-full grid place-items-center ${TINTS[product.category] || 'bg-stone-100'} ${className}`}>
-      <span className="text-5xl" aria-hidden>{categoryOf(product.category).emoji}</span>
-    </div>
   );
 }
 

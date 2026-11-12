@@ -1,4 +1,4 @@
-import { baht, ORDER_STATUS } from '../data';
+import { baht } from '../data';
 import { StatusBadge } from '../components/ui';
 
 const todayBangkok = () => new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
@@ -13,72 +13,64 @@ function Stat({ label, value, sub }) {
   );
 }
 
-export default function Dashboard({ orders, products, onOpenOrder }) {
-  const live = orders.filter((o) => o.status !== 'Cancelled');
+export default function Dashboard({ accounts, payments, onOpenPayment }) {
+  const approved = payments.filter((p) => p.status === 'Approved');
   const today = todayBangkok();
   const month = today.slice(0, 7);
-  const sum = (l) => l.reduce((s, o) => s + o.total, 0);
-  const todays = live.filter((o) => o.createdAt.startsWith(today));
-  const months = live.filter((o) => o.createdAt.startsWith(month));
-  const waiting = orders.filter((o) => o.status === 'Pending');
-  const toShip = orders.filter((o) => o.status === 'Confirmed');
-  const lowStock = products.filter((p) => p.active && p.stock <= 2).sort((a, b) => a.stock - b.stock);
+  const sum = (l) => l.reduce((s, p) => s + p.amount, 0);
+  const todays = approved.filter((p) => (p.decidedAt || p.createdAt).startsWith(today));
+  const months = approved.filter((p) => (p.decidedAt || p.createdAt).startsWith(month));
+  const pending = payments.filter((p) => p.status === 'Pending');
+  const activeCount = accounts.filter((a) => a.active).length;
+  const designs = accounts.reduce((s, a) => s + a.projectCount, 0);
+
+  // revenue per day, last 14 days
+  const days = Array.from({ length: 14 }, (_, i) => new Date(Date.now() + 7 * 3600e3 - (13 - i) * 86400e3).toISOString().slice(0, 10));
+  const perDay = days.map((d) => sum(approved.filter((p) => (p.decidedAt || p.createdAt).startsWith(d))));
+  const max = Math.max(1, ...perDay);
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Stat label="ยอดขายวันนี้" value={baht(sum(todays))} sub={`${todays.length} คำสั่งซื้อ`} />
-        <Stat label="ยอดขายเดือนนี้" value={baht(sum(months))} sub={`${months.length} คำสั่งซื้อ`} />
-        <Stat label="รอตรวจสอบชำระเงิน" value={waiting.length} sub={`มีสลิปแล้ว ${waiting.filter((o) => o.hasSlip).length}`} />
-        <Stat label="รอจัดส่ง" value={toShip.length} />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl bg-white border border-stone-200 p-5">
-          <h3 className="font-semibold mb-3">ต้องดำเนินการ</h3>
-          {[...waiting, ...toShip].length === 0 ? (
-            <p className="text-sm text-stone-500">ไม่มีคำสั่งซื้อค้าง</p>
-          ) : (
-            <ul className="divide-y divide-stone-100">
-              {[...waiting, ...toShip].slice(0, 10).map((o) => (
-                <li key={o.id}>
-                  <button onClick={() => onOpenOrder(o.id)} className="w-full py-2.5 flex items-center gap-3 text-left text-sm hover:bg-stone-50 rounded-lg px-2">
-                    <span className="font-medium w-28">{o.id}</span>
-                    <span className="flex-1 truncate text-stone-600">{o.customerName}</span>
-                    <span>{baht(o.total)}</span>
-                    <StatusBadge status={o.status} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-        <section className="rounded-2xl bg-white border border-stone-200 p-5">
-          <h3 className="font-semibold mb-3">สินค้าใกล้หมด (เหลือ ≤ 2)</h3>
-          {lowStock.length === 0 ? (
-            <p className="text-sm text-stone-500">สต็อกเพียงพอทุกรายการ</p>
-          ) : (
-            <ul className="divide-y divide-stone-100 text-sm">
-              {lowStock.map((p) => (
-                <li key={p.id} className="py-2.5 flex justify-between">
-                  <span>{p.name}</span>
-                  <span className={p.stock === 0 ? 'text-rose-600 font-medium' : 'text-amber-700'}>{p.stock === 0 ? 'หมด' : `เหลือ ${p.stock}`}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <Stat label="รายได้วันนี้" value={baht(sum(todays))} sub={`${todays.length} รายการ`} />
+        <Stat label="รายได้เดือนนี้" value={baht(sum(months))} sub={`${months.length} รายการ`} />
+        <Stat label="รอตรวจสอบสลิป" value={pending.length} sub={`แนบสลิปแล้ว ${pending.filter((p) => p.hasSlip).length}`} />
+        <Stat label="ลูกค้าที่ใช้งานอยู่" value={activeCount} sub={`ทั้งหมด ${accounts.length} · แบบที่บันทึก ${designs}`} />
       </div>
 
       <section className="rounded-2xl bg-white border border-stone-200 p-5">
-        <h3 className="font-semibold mb-3">สถานะคำสั่งซื้อทั้งหมด</h3>
-        <div className="flex flex-wrap gap-3">
-          {Object.entries(ORDER_STATUS).map(([k, m]) => (
-            <span key={k} className={`px-3 py-1.5 rounded-xl border text-sm ${m.cls}`}>
-              {m.short} {orders.filter((o) => o.status === k).length}
-            </span>
+        <h3 className="font-semibold mb-4">รายได้ 14 วันล่าสุด</h3>
+        <div className="flex items-end gap-1.5 h-40">
+          {perDay.map((v, i) => (
+            <div key={days[i]} className="flex-1 flex flex-col items-center gap-1 h-full justify-end" title={`${days[i]}: ${baht(v)}`}>
+              <div className="w-full max-w-8 rounded-t bg-amber-600" style={{ height: `${Math.max(v ? 4 : 1, (v / max) * 100)}%`, opacity: v ? 1 : 0.15 }} />
+              <span className="text-[10px] text-stone-400">{days[i].slice(8)}</span>
+            </div>
           ))}
         </div>
+      </section>
+
+      <section className="rounded-2xl bg-white border border-stone-200 p-5">
+        <h3 className="font-semibold mb-3">รอตรวจสอบการชำระเงิน</h3>
+        {pending.length === 0 ? (
+          <p className="text-sm text-stone-500">ไม่มีรายการค้าง</p>
+        ) : (
+          <ul className="divide-y divide-stone-100">
+            {pending.slice(0, 10).map((p) => (
+              <li key={p.id}>
+                <button onClick={() => onOpenPayment(p.id)} className="w-full py-2.5 px-2 flex items-center gap-3 text-left text-sm hover:bg-stone-50 rounded-lg">
+                  <span className="font-medium w-28">{p.id}</span>
+                  <span className="flex-1 truncate text-stone-600">
+                    {p.account?.name} · {p.planName}
+                  </span>
+                  <span>{baht(p.amount)}</span>
+                  <span className="text-xs w-16 text-right">{p.hasSlip ? 'มีสลิป' : 'ยังไม่มีสลิป'}</span>
+                  <StatusBadge status={p.status} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

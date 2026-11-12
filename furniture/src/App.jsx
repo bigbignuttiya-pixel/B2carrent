@@ -1,49 +1,50 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ShoppingCart, LayoutDashboard, Receipt, Package, Settings as SettingsIcon, LogOut, Store } from 'lucide-react';
-import { DEFAULT_SETTINGS } from './data';
+import { useCallback, useEffect, useState } from 'react';
+import { LayoutDashboard, Receipt, Users, Tags, Settings as SettingsIcon, LogOut, Home, PencilRuler, UserRound, Lock } from 'lucide-react';
+import { DEFAULT_SETTINGS, formatCode } from './data';
 import { api } from './lib/api';
 import { errorMessage } from './lib/errors';
 import { usePersistentState } from './lib/storage';
-import { Toasts, Spinner } from './components/ui';
+import { Toasts, Spinner, btnPrimary, btnGhost } from './components/ui';
 
-import Storefront, { ProductModal } from './customer/Storefront';
-import CartDrawer from './customer/CartDrawer';
-import Checkout from './customer/Checkout';
-import Tracker from './customer/Tracker';
+import Landing from './customer/Landing';
+import BuyModal from './customer/BuyModal';
+import Account from './customer/Account';
+import Designer from './designer/Designer';
 
 import AdminLogin from './admin/AdminLogin';
 import Dashboard from './admin/Dashboard';
-import Orders, { OrderDrawer } from './admin/Orders';
-import Products from './admin/Products';
+import Payments, { PaymentDrawer } from './admin/Payments';
+import Customers from './admin/Customers';
+import Plans from './admin/Plans';
 import Settings from './admin/Settings';
 
-// Pages: "#" storefront, "#track" order tracker, "#admin" back office (link is not shown to customers)
-const pageFromHash = () => (window.location.hash === '#admin' ? 'admin' : window.location.hash === '#track' ? 'track' : 'shop');
+// Pages: "#" landing, "#design" designer, "#account" customer account, "#admin" back office (not linked for customers)
+const PAGES = ['design', 'account', 'admin'];
+const pageFromHash = () => PAGES.find((p) => window.location.hash === `#${p}`) || 'home';
 
 const ADMIN_TABS = [
   { id: 'dashboard', label: 'ภาพรวม', icon: LayoutDashboard },
-  { id: 'orders', label: 'คำสั่งซื้อ', icon: Receipt },
-  { id: 'products', label: 'สินค้า', icon: Package },
-  { id: 'settings', label: 'ตั้งค่าร้าน', icon: SettingsIcon },
+  { id: 'payments', label: 'การชำระเงิน', icon: Receipt },
+  { id: 'customers', label: 'ลูกค้า', icon: Users },
+  { id: 'plans', label: 'แพ็กเกจ', icon: Tags },
+  { id: 'settings', label: 'ตั้งค่า', icon: SettingsIcon },
 ];
 
 export default function App() {
   const [page, setPage] = useState(pageFromHash);
-  const [products, setProducts] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
-  const [cart, setCart] = usePersistentState('furniture:cart', {}); // { productId: qty }
-  const [myPhones, setMyPhones] = usePersistentState('furniture:phones', []);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [viewing, setViewing] = useState(null);
+  // Customer session: the secret access code is remembered on this device
+  const [code, setCode] = usePersistentState('furniture:code', '');
+  const [session, setSession] = useState(null); // { code, account, payments, projectCount }
+  const [buy, setBuy] = useState(null); // { planId, reason } when the plan picker is open
 
   const [adminState, setAdminState] = useState({ checked: false, signedIn: false, isAdmin: false, email: null });
   const [adminTab, setAdminTab] = useState('dashboard');
-  const [orders, setOrders] = useState([]);
-  const [openOrderId, setOpenOrderId] = useState(null);
+  const [adminData, setAdminData] = useState({ accounts: [], payments: [] });
+  const [openPaymentId, setOpenPaymentId] = useState(null);
 
   const [toasts, setToasts] = useState([]);
   const notify = useCallback((message, type = 'success') => {
@@ -55,7 +56,7 @@ export default function App() {
   useEffect(() => {
     const sync = () => {
       setPage(pageFromHash());
-      window.scrollTo(0, 0);
+      if (window.location.hash !== '#plans') window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
@@ -64,16 +65,57 @@ export default function App() {
   const refreshPublic = useCallback(async () => {
     try {
       const d = await api.loadPublic();
-      setProducts(d.products);
+      setPlans(d.plans.filter((p) => p.active));
       setSettings(d.settings);
-      setLoadError('');
     } catch (err) {
-      setLoadError(errorMessage(err));
+      notify(errorMessage(err), 'error');
     } finally {
-      setLoading(false);
+      setLoaded(true);
     }
-  }, []);
+  }, [notify]);
 
+  // Load (or re-check) the customer's account. `strict` throws so the login form can show the error.
+  const loadSession = useCallback(
+    async (c, strict = false) => {
+      try {
+        const d = await api.account(c);
+        setSession({ code: d.account.code, ...d });
+        setCode(d.account.code);
+        return d;
+      } catch (err) {
+        if (strict) throw err;
+        if (err.code === 'invalid_code') {
+          setSession(null);
+          setCode('');
+        }
+        return null;
+      }
+    },
+    [setCode]
+  );
+
+  useEffect(() => {
+    refreshPublic();
+  }, [refreshPublic]);
+  useEffect(() => {
+    if (code) loadSession(code);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // While a payment is waiting for approval, re-check every 30 s so the designer unlocks by itself
+  const waiting = session && !session.account.active && session.payments.some((p) => p.status === 'Pending');
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const t = setInterval(() => loadSession(session.code), 30000);
+    return () => clearInterval(t);
+  }, [waiting, session?.code, loadSession]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const signOutCustomer = () => {
+    setSession(null);
+    setCode('');
+    window.location.hash = '';
+  };
+
+  // ---------- admin ----------
   const refreshAdminState = useCallback(async () => {
     try {
       setAdminState({ checked: true, ...(await api.getAdminState()) });
@@ -81,84 +123,45 @@ export default function App() {
       setAdminState({ checked: true, signedIn: false, isAdmin: false, email: null });
     }
   }, []);
-
-  const refreshOrders = useCallback(async () => {
+  const refreshAdmin = useCallback(async () => {
     try {
-      setOrders(await api.loadOrders());
+      setAdminData(await api.loadAdmin());
     } catch (err) {
       notify(errorMessage(err), 'error');
     }
   }, [notify]);
-
   useEffect(() => {
-    refreshPublic();
+    if (page !== 'admin') return undefined;
     refreshAdminState();
     return api.onAuthChange(refreshAdminState);
-  }, [refreshPublic, refreshAdminState]);
-
-  // Admin data + live updates while the back office is open
+  }, [page, refreshAdminState]);
   const isAdmin = adminState.isAdmin;
   useEffect(() => {
     if (page !== 'admin' || !isAdmin) return undefined;
-    refreshPublic(); // as admin this also returns hidden products
-    refreshOrders();
+    refreshAdmin();
     let t;
     const unsub = api.subscribe(() => {
       clearTimeout(t);
-      t = setTimeout(() => {
-        refreshOrders();
-        refreshPublic();
-      }, 400);
+      t = setTimeout(refreshAdmin, 400);
     });
     return () => {
       clearTimeout(t);
       unsub();
     };
-  }, [page, isAdmin, refreshOrders, refreshPublic]);
+  }, [page, isAdmin, refreshAdmin]);
 
-  // Customers only see active products (admins get hidden ones too, for the back office)
-  const shopProducts = useMemo(() => products.filter((p) => p.active), [products]);
-
-  const cartItems = useMemo(
-    () =>
-      Object.entries(cart)
-        .map(([id, qty]) => ({ product: shopProducts.find((p) => p.id === id), qty }))
-        .filter((i) => i.product),
-    [cart, shopProducts]
-  );
-  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
-
-  const addToCart = (product, qty) => {
-    const now = cart[product.id] || 0;
-    const next = Math.min(product.stock, now + qty);
-    if (next === now) return notify(`"${product.name}" อยู่ในตะกร้าครบจำนวนที่มีแล้ว`, 'info');
-    setCart((c) => ({ ...c, [product.id]: next }));
-    notify(`เพิ่ม "${product.name}" ลงตะกร้าแล้ว`);
-  };
-  const setQty = (id, qty) =>
-    setCart((c) => {
-      const n = { ...c };
-      if (qty <= 0) delete n[id];
-      else n[id] = qty;
-      return n;
-    });
-
-  const onPlaced = (order) => {
-    setCart({});
-    setMyPhones((l) => [order.phone, ...l.filter((p) => p !== order.phone)].slice(0, 5));
-    refreshPublic(); // stock changed
-  };
-
-  const openOrder = orders.find((o) => o.id === openOrderId) || null;
+  const toastsEl = <Toasts toasts={toasts} onDismiss={(id) => setToasts((t) => t.filter((x) => x.id !== id))} />;
 
   if (page === 'admin') {
+    const pendingCount = adminData.payments.filter((p) => p.status === 'Pending').length;
+    const openPayment = adminData.payments.find((p) => p.id === openPaymentId) || null;
     return (
       <div className="min-h-screen font-sans text-stone-800 bg-stone-100">
         <header className="bg-white border-b border-stone-200 sticky top-0 z-30">
           <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-3">
             <span className="font-semibold">{settings.shopName} · หลังบ้าน</span>
             <a href="#" className="ml-auto inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900">
-              <Store className="w-4 h-4" /> หน้าร้าน
+              <Home className="w-4 h-4" /> หน้าเว็บ
             </a>
             {adminState.signedIn && (
               <button onClick={() => api.signOut()} className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900">
@@ -175,9 +178,7 @@ export default function App() {
                   className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 ${adminTab === id ? 'border-stone-900 text-stone-900' : 'border-transparent text-stone-500 hover:text-stone-800'}`}
                 >
                   <Icon className="w-4 h-4" /> {label}
-                  {id === 'orders' && orders.some((o) => o.status === 'Pending') && (
-                    <span className="ml-1 rounded-full bg-amber-600 text-white text-[10px] px-1.5">{orders.filter((o) => o.status === 'Pending').length}</span>
-                  )}
+                  {id === 'payments' && pendingCount > 0 && <span className="ml-1 rounded-full bg-amber-600 text-white text-[10px] px-1.5">{pendingCount}</span>}
                 </button>
               ))}
             </nav>
@@ -193,72 +194,92 @@ export default function App() {
               <AdminLogin adminState={adminState} onSignIn={api.signIn} onSignOut={api.signOut} />
             </div>
           ) : adminTab === 'dashboard' ? (
-            <Dashboard orders={orders} products={products} onOpenOrder={setOpenOrderId} />
-          ) : adminTab === 'orders' ? (
-            <Orders orders={orders} onOpenOrder={setOpenOrderId} />
-          ) : adminTab === 'products' ? (
-            <Products products={products} notify={notify} onChanged={refreshPublic} />
+            <Dashboard {...adminData} onOpenPayment={setOpenPaymentId} />
+          ) : adminTab === 'payments' ? (
+            <Payments payments={adminData.payments} onOpenPayment={setOpenPaymentId} />
+          ) : adminTab === 'customers' ? (
+            <Customers accounts={adminData.accounts} notify={notify} onChanged={refreshAdmin} />
+          ) : adminTab === 'plans' ? (
+            <Plans notify={notify} onChanged={refreshPublic} />
           ) : (
             <Settings settings={settings} notify={notify} onSaved={refreshPublic} />
           )}
         </main>
-        {isAdmin && openOrder && (
-          <OrderDrawer
-            order={openOrder}
-            notify={notify}
-            onClose={() => setOpenOrderId(null)}
-            onChanged={() => {
-              refreshOrders();
-              refreshPublic();
-            }}
-          />
-        )}
-        <Toasts toasts={toasts} onDismiss={(id) => setToasts((t) => t.filter((x) => x.id !== id))} />
+        {isAdmin && openPayment && <PaymentDrawer payment={openPayment} notify={notify} onClose={() => setOpenPaymentId(null)} onChanged={refreshAdmin} />}
+        {toastsEl}
       </div>
     );
   }
 
+  const active = Boolean(session?.account.active);
+  const openBuy = (planId, reason) => setBuy({ planId, reason });
+  const navLink = (id, label, Icon) => (
+    <a href={`#${id === 'home' ? '' : id}`} className={`inline-flex items-center gap-1.5 text-sm px-2 py-1.5 rounded-lg ${page === id ? 'text-stone-900 font-medium bg-stone-100' : 'text-stone-600 hover:text-stone-900'}`}>
+      <Icon className="w-4 h-4" /> <span className="hidden sm:inline">{label}</span>
+    </a>
+  );
+
   return (
     <div className="min-h-screen font-sans text-stone-800 bg-stone-50">
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-stone-200">
-        <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-4">
-          <a href="#" className="text-xl font-bold tracking-tight">
+        <div className={`mx-auto ${page === 'design' ? '' : 'max-w-6xl'} px-4 h-16 flex items-center gap-2`}>
+          <a href="#" className="text-lg sm:text-xl font-bold tracking-tight mr-auto truncate">
             {settings.shopName}
           </a>
-          <a href="#track" className={`ml-auto text-sm ${page === 'track' ? 'text-stone-900 font-medium' : 'text-stone-600 hover:text-stone-900'}`}>
-            ติดตามคำสั่งซื้อ
-          </a>
-          <button onClick={() => setCartOpen(true)} className="relative rounded-full p-2 hover:bg-stone-100" aria-label="ตะกร้าสินค้า">
-            <ShoppingCart className="h-6 w-6" />
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 rounded-full bg-amber-600 text-white text-xs h-5 min-w-5 px-1 grid place-items-center">{cartCount}</span>
-            )}
-          </button>
+          {navLink('design', 'ออกแบบ', PencilRuler)}
+          {navLink('account', session ? (active ? `ใช้ได้ถึง ${session.account.expiresAt.slice(5, 10).split('-').reverse().join('/')}` : 'บัญชีของฉัน') : 'เข้าใช้งาน', UserRound)}
+          {!active && (
+            <button onClick={() => openBuy()} className={`${btnPrimary} py-2`}>
+              ซื้อแพ็กเกจ
+            </button>
+          )}
         </div>
       </header>
 
-      {page === 'track' ? (
-        <Tracker settings={settings} myPhones={myPhones} notify={notify} />
+      {page === 'design' ? (
+        !loaded ? (
+          <div className="py-32 grid place-items-center text-stone-400">
+            <Spinner className="w-8 h-8" />
+          </div>
+        ) : active || settings.allowTrial ? (
+          <Designer settings={settings} session={session} notify={notify} onNeedAccess={(reason) => (session && !active && session.payments.some((p) => p.status === 'Pending') ? (window.location.hash = '#account') : openBuy(undefined, reason))} />
+        ) : (
+          <main className="px-4 py-16">
+            <div className="max-w-md mx-auto rounded-3xl bg-white border border-stone-200 p-8 text-center space-y-4">
+              <Lock className="w-10 h-10 mx-auto text-amber-600" />
+              <h1 className="text-lg font-semibold">หน้าออกแบบสำหรับผู้ที่มีแพ็กเกจ</h1>
+              <p className="text-sm text-stone-500">
+                {session ? `รหัส ${formatCode(session.code)} ยังไม่ได้เปิดใช้งานหรือหมดอายุแล้ว` : 'ซื้อแพ็กเกจหรือเข้าใช้งานด้วยรหัสที่มีอยู่'}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <button onClick={() => openBuy()} className={btnPrimary}>
+                  ซื้อแพ็กเกจ
+                </button>
+                <a href="#account" className={btnGhost}>
+                  {session ? 'ดูสถานะการชำระเงิน' : 'เข้าใช้งานด้วยรหัส'}
+                </a>
+              </div>
+            </div>
+          </main>
+        )
+      ) : page === 'account' ? (
+        <Account session={session} settings={settings} notify={notify} onSession={loadSession} onSignOut={signOutCustomer} onBuy={(planId) => openBuy(planId)} />
       ) : (
-        <Storefront products={shopProducts} settings={settings} loading={loading} loadError={loadError} onOpen={setViewing} onAdd={addToCart} />
+        <Landing settings={settings} plans={plans} onBuy={(planId) => openBuy(planId)} />
       )}
 
-      {viewing && (
-        <ProductModal key={viewing.id} product={viewing} inCart={cart[viewing.id] || 0} onClose={() => setViewing(null)} onAdd={addToCart} />
-      )}
-      <CartDrawer
-        open={cartOpen}
-        items={cartItems}
+      <BuyModal
+        open={Boolean(buy)}
+        plans={plans}
         settings={settings}
-        onClose={() => setCartOpen(false)}
-        onQty={setQty}
-        onCheckout={() => {
-          setCartOpen(false);
-          setCheckoutOpen(true);
-        }}
+        session={session}
+        initialPlanId={buy?.planId}
+        reason={buy?.reason}
+        notify={notify}
+        onClose={() => setBuy(null)}
+        onSession={(c) => loadSession(c)}
       />
-      <Checkout open={checkoutOpen} items={cartItems} settings={settings} notify={notify} onClose={() => setCheckoutOpen(false)} onPlaced={onPlaced} />
-      <Toasts toasts={toasts} onDismiss={(id) => setToasts((t) => t.filter((x) => x.id !== id))} />
+      {toastsEl}
     </div>
   );
 }

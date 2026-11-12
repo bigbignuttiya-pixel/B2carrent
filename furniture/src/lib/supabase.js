@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-// The furniture shop shares B2 Rental's Supabase project (its data lives in separate
+// The design site shares B2 Rental's Supabase project (its data lives in separate
 // furniture_* tables and buckets). The anon key is designed to be public; security is enforced
 // by the database policies in supabase/schema.sql. Environment variables override these values.
 const DEFAULT_URL = 'https://fxnvwjugcapmyybvgymv.supabase.co';

@@ -1,5 +1,5 @@
 // Read an image File, downscale it and re-encode as a JPEG data URL before upload
-export function compressImage(file, maxSize = 1200, quality = 0.78) {
+export function compressImage(file, maxSize = 1400, quality = 0.8) {
   return new Promise((resolve, reject) => {
     if (!file || !file.type.startsWith('image/')) {
       reject(new Error('not-image'));
