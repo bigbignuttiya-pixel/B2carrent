@@ -4,6 +4,10 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { buildPiece, decorFor, finishById } from './model';
 
 const OPEN_DOOR = (100 * Math.PI) / 180;
@@ -143,7 +147,7 @@ export function layoutPieces(pieces, materials) {
 }
 
 const Viewer3D = forwardRef(function Viewer3D(
-  { pieces, materials, selectedId, allOpen, onlySelected, showRoom = true, showDecor = true, wallColor = '#e8e4dc', transparentBg = false, onAzimuth, autoRotate = 0, interactive = true },
+  { pieces, materials, selectedId, allOpen, onlySelected, showRoom = true, showDecor = true, wallColor = '#e8e4dc', transparentBg = false, onAzimuth, autoRotate = 0, interactive = true, ao },
   ref
 ) {
   const wrapRef = useRef(null);
@@ -152,7 +156,7 @@ const Viewer3D = forwardRef(function Viewer3D(
   const azRef = useRef(onAzimuth);
   azRef.current = onAzimuth;
   const opts = useRef({});
-  opts.current = { autoRotate, interactive };
+  opts.current = { autoRotate, interactive, ao };
 
   // ---------- one-time setup ----------
   useEffect(() => {
@@ -161,7 +165,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.92;
+    renderer.toneMappingExposure = 0.86;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     wrap.appendChild(renderer.domElement);
@@ -175,6 +179,21 @@ const Viewer3D = forwardRef(function Viewer3D(
 
     const camera = new THREE.PerspectiveCamera(36, 1, 1, 20000);
     camera.position.set(250, 200, 420);
+    // Ambient occlusion (soft contact shadows in corners, under shelves, inside cabinets) — off on small phones
+    const useAO = opts.current.ao ?? (window.innerWidth >= 768 && renderer.capabilities.isWebGL2);
+    let composer = null;
+    let gtao = null;
+    if (useAO) {
+      composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType }));
+      composer.addPass(new RenderPass(scene, camera));
+      gtao = new GTAOPass(scene, camera, 1, 1);
+      gtao.updateGtaoMaterial({ radius: 32, distanceExponent: 1.2, thickness: 18, scale: 1.3, samples: 16 });
+      gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+      gtao.blendIntensity = 1;
+      composer.addPass(gtao);
+      composer.addPass(new OutputPass());
+    }
+    const draw = () => (composer ? composer.render() : renderer.render(scene, camera));
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
@@ -213,6 +232,7 @@ const Viewer3D = forwardRef(function Viewer3D(
       const w = wrap.clientWidth || 1;
       const h = wrap.clientHeight || 1;
       renderer.setSize(w, h);
+      composer?.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       if (st.current) st.current.dirty = true;
@@ -267,9 +287,9 @@ const Viewer3D = forwardRef(function Viewer3D(
       if (controls.update()) dirty = true;
       if (!dirty) return;
       s.dirty = false;
-      renderer.render(scene, camera);
+      draw();
     };
-    st.current = { renderer, scene, camera, controls, root, roomGroup, movers: [], fitted: false, sun, mats, floorTex, envTex, pmrem, dirty: true };
+    st.current = { renderer, scene, camera, controls, root, roomGroup, movers: [], fitted: false, sun, mats, floorTex, envTex, pmrem, dirty: true, draw };
     controls.addEventListener('change', () => (st.current.dirty = true));
     tick();
 
@@ -279,6 +299,8 @@ const Viewer3D = forwardRef(function Viewer3D(
       renderer.domElement.removeEventListener('pointerdown', onDown);
       renderer.domElement.removeEventListener('pointerup', onUp);
       controls.dispose();
+      composer?.dispose();
+      gtao?.dispose();
       disposeTree(scene);
       mats.dispose();
       floorTex.dispose();
@@ -308,7 +330,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     fit,
     snapshot: () => {
       const s = st.current;
-      s.renderer.render(s.scene, s.camera);
+      s.draw();
       return s.renderer.domElement.toDataURL('image/png');
     },
     setAzimuth: (deg) => {
@@ -349,6 +371,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     const laid = layoutPieces(list.length ? list : pieces.slice(0, 1), materials);
     const edgeMat = new THREE.LineBasicMaterial({ color: '#d97706' });
     const multi = !onlySelected && laid.length > 1;
+    let lights = 0;
 
     const addMesh = (parent, box, color, offset, animId, finishId, sel) => {
       const geo = panelGeometry(box.sx, box.sy, box.sz);
@@ -460,6 +483,23 @@ const Viewer3D = forwardRef(function Viewer3D(
           }
         });
       }
+      // warm downlights under the top of each wardrobe column
+      if (showDecor && piece.kind === 'box' && /^wardrobe/.test(piece.template || '') && lights < 8) {
+        const t = materials.find((m) => m.id === piece.carcass)?.t || 1.8;
+        piece.columns.forEach((c, ci) => {
+          if (lights >= 8) return;
+          let x = t;
+          for (let k = 0; k < ci; k++) x += piece.columns[k].w + t;
+          const y = piece.H - t - 0.4;
+          const disc = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.6, 20), new THREE.MeshStandardMaterial({ color: '#fff6e0', emissive: '#ffe9c4', emissiveIntensity: 2.2 }));
+          disc.position.set(x + c.w / 2, y, piece.D * 0.55);
+          g.add(disc);
+          const pl = new THREE.PointLight('#ffd9a0', 4200, 200, 2);
+          pl.position.set(x + c.w / 2, y - 3, piece.D * 0.6);
+          g.add(pl);
+          lights += 1;
+        });
+      }
       s.root.add(g);
     });
 
@@ -493,6 +533,25 @@ const Viewer3D = forwardRef(function Viewer3D(
       const skirt2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 8, 600), skirt.material);
       skirt2.position.set(-roomW / 2 + 0.8, 4, 290);
       s.roomGroup.add(back, side, skirt, skirt2);
+      // daylight window on the side wall
+      const win = new THREE.Group();
+      const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(130, 160), new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#eaf4ff', emissiveIntensity: 1.6 }));
+      glassPane.rotation.y = Math.PI / 2;
+      win.add(glassPane);
+      const frameMat = new THREE.MeshStandardMaterial({ color: '#f5f3ee', roughness: 0.5 });
+      [[0, 82, 136, 5], [0, -82, 136, 5], [0, 0, 4, 160], [-66, 0, 5, 164], [66, 0, 5, 164], [0, 20, 132, 3]].forEach(([dz, dy, w, h]) => {
+        const f = new THREE.Mesh(new THREE.BoxGeometry(4, h, w), frameMat);
+        f.position.set(1.5, dy, dz);
+        win.add(f);
+      });
+      const sill = new THREE.Mesh(new THREE.BoxGeometry(14, 3, 146), frameMat);
+      sill.position.set(5, -84, 0);
+      win.add(sill);
+      win.position.set(-roomW / 2 + 0.4, 175, 230);
+      s.roomGroup.add(win);
+      const fill = new THREE.PointLight('#e8f1ff', 11000, 600, 2);
+      fill.position.set(-roomW / 2 + 60, 190, 230);
+      s.roomGroup.add(fill);
       // soft rug in front of the furniture
       const rug = new THREE.Mesh(new THREE.BoxGeometry(Math.min(260, size.x * 0.8 + 60), 0.6, 150), new THREE.MeshStandardMaterial({ color: '#cfc2ae', roughness: 1 }));
       rug.position.set(0, 0.3, Math.max(size.z, 60) + 95);
