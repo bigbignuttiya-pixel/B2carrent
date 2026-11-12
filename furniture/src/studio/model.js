@@ -34,6 +34,7 @@ export const DEFAULT_PRICING = {
   slide: 280, // drawer slides, per pair
   handle: 45,
   rodPerM: 120,
+  slidingPerDoor: 650, // track + rollers per sliding door
   metalLegs: 1200, // per set of 4
   countertopPerM: 1800,
   laborPerSheet: 450, // cutting, edging, assembly per sheet used
@@ -43,6 +44,23 @@ export const DEFAULT_PRICING = {
   vatPct: 0,
 };
 
+// Surface finishes for the 3D view (the cut list only cares about the sheet material)
+export const FINISHES = [
+  { id: 'oak', name: 'โอ๊คธรรมชาติ', kind: 'wood', color: '#d4b48a' },
+  { id: 'ash', name: 'เถ้าขาว', kind: 'wood', color: '#e9ddc7' },
+  { id: 'teak', name: 'สักทอง', kind: 'wood', color: '#b9814f' },
+  { id: 'walnut', name: 'วอลนัท', kind: 'wood', color: '#7a5236' },
+  { id: 'white', name: 'ขาวด้าน', kind: 'solid', color: '#f3f1ec' },
+  { id: 'cream', name: 'ครีม', kind: 'solid', color: '#e9e0cf' },
+  { id: 'stone', name: 'เทาหิน', kind: 'solid', color: '#8d8f92' },
+  { id: 'navy', name: 'น้ำเงินเมอร์', kind: 'solid', color: '#34507f' },
+  { id: 'sage', name: 'เขียวเซจ', kind: 'solid', color: '#8c9a7e' },
+  { id: 'black', name: 'ดำด้าน', kind: 'solid', color: '#2b2a29' },
+  { id: 'mirror', name: 'กระจกเงา', kind: 'mirror', color: '#c9d3dc', frontOnly: true },
+  { id: 'glass', name: 'กระจกฝ้า', kind: 'glass', color: '#dfe7ec', frontOnly: true },
+];
+export const finishById = (id) => FINISHES.find((f) => f.id === id) || null;
+
 export const COLORS = ['#f5f5f4', '#e7e5e4', '#d6d3d1', '#78716c', '#292524', '#efe3cf', '#d9c3a5', '#c8a27a', '#a47551', '#7c5a3c', '#5b4636', '#cbd5e1', '#94a3b8', '#9fb7a0', '#e8d5c4'];
 
 export const DOORS = [
@@ -51,6 +69,11 @@ export const DOORS = [
   { id: 'right', name: 'บานเดี่ยว บานพับขวา' },
   { id: 'double', name: 'บานคู่' },
   { id: 'flip', name: 'บานยกขึ้น (บานพับบน)' },
+];
+
+export const DOOR_STYLES = [
+  { id: 'hinged', name: 'บานเปิด (ตั้งค่าแต่ละช่อง)' },
+  { id: 'sliding', name: 'บานเลื่อน (เต็มหน้าตู้)' },
 ];
 
 export const ELEMENT_KINDS = {
@@ -136,6 +159,11 @@ export function newPiece(templateId, extra = {}) {
     back: 'hdf6',
     color: '#efe3cf',
     frontColor: '#d9c3a5',
+    finish: null,
+    frontFinish: null,
+    shelfFinish: null,
+    doorStyle: 'hinged',
+    slideCount: 2,
     plinth: 0,
     elev: 0,
     countertop: false,
@@ -197,7 +225,7 @@ export const hingesFor = (h) => (h <= 90 ? 2 : h <= 150 ? 3 : h <= 200 ? 4 : 5);
 // anim: { id, type: 'door'|'drawer'|'flip', ... } — parts with the same anim.id move together in 3D
 export function buildPiece(p, materials) {
   const parts = [];
-  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0 };
+  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0 };
   const extras = []; // non-panel 3D objects: rods, legs, countertop
   const add = (part) => parts.push(part);
 
@@ -229,6 +257,7 @@ export function buildPiece(p, materials) {
   }
 
   const n = p.columns.length;
+  const sliding = p.doorStyle === 'sliding';
   // Overlay edges for doors / drawer fronts: outer edge of the cabinet, or the middle of a divider
   const leftEdge = (i) => (i === 0 ? 0 : columnX(p, materials, i) - t / 2);
   const rightEdge = (i) => (i === n - 1 ? W : columnX(p, materials, i) + p.columns[i].w + t / 2);
@@ -239,12 +268,12 @@ export function buildPiece(p, materials) {
     if (i > 0) {
       add({ name: 'แผ่นกั้นช่อง', mat: cm.id, a: Hi, b: D, bandA: 1, bandB: 0, box: { x: x - t, y: y0, z: 0, sx: t, sy: Hi, sz: D }, color });
     }
-    const hasDoor = c.door && c.door !== 'none';
+    const hasDoor = sliding || (c.door && c.door !== 'none');
     const setback = hasDoor ? 2 : 0;
 
     c.items.forEach((it) => {
       if (it.kind === 'shelf') {
-        add({ name: 'ชั้นวาง', mat: cm.id, a: c.w, b: D - setback, bandA: 1, bandB: 0, box: { x, y: y0 + it.y, z: 0, sx: c.w, sy: t, sz: D - setback }, color });
+        add({ name: 'ชั้นวาง', mat: cm.id, a: c.w, b: D - setback, bandA: 1, bandB: 0, box: { x, y: y0 + it.y, z: 0, sx: c.w, sy: t, sz: D - setback }, color: finishById(p.shelfFinish)?.color || color, shelf: true });
       } else if (it.kind === 'rod') {
         hw.rodCm += c.w;
         extras.push({ type: 'rod', from: [x, y0 + it.y, D / 2], to: [x + c.w, y0 + it.y, D / 2] });
@@ -276,7 +305,7 @@ export function buildPiece(p, materials) {
       }
     });
 
-    if (hasDoor) {
+    if (hasDoor && !sliding) {
       const dx = leftEdge(i) + gap;
       const dw = rightEdge(i) - leftEdge(i) - 2 * gap;
       const dy = pl + gap;
@@ -298,6 +327,23 @@ export function buildPiece(p, materials) {
       }
     }
   });
+
+  if (sliding) {
+    const N = Math.max(2, Math.min(4, p.slideCount || 2));
+    const ov = 3; // overlap between neighbouring doors
+    const pw = (W + (N - 1) * ov) / N;
+    const dy = pl + 0.5;
+    const dh = H - pl - 1;
+    for (let k = 0; k < N; k++) {
+      const front = k % 2 === 1;
+      const lx = k * (pw - ov);
+      const anim = { id: `${p.id}:slide:${k}`, type: 'slide', dx: front ? (k === N - 1 ? -(pw - ov) : pw - ov) * 0.92 : 0 };
+      hw.slidingDoor += 1;
+      add({ name: 'บานเลื่อน', mat: fm.id, a: dh, b: pw, bandA: 2, bandB: 2, box: { x: lx, y: dy, z: D + (front ? ft + 0.6 : 0.2), sx: pw, sy: dh, sz: ft }, color: fcolor, role: 'front', anim });
+    }
+    extras.push({ type: 'box', box: { x: 0, y: H - 1.2, z: D, sx: W, sy: 1.2, sz: 2 * ft + 1 }, color: '#a8a29e' });
+    extras.push({ type: 'box', box: { x: 0, y: pl, z: D, sx: W, sy: 0.6, sz: 2 * ft + 1 }, color: '#a8a29e' });
+  }
 
   return finish(p, parts, hw, extras);
 }
@@ -354,6 +400,7 @@ function buildBed(p, materials, parts, hw, extras) {
 
 function finish(p, parts, hw, extras, outer) {
   parts.forEach((x, i) => {
+    x.finish = x.role === 'front' ? p.frontFinish : x.shelf ? p.shelfFinish || p.finish : p.finish;
     x.a = r1(x.a);
     x.b = r1(x.b);
     x.key = `${p.id}:${i}`;
@@ -406,3 +453,94 @@ export function shadeHex(hex, amt) {
 }
 
 export const pieceSize = (p) => `${r1(p.W)} × ${r1(p.D)} × ${r1(p.H)} ซม.`;
+
+// ---------- quick configuration (counts → positions) ----------
+export const countItems = (c) => ({
+  shelves: c.items.filter((i) => i.kind === 'shelf').length,
+  rods: c.items.filter((i) => i.kind === 'rod').length,
+  drawers: c.items.filter((i) => i.kind === 'drawer').length,
+});
+
+// Lay out a column from counts: drawers stacked at the bottom, hanging space at the top, shelves spread evenly
+export function autoLayout(p, materials, colIndex, counts) {
+  const t = matById(materials, p.carcass).t;
+  const Hi = innerHeight(p, materials);
+  const drawers = Math.max(0, Math.min(8, counts.drawers));
+  let rods = Math.max(0, Math.min(2, counts.rods));
+  let shelves = Math.max(0, Math.min(12, counts.shelves));
+  const dh = Hi < 100 ? Math.max(10, Math.min(25, Math.floor(Hi / Math.max(1, drawers)) - 1)) : 20;
+  const items = [];
+  for (let k = 0; k < drawers; k++) items.push({ id: uid(), kind: 'drawer', y: r1(k * (dh + 0.5)), h: dh });
+  const base = drawers ? r1(drawers * (dh + 0.5) + (shelves || rods ? 0.5 : 0)) : 0;
+  if (drawers && (shelves || rods)) {
+    items.push({ id: uid(), kind: 'shelf', y: base });
+    shelves = Math.max(0, shelves - 1);
+  }
+  const floor = drawers && items.length > drawers ? base + t : base;
+  let top = Hi;
+  if (rods > 0 && Hi - floor < 60) rods = 0;
+  if (rods > 0) {
+    let rodY = Hi - 6;
+    if (shelves > 0 && Hi - floor > 150) {
+      items.push({ id: uid(), kind: 'shelf', y: r1(Hi - 30) });
+      shelves -= 1;
+      rodY = Hi - 36;
+    }
+    items.push({ id: uid(), kind: 'rod', y: r1(rodY) });
+    top = rodY - (rods === 2 ? (rodY - floor) / 2 : 100);
+    if (rods === 2) items.push({ id: uid(), kind: 'rod', y: r1(floor + (rodY - floor) / 2 - 4) });
+    if (rods === 2) top = floor; // double hanging: no shelves left below
+  }
+  const span = top - floor;
+  if (shelves > 0 && span > 25) {
+    const n = Math.min(shelves, Math.floor(span / 18));
+    for (let k = 1; k <= n; k++) items.push({ id: uid(), kind: 'shelf', y: r1(Math.min(Hi - t, floor + (k * span) / (n + 1))) });
+  }
+  return { ...p, columns: p.columns.map((c, i) => (i === colIndex ? { ...c, items } : c)) };
+}
+
+// Props for the 3D showroom: folded clothes on shelves, garments on rods
+const CLOTH = ['#e7e2d8', '#9aa5b1', '#3f4a5a', '#c9b79c', '#7d8b6a', '#d8c3b0', '#5a5f66', '#efe9e1', '#a6806a', '#2f3640'];
+export function decorFor(p, materials) {
+  if (p.kind !== 'box' || p.D < 28) return [];
+  const t = matById(materials, p.carcass).t;
+  const y0 = (p.plinth || 0) + t;
+  const Hi = innerHeight(p, materials);
+  const out = [];
+  let seed = p.id.split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  p.columns.forEach((c, i) => {
+    const x = columnX(p, materials, i);
+    const els = c.items.map((it) => ({ ...it, top: it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 0) })).sort((a, b) => a.y - b.y);
+    const surfaces = [{ y: 0 }, ...els.filter((e) => e.kind === 'shelf').map((e) => ({ y: e.top }))];
+    surfaces.forEach((sf) => {
+      const above = els.filter((e) => e.y >= sf.y - 0.1 && e.y > sf.y + 0.1).sort((a, b) => a.y - b.y)[0];
+      const blocked = els.some((e) => e.kind === 'drawer' && e.y <= sf.y + 0.1 && e.top > sf.y);
+      if (blocked || (sf.y === 0 && els.some((e) => e.kind === 'drawer' && e.y < 1))) return;
+      const clear = (above ? above.y : Hi) - sf.y;
+      if (above?.kind === 'rod' || clear < 16 || clear > 90) return;
+      const n = Math.floor((c.w - 4) / 30);
+      for (let k = 0; k < n; k++) {
+        if (rnd() < 0.25) continue;
+        const layers = Math.max(1, Math.min(5, Math.floor((clear - 6) / 5.5) - Math.floor(rnd() * 2)));
+        const sw = 24 + rnd() * 3;
+        const sx = x + 2 + k * ((c.w - 4) / n) + ((c.w - 4) / n - sw) / 2;
+        for (let l = 0; l < layers; l++) {
+          out.push({ type: 'fold', box: { x: sx + (rnd() - 0.5) * 1.5, y: y0 + sf.y + l * 5.2, z: p.D * 0.2, sx: sw, sy: 5, sz: Math.min(30, p.D * 0.62) }, color: CLOTH[Math.floor(rnd() * CLOTH.length)] });
+        }
+      }
+    });
+    els.filter((e) => e.kind === 'rod').forEach((r) => {
+      const below = els.filter((e) => e.top <= r.y && e.kind !== 'rod').reduce((a, e) => Math.max(a, e.top), 0);
+      const room = r.y - below - 8;
+      if (room < 30) return;
+      const n = Math.floor((c.w - 6) / 7);
+      for (let k = 0; k < n; k++) {
+        if (rnd() < 0.2) continue;
+        const len = Math.min(room, 55 + rnd() * 50);
+        out.push({ type: 'garment', box: { x: x + 4 + k * ((c.w - 8) / n), y: y0 + r.y - 3 - len, z: p.D / 2 - 21, sx: 1.6, sy: len, sz: Math.min(42, p.D - 14) }, color: CLOTH[Math.floor(rnd() * CLOTH.length)] });
+      }
+    });
+  });
+  return out;
+}

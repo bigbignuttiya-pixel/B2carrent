@@ -101,13 +101,14 @@ export function analyzeProject(design) {
   const matCostById = Object.fromEntries(mats.map((m) => [m.id, m]));
 
   // Hardware totals
-  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0 };
+  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0 };
   pieces.forEach((p) => Object.keys(hw).forEach((k) => (hw[k] += p.hw[k])));
   const hwLines = [
     ['บานพับถ้วย', hw.hinge, 'ตัว', pr.hinge],
     ['รางลิ้นชัก', hw.slide, 'คู่', pr.slide],
     ['มือจับ', hw.handle, 'ชิ้น', pr.handle],
     ['ราวแขวนผ้า', r1(hw.rodCm / 100), 'ม.', pr.rodPerM],
+    ['ชุดรางบานเลื่อน', hw.slidingDoor, 'บาน', pr.slidingPerDoor],
     ['ขาโต๊ะเหล็ก', hw.metalLegs, 'ชุด', pr.metalLegs],
     ['ท็อปเคาน์เตอร์', r1(hw.countertopCm / 100), 'ม.', pr.countertopPerM],
   ]
@@ -136,7 +137,7 @@ export function analyzeProject(design) {
     });
     const area = own.reduce((a, r) => a + r.areaM2, 0);
     c += (area / totalArea) * (laborCost + install);
-    c += phw.hinge * pr.hinge + phw.slide * pr.slide + phw.handle * pr.handle + (phw.rodCm / 100) * pr.rodPerM + phw.metalLegs * pr.metalLegs + (phw.countertopCm / 100) * pr.countertopPerM;
+    c += phw.hinge * pr.hinge + phw.slide * pr.slide + phw.handle * pr.handle + (phw.rodCm / 100) * pr.rodPerM + phw.metalLegs * pr.metalLegs + (phw.countertopCm / 100) * pr.countertopPerM + (phw.slidingDoor || 0) * (pr.slidingPerDoor || 0);
     return { id: piece.id, cost: c, price: Math.round(c * margin), area };
   });
 

@@ -191,10 +191,30 @@ export function PropsPanel({ piece, design, selection, onSelect, update, actions
       </div>
       <div>
         <p className="text-xs text-stone-500 mb-1.5">สีโครง</p>
-        <Swatches value={piece.color} onChange={(c) => set({ color: c })} />
+        <Swatches value={piece.color} onChange={(c) => set({ color: c, finish: null })} />
         <p className="text-xs text-stone-500 mb-1.5 mt-3">{piece.kind === 'table' ? 'สีหน้าโต๊ะ' : piece.kind === 'bed' ? 'สีหัวเตียง' : 'สีหน้าบาน'}</p>
-        <Swatches value={piece.frontColor} onChange={(c) => set({ frontColor: c })} />
+        <Swatches value={piece.frontColor} onChange={(c) => set({ frontColor: c, frontFinish: null })} />
       </div>
+
+      {isBox && (
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <span className="text-xs text-stone-500">รูปแบบประตู</span>
+            <select className={`${inputCls} py-2`} value={piece.doorStyle || 'hinged'} onChange={(e) => set({ doorStyle: e.target.value })}>
+              <option value="hinged">บานเปิด (แต่ละช่อง)</option>
+              <option value="sliding">บานเลื่อน</option>
+            </select>
+          </label>
+          {piece.doorStyle === 'sliding' && (
+            <label className="block">
+              <span className="text-xs text-stone-500">จำนวนบานเลื่อน</span>
+              <select className={`${inputCls} py-2`} value={piece.slideCount || 2} onChange={(e) => set({ slideCount: Number(e.target.value) })}>
+                {[2, 3, 4].map((n) => <option key={n} value={n}>{n} บาน</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+      )}
 
       {isBox && (
         <div className="border-t border-stone-200 pt-4 space-y-3">

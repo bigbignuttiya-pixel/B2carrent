@@ -11,6 +11,7 @@ import FrontView from './FrontView';
 import { PiecesPanel, PropsPanel } from './Panels';
 import { CutListView, CostView, QuoteModal } from './CutCost';
 import PhotoMeasure from './PhotoMeasure';
+import Configurator from './Configurator';
 import { printQuotation, printCutSheet, downloadCutCsv, downloadBlob, safeName } from './printDocs';
 import { usePersistentState } from '../lib/storage';
 import { api } from '../lib/api';
@@ -21,8 +22,8 @@ import { btnPrimary, btnGhost, Spinner } from '../components/ui';
 const Viewer3D = lazy(() => import('./Viewer3D'));
 
 const TABS = [
+  { id: '3d', label: 'ห้องโชว์ 3D', icon: Box },
   { id: 'design', label: 'ออกแบบ 2D', icon: PencilRuler },
-  { id: '3d', label: 'โมเดล 3D', icon: Box },
   { id: 'cut', label: 'ใบตัดไม้', icon: Scissors },
   { id: 'cost', label: 'ราคา / ใบเสนอราคา', icon: Calculator },
   { id: 'photo', label: 'วัดจากรูป', icon: Camera },
@@ -55,7 +56,7 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
   const [saving, setSaving] = useState(false);
   const [selectedId, setSelectedId] = useState(() => design.items[0]?.id || null);
   const [selection, setSelection] = useState({ col: 0, item: null });
-  const [tab, setTab] = useState('design');
+  const [tab, setTab] = useState('3d');
   const [mobilePanel, setMobilePanel] = useState('props');
   const [showDoors, setShowDoors] = useState(false);
   const [allOpen, setAllOpen] = useState(false);
@@ -115,7 +116,6 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
     const p = newPiece(templateId, extra);
     change((d) => ({ ...d, items: [...d.items, p] }));
     selectPiece(p.id);
-    if (tab !== '3d') setTab('design');
     return p;
   };
   const movePiece = (id, dir) =>
@@ -446,7 +446,25 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
         ))}
       </nav>
 
-      {tab === 'design' || tab === '3d' ? (
+      {tab === '3d' ? (
+        <Configurator
+          design={design}
+          piece={piece}
+          analysis={analysis}
+          selectedId={piece?.id}
+          onSelect={selectPiece}
+          onAdd={(id) => addPiece(id)}
+          update={updatePiece}
+          undo={undo}
+          redo={redo}
+          canUndo={past.length > 0}
+          canRedo={future.length > 0}
+          onQuote={doQuote}
+          onSnapshot={doSnapshot}
+          viewerRef={viewerRef}
+          locked={!active}
+        />
+      ) : tab === 'design' ? (
         editor
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto">
