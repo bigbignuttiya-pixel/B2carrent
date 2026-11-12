@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Navigation, Route, Facebook } from 'lucide-react';
+import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Navigation, Route, Facebook, Lock } from 'lucide-react';
 import { DESTINATIONS, REVIEWS, REQUIREMENTS, FAQS } from '../data';
 import { SectionHeading } from '../components/ui';
 
@@ -148,7 +148,7 @@ export function RequirementsAndFaq() {
   );
 }
 
-export function Footer({ settings, onNav }) {
+export function Footer({ settings, onNav, onStaff }) {
   return (
     <footer className="bg-slate-950 border-t border-slate-900 mt-20 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
@@ -196,7 +196,14 @@ export function Footer({ settings, onNav }) {
           </div>
         </div>
       </div>
-      <div className="border-t border-slate-900 py-5 text-center text-[11px] text-slate-600">© 2026 B2 MOTORCYCLE & CAR RENTAL SERVICES. All rights reserved.</div>
+      <div className="border-t border-slate-900 py-5 px-4 text-center text-[11px] text-slate-600 relative">
+        © 2026 B2 MOTORCYCLE & CAR RENTAL SERVICES. All rights reserved.
+        {onStaff && (
+          <button onClick={onStaff} aria-label="staff" className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-800 hover:text-slate-500">
+            <Lock className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
     </footer>
   );
 }

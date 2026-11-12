@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Key, LayoutDashboard, FileText, Menu, X, Car, Compass, HelpCircle, Bell } from 'lucide-react';
 
-export default function Header({ viewMode, setViewMode, activeTab, goTab, bookingCount, pendingCount }) {
+export default function Header({ viewMode, setViewMode, activeTab, goTab, bookingCount, pendingCount, showAdminSwitch = true, onSecretTap }) {
   const [open, setOpen] = useState(false);
+  // Hidden staff entrance: 5 quick taps on the logo
+  const taps = useRef([]);
+  const logoTap = () => {
+    const now = Date.now();
+    taps.current = [...taps.current.filter((t) => now - t < 2500), now];
+    if (taps.current.length >= 5) {
+      taps.current = [];
+      onSecretTap?.();
+      return true;
+    }
+    return false;
+  };
 
   const scrollTo = (id) => {
     goTab('browse');
@@ -21,7 +33,7 @@ export default function Header({ viewMode, setViewMode, activeTab, goTab, bookin
     <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-blue-900/40 shadow-2xl no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
         {/* Logo */}
-        <button className="flex items-center gap-3 group text-left" onClick={() => { setViewMode('customer'); goTab('browse'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+        <button className="flex items-center gap-3 group text-left" onClick={() => { if (logoTap()) return; setViewMode('customer'); goTab('browse'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           <div className="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-tr from-blue-900 via-blue-700 to-indigo-600 rounded-2xl border-2 border-yellow-400 shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform">
             <span className="font-black text-2xl text-yellow-400 tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">B2</span>
           </div>
@@ -70,7 +82,7 @@ export default function Header({ viewMode, setViewMode, activeTab, goTab, bookin
 
         {/* Mode switcher + mobile menu */}
         <div className="flex items-center gap-2">
-          <div className="bg-slate-900/90 p-1 rounded-2xl border border-slate-800 flex items-center shadow-inner">
+          {(showAdminSwitch || viewMode === 'admin') && <div className="bg-slate-900/90 p-1 rounded-2xl border border-slate-800 flex items-center shadow-inner">
             <button
               onClick={() => setViewMode('customer')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
@@ -90,7 +102,7 @@ export default function Header({ viewMode, setViewMode, activeTab, goTab, bookin
               <span>หลังบ้าน</span>
               {pendingCount > 0 && viewMode !== 'admin' && <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] rounded-full flex items-center justify-center font-black">{pendingCount}</span>}
             </button>
-          </div>
+          </div>}
           {viewMode === 'customer' && (
             <button className="lg:hidden p-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-200" onClick={() => setOpen(!open)} aria-label="เมนู">
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

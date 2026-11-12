@@ -127,6 +127,20 @@ export default function App() {
     refreshMine();
   }, [refreshMine]);
 
+  // Staff entrance is hidden from customers: open with the secret link …/#admin
+  // (the admin switch in the header only appears on a device already signed in as admin)
+  const setStaffView = useCallback((mode) => {
+    setViewMode(mode);
+    const want = mode === 'admin' ? '#admin' : '';
+    if (window.location.hash !== want) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${want}`);
+  }, []);
+  useEffect(() => {
+    const sync = () => window.location.hash === '#admin' && setViewMode('admin');
+    sync();
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+
   // Admin: load bookings/coupons and listen for live changes
   useEffect(() => {
     if (!adminState.isAdmin) {
@@ -432,7 +446,9 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col selection:bg-yellow-400 selection:text-slate-950">
       <Header
         viewMode={viewMode}
-        setViewMode={setViewMode}
+        setViewMode={setStaffView}
+        showAdminSwitch={adminState.isAdmin}
+        onSecretTap={() => setStaffView('admin')}
         activeTab={customerTab}
         goTab={goTab}
         bookingCount={myBookings.length}
@@ -496,7 +512,7 @@ export default function App() {
               />
             )}
           </main>
-          <Footer settings={settings} onNav={scrollToId} />
+          <Footer settings={settings} onNav={scrollToId} onStaff={() => setStaffView('admin')} />
           <FloatingContact settings={settings} />
         </>
       )}
