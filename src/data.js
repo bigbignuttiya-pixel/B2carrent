@@ -7,8 +7,8 @@ import { HardHat, Smartphone, Shield, MapPin, Baby, Wifi, UserCheck } from 'luci
 export const HERO_SLIDES = [
   {
     id: 1,
-    title: 'บริการเช่ารถจักรยานยนต์และรถยนต์ B2',
-    subtitle: 'บริการเช่ารถคุณภาพสูง รับ-ส่งฟรี สนามบินนครศรีธรรมราชและตัวเมือง พร้อมขับขี่ทันที',
+    title: 'เช่ารถขับเอง | หรือพร้อมคนขับมืออาชีพ', // '|' = keep each part on one line
+    subtitle: 'คนขับชำนาญเส้นทาง ประสบการณ์สูง พาเที่ยวทั่วนครศรีฯ อย่างปลอดภัย • รถใหม่สะอาด รับ-ส่งฟรีสนามบินและตัวเมือง',
     bgImage: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1800&q=80',
     badge: '🔥 โปรโมชั่นพิเศษ! จองวันนี้ ฟรีหมวกกันน็อก 2 ใบ + ประกันภัย',
   },

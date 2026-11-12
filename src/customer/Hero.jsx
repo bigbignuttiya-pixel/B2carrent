@@ -46,7 +46,7 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
 
               <div key={`t-${slide.id}`} className="space-y-3 animate-slide-up">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
-                  {slide.title} <br />
+                  {slide.title.includes('|') ? slide.title.split('|').map((t) => <span key={t} className="inline-block">{t.trim()}&nbsp;</span>) : slide.title} <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500">B2 MOTORCYCLE & CAR RENTAL</span>
                 </h1>
                 <p className="text-slate-300 text-sm sm:text-base max-w-xl font-light leading-relaxed">{slide.subtitle}</p>
