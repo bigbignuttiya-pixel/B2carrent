@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, Pencil, X, Search, ClipboardList } from 'lucide-react';
-import { CATEGORIES } from '../data';
+import { CATEGORIES, DEPOSIT_BY_TYPE } from '../data';
 import { baht } from '../lib/pricing';
 import { Modal, inputCls } from '../components/ui';
 import PhotoManager from './PhotoManager';
 import PlateSheet from './PlateSheet';
 
 const BLANK = {
-  name: '', type: 'Motorcycle', category: 'Scooter', brand: '', pricePerDay: 400, deposit: 1000, seats: 2,
+  name: '', type: 'Motorcycle', category: 'Scooter', brand: '', pricePerDay: 400, deposit: 500, seats: 2,
   engineCc: '125 cc', transmission: 'Automatic', fuelType: 'เบนซิน 95', plateNumber: '', photos: [],
   badgeTag: 'มาใหม่', features: 'สภาพใหม่ 100%\nตรวจเช็กระยะพร้อม\nประกันภัยคุ้มครองมาตรฐาน', mileage: 0, nextServiceKm: 5000,
 };
@@ -89,7 +89,7 @@ export function VehicleForm({ open, initial, onClose, onSave, notify }) {
       </div>
       <form onSubmit={submit} noValidate className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <label className="col-span-1"><span className="text-slate-400 block mb-1">ประเภท</span>
-          <select className={inputCls} value={f.type} onChange={(e) => set({ type: e.target.value, category: CATEGORIES[e.target.value][0], seats: e.target.value === 'Car' ? 5 : 2 })}>
+          <select className={inputCls} value={f.type} onChange={(e) => set({ type: e.target.value, category: CATEGORIES[e.target.value][0], seats: e.target.value === 'Car' ? 5 : 2, deposit: DEPOSIT_BY_TYPE[e.target.value] })}>
             <option value="Motorcycle">🛵 จักรยานยนต์</option>
             <option value="Car">🚗 รถยนต์</option>
           </select>

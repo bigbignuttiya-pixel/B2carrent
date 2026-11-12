@@ -55,7 +55,7 @@ export const INITIAL_VEHICLES = [
       'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=800&q=80',
     ],
     pricePerDay: 400,
-    deposit: 1000,
+    deposit: 500,
     seats: 2,
     engineCc: '160 cc',
     transmission: 'Automatic (CVT)',
@@ -81,7 +81,7 @@ export const INITIAL_VEHICLES = [
       'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
     ],
     pricePerDay: 350,
-    deposit: 1000,
+    deposit: 500,
     seats: 2,
     engineCc: '125 cc',
     transmission: 'Automatic',
@@ -107,7 +107,7 @@ export const INITIAL_VEHICLES = [
       'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
     ],
     pricePerDay: 850,
-    deposit: 3000,
+    deposit: 500,
     seats: 2,
     engineCc: '330 cc eSP+',
     transmission: 'Automatic',
@@ -159,7 +159,7 @@ export const INITIAL_VEHICLES = [
       'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
     ],
     pricePerDay: 1800,
-    deposit: 5000,
+    deposit: 3000,
     seats: 5,
     engineCc: 'มอเตอร์ไฟฟ้า 201 แรงม้า',
     transmission: 'Automatic Single Speed',
@@ -185,7 +185,7 @@ export const INITIAL_VEHICLES = [
       'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
     ],
     pricePerDay: 2800,
-    deposit: 10000,
+    deposit: 3000,
     seats: 7,
     engineCc: '2,800 cc ดีเซลเทอร์โบ',
     transmission: 'Automatic 6-Speed 4WD',
@@ -356,10 +356,14 @@ export const REVIEWS = [
   { name: 'ธีรวัฒน์ ส.', vehicle: 'Toyota Fortuner', rating: 4.8, date: 'ส.ค. 2026', text: 'พาครอบครัวไปขนอม 7 คนนั่งสบาย รถแรง ประกันชั้น 1 ทำให้อุ่นใจ คืนรถก็ไม่ยุ่งยาก' },
 ];
 
+// Standard refundable deposit per vehicle type
+export const DEPOSIT_BY_TYPE = { Motorcycle: 500, Car: 3000 };
+export const depositOf = (v) => Number(v?.deposit) || DEPOSIT_BY_TYPE[v?.type] || 500;
+
 export const REQUIREMENTS = [
   { title: 'บัตรประชาชน / Passport', desc: 'ตัวจริงของผู้เช่า สำหรับยืนยันตัวตน' },
   { title: 'ใบขับขี่ที่ยังไม่หมดอายุ', desc: 'ประเภทให้ตรงกับพาหนะ (ต่างชาติใช้ IDP ได้)' },
-  { title: 'เงินมัดจำ (คืนเต็มจำนวน)', desc: 'เงินสด/โอน คืนทันทีเมื่อตรวจสภาพรถเรียบร้อย' },
+  { title: 'เงินมัดจำ (คืนเต็มจำนวน)', desc: 'มอเตอร์ไซค์ ฿500 / รถยนต์ ฿3,000 ต่อคัน • เงินสด/โอน คืนทันทีเมื่อตรวจสภาพรถเรียบร้อย' },
   { title: 'อายุ 18 ปีขึ้นไป', desc: 'รถยนต์ 21 ปีขึ้นไป และมีใบขับขี่อย่างน้อย 1 ปี' },
 ];
 

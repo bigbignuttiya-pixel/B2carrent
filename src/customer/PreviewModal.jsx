@@ -3,6 +3,7 @@ import { X, CheckCircle2, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-
 import { Modal } from '../components/ui';
 import { baht } from '../lib/pricing';
 import { isCutout, STUDIO_BG, STUDIO_SHADOW } from '../lib/image';
+import { depositOf } from '../data';
 
 export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose, onBook }) {
   const [idx, setIdx] = useState(0);
@@ -39,7 +40,7 @@ export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose
           </div>
           <div className="text-[11px] text-slate-400 bg-slate-900 border border-slate-800 rounded-xl p-3 flex gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            ผ่านการตรวจสภาพ 30 รายการก่อนส่งมอบ • เงินมัดจำ {baht(vehicle.deposit || 1000)} (คืนเต็มจำนวน)
+            ผ่านการตรวจสภาพ 30 รายการก่อนส่งมอบ • เงินมัดจำ {baht(depositOf(vehicle))} (คืนเต็มจำนวน)
           </div>
         </div>
 
