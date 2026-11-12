@@ -32,23 +32,25 @@ export function Destinations({ onPickVehicleType }) {
   return (
     <section id="destinations" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 scroll-mt-24">
       <SectionHeading icon={Compass} eyebrow="RECOMMENDED DESTINATIONS" title="จุดหมายปลายทางยอดนิยม" desc="รับรถจาก B2 แล้วขับท่องเที่ยวไปยังแลนด์มาร์กสวยๆ ได้อย่างมั่นใจ" center />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {DESTINATIONS.map((d) => (
-          <div key={d.name} className="group relative h-80 rounded-3xl overflow-hidden border border-slate-800 shadow-xl">
+          <div key={d.name} className={`group relative h-72 sm:h-80 rounded-3xl overflow-hidden border border-slate-800 shadow-xl ${d.featured ? 'sm:col-span-2' : ''}`}>
             <img src={d.image} alt={d.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-            <div className="absolute top-4 right-4 bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-xl px-2.5 py-1 text-[10px] text-slate-200 flex items-center gap-1">
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
+            <div className="absolute top-4 right-4 bg-slate-950/85 backdrop-blur-md border border-slate-700 rounded-xl px-2.5 py-1 text-[11px] text-slate-100 font-bold flex items-center gap-1">
               <Navigation className="w-3 h-3 text-yellow-400" /> {d.distance} • {d.drive}
             </div>
             <div className="absolute bottom-5 left-5 right-5 space-y-1">
               <span className="bg-yellow-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md inline-block">{d.tag}</span>
               <h3 className="text-lg font-bold text-white group-hover:text-yellow-300 transition-colors">{d.name}</h3>
-              <p className="text-xs text-slate-300 font-light">{d.desc}</p>
+              <p className="text-xs text-slate-200 leading-relaxed">{d.desc}</p>
               <button onClick={onPickVehicleType} className="text-[11px] font-bold text-yellow-300 pt-1 hover:underline">เลือกรถสำหรับทริปนี้ →</button>
             </div>
+            {d.credit && <span className="absolute bottom-1 right-3 text-[8px] text-slate-500/80">{d.credit}</span>}
           </div>
         ))}
       </div>
+      <p className="text-center text-[11px] text-slate-500 mt-4">* ระยะทางและเวลาขับรถโดยประมาณ จากตัวเมืองนครศรีธรรมราช</p>
     </section>
   );
 }
