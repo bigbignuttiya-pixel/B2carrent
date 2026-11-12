@@ -376,7 +376,11 @@ const Viewer3D = forwardRef(function Viewer3D(
         }
         return s.renderer.domElement.toDataURL('image/jpeg', 0.92);
       } finally {
-        pt.dispose();
+        try {
+          pt.dispose(); // some versions throw while disposing; the render is already done
+        } catch {
+          /* ignore */
+        }
         sky.dispose();
         s.scene.environment = prevEnv;
         s.scene.environmentIntensity = prevInt;
