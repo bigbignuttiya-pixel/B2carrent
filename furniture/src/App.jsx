@@ -21,7 +21,12 @@ import Settings from './admin/Settings';
 
 // Pages: "#" landing, "#design" designer, "#account" customer account, "#admin" back office (not linked for customers)
 const PAGES = ['design', 'account', 'admin'];
-const pageFromHash = () => (window.location.hash.startsWith('#login=') ? 'design' : PAGES.find((p) => window.location.hash === `#${p}`) || 'home');
+const pageFromHash = () => {
+  if (window.location.hash.startsWith('#login=')) return 'design';
+  // …/admin (path) also opens the back office — same as …/#admin
+  if (/^\/admin\/?$/.test(window.location.pathname)) return 'admin';
+  return PAGES.find((p) => window.location.hash === `#${p}`) || 'home';
+};
 
 const ADMIN_TABS = [
   { id: 'dashboard', label: 'ภาพรวม', icon: LayoutDashboard },
@@ -186,7 +191,7 @@ export default function App() {
         <header className="bg-white border-b border-stone-200 sticky top-0 z-30">
           <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-3">
             <span className="font-semibold">{settings.shopName} · หลังบ้าน</span>
-            <a href="#" className="ml-auto inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900">
+            <a href="/" className="ml-auto inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900">
               <Home className="w-4 h-4" /> หน้าเว็บ
             </a>
             {adminState.signedIn && (

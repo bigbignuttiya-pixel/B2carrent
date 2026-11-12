@@ -137,6 +137,7 @@ export default function Landing({ settings, plans, onBuy }) {
             <p className="font-semibold text-stone-900">บัญชี</p>
             <a href="#account" className="block hover:text-stone-900">เข้าใช้งานด้วยรหัส / ดูสถานะ</a>
             <a href="#design" className="block hover:text-stone-900">หน้าออกแบบ</a>
+            <a href="#admin" className="block text-stone-400 hover:text-stone-900 pt-2">สำหรับร้าน (หลังบ้าน)</a>
           </div>
         </div>
         <p className="text-center text-xs text-stone-400 pb-6">© {new Date().getFullYear()} {settings.shopName}</p>
