@@ -335,6 +335,10 @@ export const DESTINATIONS = [
     drive: '~1 ชม. 30 นาที',
     featured: true,
     credit: 'Khanom Beach — Wikimedia Commons (CC BY-SA 3.0)',
+    highlights: ['หาดขนอม / หาดในเพลา น้ำใส ทรายขาว คนไม่พลุกพล่าน', 'ล่องเรือชมโลมาสีชมพูช่วงเช้า', 'จุดชมวิวเขาพลายดำ เห็นทะเลอ่าวไทยมุมกว้าง'],
+    bestTime: 'มี.ค. – ต.ค. ทะเลเรียบ (พ.ย. – ม.ค. มีมรสุม คลื่นแรง)',
+    tip: 'รถยนต์นั่งสบายทั้งครอบครัว หรือ PCX ขับเลียบทะเลสิชล–ขนอมชมวิวตลอดทาง',
+    maps: 'Khanom Beach Nakhon Si Thammarat',
   },
   {
     name: 'วัดพระมหาธาตุวรมหาวิหาร',
@@ -344,6 +348,10 @@ export const DESTINATIONS = [
     distance: '3 กม.',
     drive: '~10 นาที',
     credit: 'Chedi Phra Baromathat — Wikimedia Commons (CC BY-SA 3.0)',
+    highlights: ['พระบรมธาตุเจดีย์ทรงลังกา สูงกว่า 55 เมตร', 'วิหารพระทรงม้า และพิพิธภัณฑ์ในวัด', 'รอบวัดมีร้านขนมจีนและของฝากเมืองนคร'],
+    bestTime: 'ช่วงเช้า อากาศไม่ร้อน คนไม่เยอะ',
+    tip: 'แต่งกายสุภาพ ใกล้ตัวเมือง มอเตอร์ไซค์หาที่จอดง่าย',
+    maps: 'Wat Phra Mahathat Woramahawihan',
   },
   {
     name: 'หมู่บ้านคีรีวง',
@@ -353,6 +361,10 @@ export const DESTINATIONS = [
     distance: '25 กม.',
     drive: '~35 นาที',
     credit: 'Wang Mai Pak Waterfall — Wikimedia Commons (CC0)',
+    highlights: ['ลำธารใสไหลผ่านกลางหมู่บ้าน อากาศเย็นสดชื่น', 'น้ำตกวังไม้ปัก เล่นน้ำได้', 'ผ้ามัดย้อมสีธรรมชาติ และสวนผลไม้ (มังคุด ทุเรียน ช่วง มิ.ย. – ก.ย.)'],
+    bestTime: 'ช่วงเช้า หมอกบางและอากาศเย็นที่สุด',
+    tip: 'มอเตอร์ไซค์ขับรับลมสบาย ถนนดี ใช้เวลาไม่นานจากตัวเมือง',
+    maps: 'Khiriwong Village Lan Saka',
   },
   {
     name: 'น้ำตกกะโรม',
@@ -362,6 +374,10 @@ export const DESTINATIONS = [
     distance: '30 กม.',
     drive: '~40 นาที',
     credit: 'Karom Waterfall — Wikimedia Commons (CC BY-SA 4.0)',
+    highlights: ['น้ำตก 19 ชั้น ไหลลดหลั่นตามแนวหิน', 'ชั้นล่างเล่นน้ำได้ เดินจากลานจอดรถไม่ไกล', 'ป่าร่มรื่น เหมาะพักผ่อนครึ่งวัน'],
+    bestTime: 'เที่ยวได้ทั้งปี ช่วงฝนน้ำเยอะสวยที่สุด',
+    tip: 'มีค่าเข้าอุทยานฯ เตรียมชุดเปลี่ยนถ้าจะเล่นน้ำ',
+    maps: 'Karom Waterfall Khao Luang National Park',
   },
   {
     name: 'น้ำตกกรุงชิง',
@@ -371,6 +387,10 @@ export const DESTINATIONS = [
     distance: '70 กม.',
     drive: '~1 ชม. 15 นาที',
     credit: 'Krung Ching Waterfall — Wikimedia Commons (CC BY-SA 4.0)',
+    highlights: ['น้ำตกหนานฝนแสนห่า ไฮไลต์ของอุทยานฯ เขาหลวง', 'เส้นทางเดินป่า ~4 กม. ผ่านป่าดิบชื้น เฟิร์น และมอส', 'อากาศเย็น ธรรมชาติสมบูรณ์มาก'],
+    bestTime: 'ช่วงฝนตกหนักอาจปิดเส้นทาง ควรเช็กกับอุทยานฯ ก่อนไป',
+    tip: 'เริ่มเดินช่วงเช้า ใส่รองเท้าเดินป่า ไป–กลับใช้เวลาประมาณ 3 ชม.',
+    maps: 'Krung Ching Waterfall Nopphitam',
   },
 ];
 
