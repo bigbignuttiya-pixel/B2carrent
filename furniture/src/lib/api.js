@@ -71,7 +71,7 @@ export const api = {
   async loadAdmin() {
     const [a, p, pr] = await Promise.all([
       supabase.from('furniture_accounts').select('*').order('created_at', { ascending: false }).limit(2000),
-      supabase.from('furniture_payments').select('*').order('created_at', { ascending: false }).limit(2000),
+      supabase.from('furniture_payments').select('*').order('created_at', { ascending: false }).limit(20000),
       supabase.from('furniture_projects').select('account_id').limit(10000),
     ]);
     const counts = {};
@@ -99,7 +99,10 @@ export const api = {
       amount: r.amount,
       status: r.status,
       slipPath: r.slip_path,
+      oldSlips: r.old_slips || [],
       hasSlip: Boolean(r.slip_path),
+      decidedAtIso: r.decided_at,
+      createdAtIso: r.created_at,
       createdAt: bangkok(r.created_at),
       decidedAt: bangkok(r.decided_at),
     }));
@@ -115,6 +118,17 @@ export const api = {
     if (!payment.slipPath) return null;
     const { data, error } = await supabase.storage.from(SLIP_BUCKET).createSignedUrl(payment.slipPath, 600);
     return error ? null : data.signedUrl;
+  },
+  // Signed links for many slips at once (e.g. a whole month for the accountant)
+  async getSlipUrls(paths) {
+    if (!paths.length) return {};
+    const out = {};
+    for (let i = 0; i < paths.length; i += 100) {
+      const { data, error } = await supabase.storage.from(SLIP_BUCKET).createSignedUrls(paths.slice(i, i + 100), 3600);
+      if (error) throw toApiError(error);
+      data.forEach((d) => d.signedUrl && (out[d.path] = d.signedUrl));
+    }
+    return out;
   },
   async updateAccount(id, patch) {
     const row = {};

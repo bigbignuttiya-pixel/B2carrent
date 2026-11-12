@@ -64,6 +64,7 @@ create table if not exists public.furniture_payments (
   amount int not null,
   status text not null default 'Pending' check (status in ('Pending', 'Approved', 'Rejected')),
   slip_path text,
+  old_slips text[] not null default '{}',     -- earlier slips for this payment (kept as evidence, never deleted)
   claim_token text not null default '',      -- secret that lets the buyer follow this payment and receive the code
   created_at timestamptz not null default now(),
   decided_at timestamptz
@@ -217,12 +218,22 @@ create policy furniture_plans_admin on public.furniture_plans for all to authent
 drop policy if exists furniture_accounts_admin on public.furniture_accounts;
 create policy furniture_accounts_admin on public.furniture_accounts for all to authenticated
   using (public.furniture_is_admin()) with check (public.furniture_is_admin());
-drop policy if exists furniture_payments_admin on public.furniture_payments;
-create policy furniture_payments_admin on public.furniture_payments for all to authenticated
-  using (public.furniture_is_admin()) with check (public.furniture_is_admin());
 drop policy if exists furniture_projects_admin on public.furniture_projects;
 create policy furniture_projects_admin on public.furniture_projects for all to authenticated
   using (public.furniture_is_admin()) with check (public.furniture_is_admin());
+
+-- Customers who have paid can't be deleted (their payments are accounting records)
+create or replace function public.furniture_keep_paid_accounts() returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if exists (select 1 from public.furniture_payments where account_id = old.id and status = 'Approved') then
+    raise exception 'has_payments';
+  end if;
+  return old;
+end $$;
+drop trigger if exists furniture_accounts_keep on public.furniture_accounts;
+create trigger furniture_accounts_keep before delete on public.furniture_accounts
+  for each row execute function public.furniture_keep_paid_accounts();
 
 -- ---------- Public RPCs (customers) ----------
 -- New customer: create the account + the first payment. The access code is NOT returned here —
@@ -281,7 +292,9 @@ returns jsonb language plpgsql volatile security definer set search_path = publi
 declare row public.furniture_payments;
 begin
   if p_path !~ '^pending/[A-Za-z0-9_-]+\.jpg$' then raise exception 'invalid_slip'; end if;
-  update public.furniture_payments set slip_path = p_path
+  update public.furniture_payments
+     set old_slips = case when coalesce(slip_path, '') <> '' then old_slips || slip_path else old_slips end,
+         slip_path = p_path
    where id = upper(trim(p_id)) and claim_token = public.furniture_norm_code(p_token) and length(claim_token) = 20
      and status = 'Pending'
   returning * into row;
@@ -308,7 +321,9 @@ returns jsonb language plpgsql volatile security definer set search_path = publi
 declare a public.furniture_accounts := public.furniture_account_by_code(p_code); row public.furniture_payments;
 begin
   if p_path !~ '^pending/[A-Za-z0-9_-]+\.jpg$' then raise exception 'invalid_slip'; end if;
-  update public.furniture_payments set slip_path = p_path
+  update public.furniture_payments
+     set old_slips = case when coalesce(slip_path, '') <> '' then old_slips || slip_path else old_slips end,
+         slip_path = p_path
    where id = upper(trim(p_payment_id)) and account_id = a.id and status = 'Pending'
   returning * into row;
   if row.id is null then raise exception 'not_allowed'; end if;
@@ -379,7 +394,7 @@ begin
   end loop;
   -- Supabase grants EXECUTE to anon/authenticated directly, so internal helpers are revoked explicitly
   foreach f in array array[
-    'furniture_touch()', 'furniture_new_code()', 'furniture_payment_decide()',
+    'furniture_touch()', 'furniture_new_code()', 'furniture_payment_decide()', 'furniture_keep_paid_accounts()',
     'furniture_account_by_code(text)', 'furniture_new_payment(uuid, text)',
     'furniture_account_json(public.furniture_accounts)', 'furniture_payment_json(public.furniture_payments)'
   ] loop
@@ -390,7 +405,8 @@ end $$;
 grant usage on schema public to anon, authenticated;
 grant select on public.furniture_plans, public.furniture_settings to anon;
 grant select, insert, update, delete on public.furniture_plans, public.furniture_settings, public.furniture_accounts,
-  public.furniture_payments, public.furniture_projects, public.furniture_admins to authenticated;
+  public.furniture_projects, public.furniture_admins to authenticated;
+grant select, update on public.furniture_payments to authenticated;
 
 -- ---------- Storage (payment slips) ----------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -403,9 +419,16 @@ create policy "furniture slips customer upload" on storage.objects for insert to
 drop policy if exists "furniture slips admin read" on storage.objects;
 create policy "furniture slips admin read" on storage.objects for select to authenticated
   using (bucket_id = 'furniture-slips' and public.furniture_is_admin());
+-- No delete policy: payment slips are kept permanently as evidence for tax / accounting.
 drop policy if exists "furniture slips admin delete" on storage.objects;
-create policy "furniture slips admin delete" on storage.objects for delete to authenticated
-  using (bucket_id = 'furniture-slips' and public.furniture_is_admin());
+
+-- Payments are financial records: they can change status but never be deleted from the website
+drop policy if exists furniture_payments_admin on public.furniture_payments;
+drop policy if exists furniture_payments_admin_read on public.furniture_payments;
+create policy furniture_payments_admin_read on public.furniture_payments for select to authenticated using (public.furniture_is_admin());
+drop policy if exists furniture_payments_admin_update on public.furniture_payments;
+create policy furniture_payments_admin_update on public.furniture_payments for update to authenticated
+  using (public.furniture_is_admin()) with check (public.furniture_is_admin());
 
 -- ---------- Realtime: admin screens update instantly on new payments ----------
 do $$

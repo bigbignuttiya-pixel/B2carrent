@@ -74,6 +74,16 @@ export function PaymentDrawer({ payment, onClose, onChanged, notify }) {
           ) : (
             <p className="h-48 grid place-items-center rounded-xl bg-stone-50 border border-dashed border-stone-300 text-stone-500">ยังไม่มีสลิป</p>
           )}
+          {payment.oldSlips?.length > 0 && (
+            <p className="text-xs text-stone-500 mt-2">
+              สลิปที่ลูกค้าแนบก่อนหน้า (เก็บไว้เป็นหลักฐาน):{' '}
+              {payment.oldSlips.map((path, i) => (
+                <button key={path} onClick={async () => { const u = await api.getSlipUrl({ slipPath: path }); if (u) window.open(u, '_blank', 'noopener'); }} className="text-amber-700 underline mr-2">
+                  ใบที่ {i + 1}
+                </button>
+              ))}
+            </p>
+          )}
         </div>
         {payment.status === 'Approved' && a && (
           <div className="sm:col-span-2 space-y-2">

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LayoutDashboard, Receipt, Users, Tags, Settings as SettingsIcon, LogOut, Home, PencilRuler, UserRound, Lock } from 'lucide-react';
+import { LayoutDashboard, Receipt, Users, Tags, Settings as SettingsIcon, BarChart3, LogOut, Home, PencilRuler, UserRound, Lock } from 'lucide-react';
 import { DEFAULT_SETTINGS, formatCode } from './data';
 import { api } from './lib/api';
 import { errorMessage } from './lib/errors';
@@ -15,6 +15,7 @@ import AdminLogin from './admin/AdminLogin';
 import Dashboard from './admin/Dashboard';
 import Payments, { PaymentDrawer } from './admin/Payments';
 import Customers from './admin/Customers';
+import Revenue from './admin/Revenue';
 import Plans from './admin/Plans';
 import Settings from './admin/Settings';
 
@@ -25,6 +26,7 @@ const pageFromHash = () => (window.location.hash.startsWith('#login=') ? 'design
 const ADMIN_TABS = [
   { id: 'dashboard', label: 'ภาพรวม', icon: LayoutDashboard },
   { id: 'payments', label: 'การชำระเงิน', icon: Receipt },
+  { id: 'revenue', label: 'รายรับรายเดือน', icon: BarChart3 },
   { id: 'customers', label: 'ลูกค้า', icon: Users },
   { id: 'plans', label: 'แพ็กเกจ', icon: Tags },
   { id: 'settings', label: 'ตั้งค่า', icon: SettingsIcon },
@@ -221,6 +223,8 @@ export default function App() {
             <Dashboard {...adminData} onOpenPayment={setOpenPaymentId} />
           ) : adminTab === 'payments' ? (
             <Payments payments={adminData.payments} onOpenPayment={setOpenPaymentId} />
+          ) : adminTab === 'revenue' ? (
+            <Revenue payments={adminData.payments} shopName={settings.shopName} notify={notify} />
           ) : adminTab === 'customers' ? (
             <Customers accounts={adminData.accounts} notify={notify} onChanged={refreshAdmin} />
           ) : adminTab === 'plans' ? (
