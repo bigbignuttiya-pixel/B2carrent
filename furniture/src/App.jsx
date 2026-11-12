@@ -70,6 +70,7 @@ export default function App() {
   useEffect(() => {
     const sync = () => {
       setPage(pageFromHash());
+      setBuy(null); // e.g. "เริ่มออกแบบ" inside the payment dialog
       if (window.location.hash !== '#plans') window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', sync);
