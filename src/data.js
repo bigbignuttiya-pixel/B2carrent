@@ -1,4 +1,4 @@
-import { HardHat, Smartphone, Shield, MapPin, Baby, Wifi } from 'lucide-react';
+import { HardHat, Smartphone, Shield, MapPin, Baby, Wifi, UserCheck } from 'lucide-react';
 
 // ==========================================
 // MOCK DATA & CONSTANTS
@@ -304,6 +304,7 @@ export const INITIAL_BOOKINGS = [
 ];
 
 export const ADDONS = [
+  { id: 'driver', name: 'บริการพร้อมคนขับ (คนขับมืออาชีพ ชำนาญเส้นทาง)', price: 500, unit: 'day', icon: UserCheck, onlyFor: 'Car', note: 'บาท/วัน' },
   { id: 'helmet', name: 'หมวกกันน็อกมาตรฐาน มอก. 2 ใบ (Full Face / Half)', price: 0, unit: 'free', icon: HardHat, onlyFor: 'Motorcycle', note: 'บริการฟรีไม่มีค่าใช้จ่าย' },
   { id: 'phoneholder', name: 'แท่นจับมือถือกันสั่นอลูมิเนียม Smart Holder', price: 50, unit: 'day', icon: Smartphone, note: 'บาท/วัน' },
   { id: 'insurance', name: 'ประกันภัยคุ้มครองพิเศษ Zero Deductible (ไม่มีค่าเสียหายส่วนแรก)', price: 150, unit: 'day', icon: Shield, note: 'บาท/วัน' },

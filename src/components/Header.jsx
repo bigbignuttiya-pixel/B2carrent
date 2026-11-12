@@ -42,7 +42,7 @@ export default function Header({ viewMode, setViewMode, activeTab, goTab, bookin
               <span className="text-xl font-black tracking-wide text-white group-hover:text-yellow-400 transition-colors">B2 RENTAL</span>
               <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-md">MOTOR & CAR</span>
             </div>
-            <span className="block text-[10px] text-blue-300/80 font-medium tracking-wider">บริการเช่ารถจักรยานยนต์และรถยนต์คุณภาพสูง</span>
+            <span className="block text-[10px] text-blue-300/80 font-medium tracking-wider">บริการเช่ารถจักรยานยนต์และรถยนต์ • พร้อมคนขับ</span>
           </div>
         </button>
 

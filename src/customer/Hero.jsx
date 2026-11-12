@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Sparkles, Bike, Car, AlertTriangle, Percent, Copy } from 'lucide-react';
+import { Search, Sparkles, Bike, Car, AlertTriangle, Percent, Copy, UserCheck } from 'lucide-react';
 import { HERO_SLIDES, LOCATIONS } from '../data';
 import { addDaysISO, todayISO, durationTier } from '../lib/pricing';
 import { inputCls } from '../components/ui';
@@ -58,6 +58,9 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
                 </div>
                 <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 backdrop-blur-sm">
                   <Car className="w-4 h-4 text-blue-400" /> รถยนต์ (Sedan / SUV / EV)
+                </div>
+                <div className="flex items-center gap-2 bg-yellow-400/15 border border-yellow-400/50 px-3 py-1.5 rounded-xl text-xs font-black text-yellow-300 backdrop-blur-sm">
+                  <UserCheck className="w-4 h-4 text-yellow-400" /> บริการรถเช่าพร้อมคนขับ
                 </div>
               </div>
 
