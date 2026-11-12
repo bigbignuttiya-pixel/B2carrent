@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Navigation, Route, Facebook, Lock } from 'lucide-react';
 import { DESTINATIONS, REVIEWS, REQUIREMENTS, FAQS } from '../data';
 import { SectionHeading } from '../components/ui';
+import { lineChatUrl, lineLabel } from '../lib/line';
 
 export function HowItWorks() {
   const steps = [
@@ -116,7 +117,7 @@ export function RequirementsAndFaq() {
     <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 scroll-mt-24">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-2">
-          <SectionHeading icon={FileCheck2} eyebrow="RENTAL REQUIREMENTS" title="เอกสารที่ต้องใช้" desc="เตรียมให้พร้อมในวันรับรถ ส่งมอบได้ภายใน 10 นาที" />
+          <SectionHeading icon={FileCheck2} eyebrow="RENTAL REQUIREMENTS" title="เอกสารที่ต้องใช้" desc="หลังจองแล้ว ส่งรูปบัตรประชาชน/Passport และใบขับขี่ทาง LINE ได้เลย วันรับรถนำตัวจริงมาด้วย ส่งมอบได้ภายใน 10 นาที" />
           <div className="space-y-3">
             {REQUIREMENTS.map((r, i) => (
               <div key={r.title} className="flex gap-4 bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
@@ -175,7 +176,7 @@ export function Footer({ settings, onNav, onStaff }) {
         <div className="space-y-2">
           <h4 className="font-bold text-white text-sm mb-2">ติดต่อเรา</h4>
           <a href={`tel:${settings.storePhone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-2 text-slate-400 hover:text-yellow-300"><Phone className="w-4 h-4" /> {settings.storePhone}</a>
-          <a href={`https://line.me/R/ti/p/${encodeURIComponent(settings.lineOaId)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-slate-400 hover:text-emerald-300"><MessageCircle className="w-4 h-4" /> LINE {settings.lineOaId}</a>
+          <a href={lineChatUrl(settings.lineOaId)} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-slate-400 hover:text-emerald-300"><MessageCircle className="w-4 h-4" /> LINE {lineLabel(settings.lineOaId)}</a>
           {settings.facebookUrl && (
             <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-slate-400 hover:text-[#4c8dff]" aria-label="เปิดแฟนเพจ Facebook">
               <Facebook className="w-4 h-4" /> Facebook: {settings.facebookName || 'แฟนเพจ'}
@@ -187,7 +188,7 @@ export function Footer({ settings, onNav, onStaff }) {
                 <Facebook className="w-4 h-4" />
               </a>
             )}
-            <a href={`https://line.me/R/ti/p/${encodeURIComponent(settings.lineOaId)}`} target="_blank" rel="noopener noreferrer" title="LINE" aria-label="LINE" className="w-9 h-9 rounded-xl bg-[#06C755] text-white flex items-center justify-center hover:scale-110 transition">
+            <a href={lineChatUrl(settings.lineOaId)} target="_blank" rel="noopener noreferrer" title="LINE" aria-label="LINE" className="w-9 h-9 rounded-xl bg-[#06C755] text-white flex items-center justify-center hover:scale-110 transition">
               <MessageCircle className="w-4 h-4" />
             </a>
             <a href={`tel:${settings.storePhone.replace(/[^0-9+]/g, '')}`} title="โทร" aria-label="โทร" className="w-9 h-9 rounded-xl bg-yellow-400 text-slate-950 flex items-center justify-center hover:scale-110 transition">
@@ -217,7 +218,7 @@ export function FloatingContact({ settings }) {
           <span className="hidden sm:inline">Facebook</span>
         </a>
       )}
-      <a href={`https://line.me/R/ti/p/${encodeURIComponent(settings.lineOaId)}`} target="_blank" rel="noreferrer" className="group flex items-center gap-2 bg-[#06C755] text-white rounded-full shadow-2xl shadow-emerald-900/50 pl-3 pr-4 py-3 text-xs font-black hover:scale-105 transition" aria-label="แชท LINE">
+      <a href={lineChatUrl(settings.lineOaId)} target="_blank" rel="noreferrer" className="group flex items-center gap-2 bg-[#06C755] text-white rounded-full shadow-2xl shadow-emerald-900/50 pl-3 pr-4 py-3 text-xs font-black hover:scale-105 transition" aria-label="แชท LINE">
         <MessageCircle className="w-5 h-5" />
         <span className="hidden sm:inline">แชท LINE</span>
       </a>

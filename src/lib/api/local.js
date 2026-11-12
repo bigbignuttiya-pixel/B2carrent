@@ -79,7 +79,7 @@ export const localApi = {
       vehicleType: v.type,
       customerName: p.name.trim(),
       phone: digits(p.phone),
-      email: p.email,
+      lineId: p.lineId || undefined,
       idCard: p.idCard || '-',
       license: p.license,
       note: p.note,

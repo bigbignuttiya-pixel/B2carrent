@@ -1,13 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
 import { ADDONS } from '../data';
 import { priceQuote, baht, formatThaiDate } from '../lib/pricing';
 import { buildPromptPayPayload } from '../lib/promptpay';
 import { Modal, inputCls } from '../components/ui';
 import { compressImage } from '../lib/image';
+import { lineChatUrl, lineMessageUrl, lineLabel } from '../lib/line';
 
-const EMPTY_INFO = { name: '', phone: '', email: '', idCard: '', license: '', note: '' };
+const EMPTY_INFO = { name: '', phone: '', lineId: '', idCard: '', license: '', note: '' };
+
+// Message the customer sends to the shop's LINE OA together with photos of their documents
+export function bookingLineText(b) {
+  return [
+    `ส่งเอกสารการจอง ${b.id}`,
+    `รถ: ${b.vehicleName}`,
+    `ชื่อผู้เช่า: ${b.customerName}`,
+    `โทร: ${b.phone}`,
+    b.lineId ? `LINE ID: ${b.lineId}` : null,
+    `รับรถ: ${formatThaiDate(b.startDate)} ${b.pickupTime}`,
+    `คืนรถ: ${formatThaiDate(b.endDate)} ${b.returnTime} (${b.totalDays} วัน)`,
+    `จุดรับ-คืน: ${b.pickupLocation}`,
+    `ยอดชำระ: ${baht(b.totalPrice)}`,
+    '',
+    'แนบรูป: บัตรประชาชน/Passport และใบขับขี่' + (b.hasSlip ? '' : ' + สลิปโอนเงิน'),
+  ]
+    .filter((x) => x !== null)
+    .join('\n');
+}
+
+
 
 function Stepper({ step }) {
   const steps = ['ข้อมูล & ออปชัน', 'ชำระเงิน', 'ยืนยันการจอง'];
@@ -103,7 +125,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
     if (info.name.trim().length < 3) e.name = 'กรุณากรอกชื่อ-นามสกุลจริง';
     const digits = info.phone.replace(/[^0-9]/g, '');
     if (!/^0\d{8,9}$/.test(digits)) e.phone = 'เบอร์โทรศัพท์ไม่ถูกต้อง (เช่น 0819998877)';
-    if (info.email && !/^\S+@\S+\.\S+$/.test(info.email)) e.email = 'รูปแบบอีเมลไม่ถูกต้อง';
+    if (info.lineId && !/^@?[A-Za-z0-9._-]{2,40}$/.test(info.lineId.trim())) e.lineId = 'LINE ID ไม่ถูกต้อง (ใช้ตัวอักษรภาษาอังกฤษ ตัวเลข . _ - เท่านั้น)';
     if (!agree) e.agree = 'กรุณายอมรับเงื่อนไขการเช่า';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -239,9 +261,9 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
                 {err('phone')}
               </div>
               <div>
-                <label className="text-slate-400 block mb-1">อีเมล</label>
-                <input className={inputCls} type="email" placeholder="you@mail.com" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} />
-                {err('email')}
+                <label className="text-slate-400 block mb-1">LINE ID (สำหรับติดต่อกลับ)</label>
+                <input className={inputCls} autoCapitalize="none" autoCorrect="off" placeholder="เช่น somchai123" value={info.lineId} onChange={(e) => setInfo({ ...info, lineId: e.target.value })} />
+                {err('lineId')}
               </div>
               <div>
                 <label className="text-slate-400 block mb-1">เลขบัตรประชาชน / Passport</label>
@@ -407,6 +429,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
               ['รุ่นพาหนะ', result.vehicleName],
               ['ชื่อผู้เช่า', result.customerName],
               ['เบอร์โทรศัพท์', result.phone],
+              ...(result.lineId ? [['LINE ID', result.lineId]] : []),
               ['จุดรับ-คืนรถ', result.pickupLocation],
               ['รับรถ', `${formatThaiDate(result.startDate)} ${result.pickupTime}`],
               ['คืนรถ', `${formatThaiDate(result.endDate)} ${result.returnTime} (${result.totalDays} วัน)`],
@@ -426,9 +449,36 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
 
           {!result.hasSlip && (
             <div className="max-w-md mx-auto text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2 flex gap-2 text-left no-print">
-              <AlertTriangle className="w-4 h-4 shrink-0" /> ยังไม่ได้แนบสลิป — สามารถแนบได้ที่หน้า “ตรวจสถานะการจอง” หรือส่งทาง LINE {settings.lineOaId}
+              <AlertTriangle className="w-4 h-4 shrink-0" /> ยังไม่ได้แนบสลิป — สามารถแนบได้ที่หน้า “ตรวจสถานะการจอง” หรือส่งทาง LINE {lineLabel(settings.lineOaId)}
             </div>
           )}
+
+          <div className="max-w-md mx-auto text-left bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-3 no-print">
+            <div className="text-sm font-black text-emerald-300 flex items-center gap-2"><MessageCircle className="w-4 h-4" /> ขั้นตอนต่อไป: ส่งเอกสารทาง LINE</div>
+            <p className="text-[11px] text-slate-300">กรุณาส่งรูปเอกสารต่อไปนี้ทาง LINE <b className="text-emerald-300">{lineLabel(settings.lineOaId)}</b> พร้อมรายละเอียดการจอง เพื่อให้ทีมงานยืนยันได้รวดเร็ว</p>
+            <ul className="text-[11px] text-slate-200 space-y-1">
+              <li>✅ บัตรประชาชน / Passport ของผู้เช่า</li>
+              <li>✅ ใบขับขี่ที่ยังไม่หมดอายุ</li>
+              {!result.hasSlip && <li>✅ สลิปการโอนเงิน</li>}
+            </ul>
+            <div className="flex flex-wrap gap-2">
+              {lineChatUrl(settings.lineOaId) && (
+                <a
+                  href={lineMessageUrl(settings.lineOaId, bookingLineText(result)) || lineChatUrl(settings.lineOaId)}
+                  onClick={() => !lineMessageUrl(settings.lineOaId, '') && copy(bookingLineText(result), 'คัดลอกรายละเอียดการจองแล้ว — วางในแชต LINE ได้เลย')}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 min-w-[180px] text-center px-4 py-3 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5"
+                >
+                  <MessageCircle className="w-4 h-4" /> ส่งรายละเอียดการจองทาง LINE
+                </a>
+              )}
+              <button onClick={() => copy(bookingLineText(result), 'คัดลอกรายละเอียดการจองแล้ว')} className="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                <Copy className="w-4 h-4" /> คัดลอก
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500">{lineMessageUrl(settings.lineOaId, '') ? 'กดปุ่มแล้ว LINE จะเปิดพร้อมข้อความการจอง จากนั้นแนบรูปเอกสารแล้วกดส่ง' : 'กดปุ่มแล้วระบบจะคัดลอกรายละเอียดการจองให้ และเปิด LINE ของร้าน — กด "วาง" ในแชต แนบรูปเอกสาร แล้วกดส่ง'}</p>
+          </div>
 
           <div className="flex flex-wrap justify-center gap-3 no-print">
             <button onClick={() => window.print()} className="px-5 py-3 bg-slate-800 text-slate-200 hover:bg-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5">
