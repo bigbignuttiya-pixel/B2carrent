@@ -364,7 +364,7 @@ const Viewer3D = forwardRef(function Viewer3D(
       s.scene.environmentIntensity = 0.9;
       const pt = new WebGLPathTracer(s.renderer);
       Object.assign(pt, { renderDelay: 0, fadeDuration: 0, minSamples: 1, bounces: 6, filterGlossyFactor: 0.5 });
-      pt.tiles.set(2, 2);
+      pt.tiles.set(3, 3); // small pieces of work per frame keep the page responsive
       try {
         s.camera.updateMatrixWorld();
         pt.setScene(s.scene, s.camera);

@@ -116,7 +116,7 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
     setPt({ progress: 0, started: Date.now() });
     try {
       const small = window.innerWidth < 768;
-      const url = await viewerRef.current?.renderPhotoreal({ samples: small ? 60 : 140, onProgress: (p) => setPt((x) => x && { ...x, progress: p }), isCancelled: () => cancelRef.current });
+      const url = await viewerRef.current?.renderPhotoreal({ samples: window.__FORMA_PT_SAMPLES || (small ? 60 : 140), onProgress: (p) => setPt((x) => x && { ...x, progress: p }), isCancelled: () => cancelRef.current });
       if (url) setPhoto(url);
     } catch (err) {
       console.error(err);
