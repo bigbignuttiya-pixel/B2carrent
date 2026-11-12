@@ -35,6 +35,9 @@ export const DEFAULT_PRICING = {
   handle: 45,
   rodPerM: 120,
   slidingPerDoor: 650, // track + rollers per sliding door
+  shoeRack: 450,
+  basket: 690,
+  pantsRack: 950,
   metalLegs: 1200, // per set of 4
   countertopPerM: 1800,
   laborPerSheet: 450, // cutting, edging, assembly per sheet used
@@ -80,7 +83,14 @@ export const ELEMENT_KINDS = {
   shelf: { name: 'ชั้นวาง', defaultH: 0 },
   drawer: { name: 'ลิ้นชัก', defaultH: 18 },
   rod: { name: 'ราวแขวน', defaultH: 0 },
+  // ready-made accessories (hardware, not cut from sheets)
+  shoe: { name: 'ชั้นรองเท้า', defaultH: 22, accessory: true },
+  basket: { name: 'ตะกร้าลวด', defaultH: 16, accessory: true },
+  pants: { name: 'ราวกางเกง', defaultH: 10, accessory: true },
 };
+// height an element takes inside a column (cm)
+export const elementH = (it, t) => (it.kind === 'shelf' ? t : it.kind === 'rod' ? 3 : it.h || ELEMENT_KINDS[it.kind]?.defaultH || 3);
+const hasH = (kind) => kind === 'drawer' || ELEMENT_KINDS[kind]?.accessory;
 
 // ---------- templates ----------
 const col = (w, door, items = []) => ({ id: uid(), w, door, items: items.map((it) => ({ id: uid(), ...it })) });
@@ -196,8 +206,8 @@ export function normalizePiece(p, materials) {
     ...c,
     w: r1((Math.max(1, c.w) / sum) * inner),
     items: c.items.map((it) => {
-      const h = it.kind === 'drawer' ? Math.max(8, Math.min(it.h || 18, innerH)) : 0;
-      const top = it.kind === 'shelf' ? innerH - t : it.kind === 'drawer' ? innerH - h : innerH - 5;
+      const h = hasH(it.kind) ? Math.max(6, Math.min(it.h || ELEMENT_KINDS[it.kind].defaultH, innerH)) : 0;
+      const top = it.kind === 'shelf' ? innerH - t : hasH(it.kind) ? innerH - h : innerH - 5;
       return { ...it, h, y: r1(Math.max(0, Math.min(it.y, top))) };
     }),
   }));
@@ -225,7 +235,7 @@ export const hingesFor = (h) => (h <= 90 ? 2 : h <= 150 ? 3 : h <= 200 ? 4 : 5);
 // anim: { id, type: 'door'|'drawer'|'flip', ... } — parts with the same anim.id move together in 3D
 export function buildPiece(p, materials) {
   const parts = [];
-  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0 };
+  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0, shoeRack: 0, basket: 0, pantsRack: 0 };
   const extras = []; // non-panel 3D objects: rods, legs, countertop
   const add = (part) => parts.push(part);
 
@@ -274,6 +284,15 @@ export function buildPiece(p, materials) {
     c.items.forEach((it) => {
       if (it.kind === 'shelf') {
         add({ name: 'ชั้นวาง', mat: cm.id, a: c.w, b: D - setback, bandA: 1, bandB: 0, box: { x, y: y0 + it.y, z: 0, sx: c.w, sy: t, sz: D - setback }, color: finishById(p.shelfFinish)?.color || color, shelf: true });
+      } else if (it.kind === 'shoe') {
+        hw.shoeRack += 1;
+        extras.push({ type: 'shoe', box: { x: x + 1, y: y0 + it.y, z: 4, sx: c.w - 2, sy: it.h, sz: D - 8 - setback } });
+      } else if (it.kind === 'basket') {
+        hw.basket += 1;
+        extras.push({ type: 'basket', box: { x: x + 1.5, y: y0 + it.y + 1, z: 4, sx: c.w - 3, sy: it.h - 2, sz: D - 9 - setback } });
+      } else if (it.kind === 'pants') {
+        hw.pantsRack += 1;
+        extras.push({ type: 'pants', box: { x: x + 1.5, y: y0 + it.y, z: 4, sx: c.w - 3, sy: it.h, sz: D - 9 - setback } });
       } else if (it.kind === 'rod') {
         hw.rodCm += c.w;
         extras.push({ type: 'rod', from: [x, y0 + it.y, D / 2], to: [x + c.w, y0 + it.y, D / 2] });
@@ -417,7 +436,7 @@ function finish(p, parts, hw, extras, outer) {
 // Collision check for the 2D editor: elements overlapping in the same column
 export function overlaps(p, materials, c) {
   const t = matById(materials, p.carcass).t;
-  const spans = c.items.map((it) => ({ id: it.id, lo: it.y, hi: it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 3) }));
+  const spans = c.items.map((it) => ({ id: it.id, lo: it.y, hi: it.y + elementH(it, t) }));
   const bad = new Set();
   spans.forEach((a, i) => spans.forEach((b, j) => i < j && a.lo < b.hi - 0.05 && b.lo < a.hi - 0.05 && (bad.add(a.id), bad.add(b.id))));
   return bad;
@@ -427,9 +446,9 @@ export function overlaps(p, materials, c) {
 export function freeSpot(p, materials, c, kind) {
   const t = matById(materials, p.carcass).t;
   const Hi = innerHeight(p, materials);
-  const size = kind === 'drawer' ? 18 : kind === 'shelf' ? t : 3;
+  const size = elementH({ kind }, t);
   const spans = c.items
-    .map((it) => [it.y, it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 3)])
+    .map((it) => [it.y, it.y + elementH(it, t)])
     .sort((a, b) => a[0] - b[0]);
   let best = { lo: 0, hi: Hi };
   let bestLen = -1;
@@ -441,7 +460,7 @@ export function freeSpot(p, materials, c, kind) {
     }
     cur = Math.max(cur, hi);
   });
-  if (kind === 'drawer') return r1(best.lo);
+  if (hasH(kind)) return r1(best.lo);
   return r1(Math.max(0, Math.min(Hi - size, (best.lo + best.hi) / 2 - size / 2)));
 }
 
@@ -459,6 +478,9 @@ export const countItems = (c) => ({
   shelves: c.items.filter((i) => i.kind === 'shelf').length,
   rods: c.items.filter((i) => i.kind === 'rod').length,
   drawers: c.items.filter((i) => i.kind === 'drawer').length,
+  shoes: c.items.filter((i) => i.kind === 'shoe').length,
+  baskets: c.items.filter((i) => i.kind === 'basket').length,
+  pants: c.items.filter((i) => i.kind === 'pants').length,
 });
 
 // Lay out a column from counts: drawers stacked at the bottom, hanging space at the top, shelves spread evenly
@@ -470,13 +492,25 @@ export function autoLayout(p, materials, colIndex, counts) {
   let shelves = Math.max(0, Math.min(12, counts.shelves));
   const dh = Hi < 100 ? Math.max(10, Math.min(25, Math.floor(Hi / Math.max(1, drawers)) - 1)) : 20;
   const items = [];
-  for (let k = 0; k < drawers; k++) items.push({ id: uid(), kind: 'drawer', y: r1(k * (dh + 0.5)), h: dh });
-  const base = drawers ? r1(drawers * (dh + 0.5) + (shelves || rods ? 0.5 : 0)) : 0;
-  if (drawers && (shelves || rods)) {
+  // bottom of the column, from the floor up: shoe racks, drawers, wire baskets, pull-out trouser rack
+  let yb = 0;
+  const stack = (kind, n, h) => {
+    for (let k = 0; k < n; k++) {
+      items.push({ id: uid(), kind, y: r1(yb), h });
+      yb += h + 0.5;
+    }
+  };
+  stack('shoe', Math.max(0, Math.min(4, counts.shoes || 0)), ELEMENT_KINDS.shoe.defaultH);
+  stack('drawer', drawers, dh);
+  stack('basket', Math.max(0, Math.min(5, counts.baskets || 0)), ELEMENT_KINDS.basket.defaultH);
+  stack('pants', Math.max(0, Math.min(1, counts.pants || 0)), ELEMENT_KINDS.pants.defaultH);
+  const stacked = items.length;
+  const base = stacked ? r1(yb + (shelves || rods ? 0 : -0.5)) : 0;
+  if (stacked && (shelves || rods)) {
     items.push({ id: uid(), kind: 'shelf', y: base });
     shelves = Math.max(0, shelves - 1);
   }
-  const floor = drawers && items.length > drawers ? base + t : base;
+  const floor = stacked && items.length > stacked ? base + t : base;
   let top = Hi;
   if (rods > 0 && Hi - floor < 60) rods = 0;
   if (rods > 0) {
@@ -528,12 +562,20 @@ export function decorFor(p, materials) {
   const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
   p.columns.forEach((c, i) => {
     const x = columnX(p, materials, i);
-    const els = c.items.map((it) => ({ ...it, top: it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 0) })).sort((a, b) => a.y - b.y);
+    const els = c.items.map((it) => ({ ...it, top: it.y + (it.kind === 'rod' ? 0 : elementH(it, t)) })).sort((a, b) => a.y - b.y);
+    els.filter((e) => e.kind === 'shoe').forEach((e) => {
+      const n = Math.floor((c.w - 4) / 22);
+      for (let k = 0; k < n; k++) {
+        const col = SHOE[Math.floor(rnd() * SHOE.length)];
+        const sx = x + 3 + k * ((c.w - 4) / n);
+        [0, 9.5].forEach((dx) => out.push({ type: 'fold', box: { x: sx + dx, y: y0 + e.y + 6, z: p.D * 0.25, sx: 8.5, sy: 8, sz: Math.min(26, p.D - 14) }, color: col, tilt: -0.32 }));
+      }
+    });
     const surfaces = [{ y: 0 }, ...els.filter((e) => e.kind === 'shelf').map((e) => ({ y: e.top }))];
     surfaces.forEach((sf) => {
       const above = els.filter((e) => e.y >= sf.y - 0.1 && e.y > sf.y + 0.1).sort((a, b) => a.y - b.y)[0];
-      const blocked = els.some((e) => e.kind === 'drawer' && e.y <= sf.y + 0.1 && e.top > sf.y);
-      if (blocked || (sf.y === 0 && els.some((e) => e.kind === 'drawer' && e.y < 1))) return;
+      const blocked = els.some((e) => hasH(e.kind) && e.y <= sf.y + 0.1 && e.top > sf.y);
+      if (blocked || (sf.y === 0 && els.some((e) => hasH(e.kind) && e.y < 1))) return;
       const clear = (above ? above.y : Hi) - sf.y;
       if (above?.kind === 'rod' || clear < 16 || clear > 90) return;
       const yb = y0 + sf.y;

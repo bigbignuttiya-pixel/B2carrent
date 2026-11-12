@@ -1,7 +1,7 @@
 // Side panels of FORMA STUDIO: piece list / templates and the properties of the selected piece
 import { useEffect, useState } from 'react';
-import { Plus, Minus, Copy, Trash2, ChevronUp, ChevronDown, Layers, Archive, Shirt } from 'lucide-react';
-import { TEMPLATES, DOORS, COLORS, ELEMENT_KINDS, matById, innerHeight, pieceSize } from './model';
+import { Plus, Minus, Copy, Trash2, ChevronUp, ChevronDown, Layers, Archive, Shirt, Footprints, ShoppingBasket, GripHorizontal } from 'lucide-react';
+import { TEMPLATES, DOORS, COLORS, ELEMENT_KINDS, elementH, matById, innerHeight, pieceSize } from './model';
 import { FrontDrawing, frontViewBox } from './FrontView';
 import { inputCls } from '../components/ui';
 
@@ -110,7 +110,7 @@ export function PiecesPanel({ design, selectedId, onSelect, onAdd, onMove }) {
   );
 }
 
-const ICONS = { shelf: Layers, drawer: Archive, rod: Shirt };
+export const ICONS = { shelf: Layers, drawer: Archive, rod: Shirt, shoe: Footprints, basket: ShoppingBasket, pants: GripHorizontal };
 
 export function PropsPanel({ piece, design, selection, onSelect, update, actions }) {
   const materials = design.pricing.materials;
@@ -269,7 +269,7 @@ export function PropsPanel({ piece, design, selection, onSelect, update, actions
                   {[...col.items].sort((a, b) => b.y - a.y).map((it) => {
                     const Icon = ICONS[it.kind];
                     const sel = selection.item === it.id;
-                    const max = it.kind === 'shelf' ? Hi - t : it.kind === 'drawer' ? Hi - it.h : Hi - 5;
+                    const max = it.kind === 'rod' ? Hi - 5 : Hi - elementH(it, t);
                     return (
                       <li key={it.id} className={`rounded-xl border bg-white p-2 ${sel ? 'border-amber-600' : 'border-stone-200'}`} onClick={() => onSelect({ col: ci, item: it.id })}>
                         <div className="flex items-center gap-2">

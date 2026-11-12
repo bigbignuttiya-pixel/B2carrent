@@ -172,6 +172,10 @@ export function CostView({ design, analysis: A, setPricing, onQuote, locked }) {
             <PriceInput label="รางลิ้นชัก ต่อคู่" value={pr.slide} onChange={(v) => setPricing({ slide: v })} />
             <PriceInput label="มือจับ ต่อชิ้น" value={pr.handle} onChange={(v) => setPricing({ handle: v })} />
             <PriceInput label="ราวแขวน ต่อเมตร" value={pr.rodPerM} onChange={(v) => setPricing({ rodPerM: v })} />
+            <PriceInput label="ชุดรางบานเลื่อน ต่อบาน" value={pr.slidingPerDoor} onChange={(v) => setPricing({ slidingPerDoor: v })} />
+            <PriceInput label="ชั้นรองเท้า ต่อชุด" value={pr.shoeRack} onChange={(v) => setPricing({ shoeRack: v })} />
+            <PriceInput label="ตะกร้าลวด ต่อชุด" value={pr.basket} onChange={(v) => setPricing({ basket: v })} />
+            <PriceInput label="ราวกางเกง ต่อชุด" value={pr.pantsRack} onChange={(v) => setPricing({ pantsRack: v })} />
             <PriceInput label="ขาโต๊ะเหล็ก ต่อชุด" value={pr.metalLegs} onChange={(v) => setPricing({ metalLegs: v })} />
             <PriceInput label="ท็อปเคาน์เตอร์ ต่อเมตร" value={pr.countertopPerM} onChange={(v) => setPricing({ countertopPerM: v })} />
             <PriceInput label="ค่าแรง ต่อแผ่น" value={pr.laborPerSheet} onChange={(v) => setPricing({ laborPerSheet: v })} />

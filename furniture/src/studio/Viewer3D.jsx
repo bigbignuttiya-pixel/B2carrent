@@ -134,6 +134,55 @@ function panelGeometry(sx, sy, sz) {
   return geo;
 }
 
+// Ready-made wardrobe accessories, drawn as chrome wire
+const chrome = new THREE.MeshStandardMaterial({ color: '#d4d4d8', metalness: 0.9, roughness: 0.25 });
+const bar = (len, axis, x, y, z, r = 0.45) => {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), chrome);
+  if (axis === 'x') m.rotation.z = Math.PI / 2;
+  if (axis === 'z') m.rotation.x = Math.PI / 2;
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  return m;
+};
+function accessoryMesh(e) {
+  const b = e.box;
+  const g = new THREE.Group();
+  const cx = b.x + b.sx / 2;
+  if (e.type === 'shoe') {
+    // two slanted shelves of bars, front edge lower
+    [0.35, 0.85].forEach((f) => {
+      const y = b.y + b.sy * f;
+      const rise = Math.min(9, b.sy * 0.35);
+      for (let k = 0; k <= 4; k++) {
+        const t = k / 4;
+        g.add(bar(b.sx, 'x', cx, y - rise / 2 + rise * (1 - t), b.z + b.sz * t));
+      }
+      [b.x + 0.5, b.x + b.sx - 0.5].forEach((xx) => {
+        const side = bar(Math.hypot(b.sz, rise), 'z', xx, y, b.z + b.sz / 2, 0.55);
+        side.rotation.x = Math.PI / 2 - Math.atan2(rise, b.sz);
+        g.add(side);
+      });
+    });
+  } else if (e.type === 'basket') {
+    // open wire basket on runners
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(b.sx, b.sy, b.sz)), new THREE.LineBasicMaterial({ color: '#a1a1aa' }));
+    edges.position.set(cx, b.y + b.sy / 2, b.z + b.sz / 2);
+    g.add(edges);
+    for (let x = b.x + 3; x < b.x + b.sx - 1; x += 3) g.add(bar(b.sz, 'z', x, b.y + 0.3, b.z + b.sz / 2, 0.25));
+    for (let z = b.z + 4; z < b.z + b.sz; z += 4) {
+      g.add(bar(b.sy, 'y', b.x + 0.2, b.y + b.sy / 2, z, 0.2));
+      g.add(bar(b.sy, 'y', b.x + b.sx - 0.2, b.y + b.sy / 2, z, 0.2));
+    }
+    g.add(bar(b.sx, 'x', cx, b.y + b.sy, b.z + b.sz, 0.5));
+  } else {
+    // pull-out trouser rack: side runners and a row of bars front to back
+    [b.x + 0.6, b.x + b.sx - 0.6].forEach((xx) => g.add(bar(b.sz, 'z', xx, b.y + b.sy - 1, b.z + b.sz / 2, 0.7)));
+    for (let z = b.z + 3; z < b.z + b.sz - 1; z += 4.5) g.add(bar(b.sx, 'x', cx, b.y + b.sy - 1, z, 0.4));
+    g.add(bar(b.sx, 'x', cx, b.y + b.sy - 1, b.z + b.sz, 0.7));
+  }
+  return g;
+}
+
 // Pieces stand side by side, 30 cm apart, in the order of the list
 export function layoutPieces(pieces, materials) {
   let x = 0;
@@ -504,6 +553,8 @@ const Viewer3D = forwardRef(function Viewer3D(
           g.add(leg);
         } else if (e.type === 'box') {
           addMesh(g, e.box, e.color, [0, 0, 0]);
+        } else if (e.type === 'shoe' || e.type === 'basket' || e.type === 'pants') {
+          g.add(accessoryMesh(e));
         }
       });
 
@@ -515,6 +566,7 @@ const Viewer3D = forwardRef(function Viewer3D(
           const mesh = new THREE.Mesh(geo, mat);
           mesh.position.set(d.box.x + d.box.sx / 2, d.box.y + d.box.sy / 2, d.box.z + d.box.sz / 2);
           if (d.type === 'garment') mesh.rotation.y = (Math.random() - 0.5) * 0.15;
+          if (d.tilt) mesh.rotation.x = d.tilt;
           mesh.castShadow = d.type === 'garment';
           mesh.receiveShadow = true;
           g.add(mesh);

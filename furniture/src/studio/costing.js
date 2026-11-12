@@ -101,7 +101,7 @@ export function analyzeProject(design) {
   const matCostById = Object.fromEntries(mats.map((m) => [m.id, m]));
 
   // Hardware totals
-  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0 };
+  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0, shoeRack: 0, basket: 0, pantsRack: 0 };
   pieces.forEach((p) => Object.keys(hw).forEach((k) => (hw[k] += p.hw[k])));
   const hwLines = [
     ['บานพับถ้วย', hw.hinge, 'ตัว', pr.hinge],
@@ -109,6 +109,9 @@ export function analyzeProject(design) {
     ['มือจับ', hw.handle, 'ชิ้น', pr.handle],
     ['ราวแขวนผ้า', r1(hw.rodCm / 100), 'ม.', pr.rodPerM],
     ['ชุดรางบานเลื่อน', hw.slidingDoor, 'บาน', pr.slidingPerDoor],
+    ['ชั้นวางรองเท้าสำเร็จรูป', hw.shoeRack, 'ชุด', pr.shoeRack],
+    ['ตะกร้าลวดดึงออก', hw.basket, 'ชุด', pr.basket],
+    ['ราวแขวนกางเกงดึงออก', hw.pantsRack, 'ชุด', pr.pantsRack],
     ['ขาโต๊ะเหล็ก', hw.metalLegs, 'ชุด', pr.metalLegs],
     ['ท็อปเคาน์เตอร์', r1(hw.countertopCm / 100), 'ม.', pr.countertopPerM],
   ]
@@ -137,7 +140,7 @@ export function analyzeProject(design) {
     });
     const area = own.reduce((a, r) => a + r.areaM2, 0);
     c += (area / totalArea) * (laborCost + install);
-    c += phw.hinge * pr.hinge + phw.slide * pr.slide + phw.handle * pr.handle + (phw.rodCm / 100) * pr.rodPerM + phw.metalLegs * pr.metalLegs + (phw.countertopCm / 100) * pr.countertopPerM + (phw.slidingDoor || 0) * (pr.slidingPerDoor || 0);
+    c += phw.hinge * pr.hinge + phw.slide * pr.slide + phw.handle * pr.handle + (phw.rodCm / 100) * pr.rodPerM + phw.metalLegs * pr.metalLegs + (phw.countertopCm / 100) * pr.countertopPerM + (phw.slidingDoor || 0) * (pr.slidingPerDoor || 0) + (phw.shoeRack || 0) * (pr.shoeRack || 0) + (phw.basket || 0) * (pr.basket || 0) + (phw.pantsRack || 0) * (pr.pantsRack || 0);
     return { id: piece.id, cost: c, price: Math.round(c * margin), area };
   });
 

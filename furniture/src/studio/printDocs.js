@@ -68,11 +68,15 @@ const describe = (piece, materials) => {
     const drawers = piece.columns.reduce((a, c) => a + c.items.filter((i) => i.kind === 'drawer').length, 0);
     const shelves = piece.columns.reduce((a, c) => a + c.items.filter((i) => i.kind === 'shelf').length, 0);
     const rods = piece.columns.reduce((a, c) => a + c.items.filter((i) => i.kind === 'rod').length, 0);
+    const acc = (k) => piece.columns.reduce((a, c) => a + c.items.filter((i) => i.kind === k).length, 0);
     extra.push(`${piece.columns.length} ช่อง`);
     if (doors) extra.push(`ช่องมีบาน ${doors}`);
     if (shelves) extra.push(`ชั้น ${shelves}`);
     if (drawers) extra.push(`ลิ้นชัก ${drawers}`);
     if (rods) extra.push(`ราวแขวน ${rods}`);
+    if (acc('shoe')) extra.push(`ชั้นรองเท้า ${acc('shoe')}`);
+    if (acc('basket')) extra.push(`ตะกร้าลวด ${acc('basket')}`);
+    if (acc('pants')) extra.push('ราวกางเกง');
     if (piece.countertop) extra.push('รวมท็อปเคาน์เตอร์');
   }
   return `โครง: ${esc(m)}${f !== m ? `<br>หน้าบาน: ${esc(f)}` : ''}${extra.length ? `<br>${extra.join(' · ')}` : ''}`;
