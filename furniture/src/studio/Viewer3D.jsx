@@ -135,8 +135,9 @@ export function layoutPieces(pieces, materials) {
   let x = 0;
   return pieces.map((p) => {
     const b = buildPiece(p, materials);
-    const at = { x, y: p.elev || 0 };
-    x += b.outer.outerW + 30;
+    // posX: fixed position (e.g. wall cabinets above base cabinets); otherwise side by side, 30 cm apart
+    const at = { x: p.posX ?? x, y: p.elev || 0 };
+    if (p.posX == null) x += b.outer.outerW + (p.gap ?? 30);
     return { piece: p, built: b, at };
   });
 }
@@ -160,7 +161,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 0.92;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     wrap.appendChild(renderer.domElement);
@@ -170,6 +171,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     const pmrem = new THREE.PMREMGenerator(renderer);
     const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environment = envTex;
+    scene.environmentIntensity = 0.42;
 
     const camera = new THREE.PerspectiveCamera(36, 1, 1, 20000);
     camera.position.set(250, 200, 420);
@@ -185,13 +187,14 @@ const Viewer3D = forwardRef(function Viewer3D(
       azRef.current?.(Math.round((Math.atan2(off.x, off.z) * 180) / Math.PI));
     });
 
-    scene.add(new THREE.HemisphereLight('#fffaf2', '#c8bfb0', 0.55));
-    const sun = new THREE.DirectionalLight('#fff4e5', 2.2);
+    scene.add(new THREE.HemisphereLight('#fff6ea', '#bfb3a2', 0.45));
+    const sun = new THREE.DirectionalLight('#ffeedd', 3.1);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1536, 1536);
+    sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.bias = -0.0004;
     sun.shadow.normalBias = 0.6;
-    Object.assign(sun.shadow.camera, { left: -600, right: 600, top: 600, bottom: -600, near: 10, far: 3000 });
+    Object.assign(sun.shadow.camera, { left: -700, right: 700, top: 700, bottom: -700, near: 10, far: 4000 });
+    sun.shadow.radius = 4;
     scene.add(sun);
     scene.add(sun.target);
 
@@ -477,7 +480,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     if (showRoom) {
       s.roomGroup.add(floor);
       const wallMat = new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.95 });
-      const wallH = Math.max(270, size.y + 40);
+      const wallH = Math.max(420, size.y + 200);
       const back = new THREE.Mesh(new THREE.PlaneGeometry(roomW, wallH), wallMat);
       back.position.set(0, wallH / 2, -2);
       back.receiveShadow = true;
@@ -491,8 +494,8 @@ const Viewer3D = forwardRef(function Viewer3D(
       skirt2.position.set(-roomW / 2 + 0.8, 4, 290);
       s.roomGroup.add(back, side, skirt, skirt2);
       // soft rug in front of the furniture
-      const rug = new THREE.Mesh(new THREE.BoxGeometry(Math.min(260, size.x * 0.8 + 60), 0.6, 150), new THREE.MeshStandardMaterial({ color: '#ece6dc', roughness: 1 }));
-      rug.position.set(0, 0.3, Math.max(size.z, 60) + 110);
+      const rug = new THREE.Mesh(new THREE.BoxGeometry(Math.min(260, size.x * 0.8 + 60), 0.6, 150), new THREE.MeshStandardMaterial({ color: '#cfc2ae', roughness: 1 }));
+      rug.position.set(0, 0.3, Math.max(size.z, 60) + 95);
       rug.receiveShadow = true;
       s.roomGroup.add(rug);
     } else {
@@ -503,7 +506,7 @@ const Viewer3D = forwardRef(function Viewer3D(
       s.roomGroup.add(shadow);
     }
     s.renderer.setClearColor('#f3f0ea', transparentBg || !showRoom ? 0 : 1);
-    s.sun.position.set(size.x * 0.4 + 220, 520, 480);
+    s.sun.position.set(size.x * 0.35 + 380, 560, 620);
     s.sun.target.position.set(0, size.y / 2, 0);
 
     if (!s.fitted) {

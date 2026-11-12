@@ -7,7 +7,7 @@
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
-  .animate-float, .animate-float-slow, .animate-bob, .animate-marquee, .animate-shine { animation: none !important; }
+  .animate-float, .animate-float-slow, .animate-bob, .animate-marquee, .animate-shine, .animate-kenburns { animation: none !important; }
 }
 .text-gradient { background: linear-gradient(100deg, #fde68a 0%, #fb923c 40%, #f472b6 75%, #fde68a 100%); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; }
 .bg-blueprint { background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 48px 48px; }

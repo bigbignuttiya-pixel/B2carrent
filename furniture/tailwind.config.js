@@ -11,6 +11,7 @@ export default {
         bob: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
         marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
         shine: { '0%': { backgroundPosition: '200% 0' }, '100%': { backgroundPosition: '-200% 0' } },
+        kenburns: { '0%': { transform: 'scale(1.02) translate(0,0)' }, '100%': { transform: 'scale(1.12) translate(-1.5%,-1%)' } },
       },
       animation: {
         'slide-up': 'slide-up .3s ease-out both',
@@ -20,6 +21,7 @@ export default {
         bob: 'bob 5s ease-in-out infinite',
         marquee: 'marquee 40s linear infinite',
         shine: 'shine 6s linear infinite',
+        kenburns: 'kenburns 9s ease-out both',
       },
     },
   },

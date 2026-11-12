@@ -49,7 +49,7 @@ export const FINISHES = [
   { id: 'oak', name: 'โอ๊คธรรมชาติ', kind: 'wood', color: '#d4b48a' },
   { id: 'ash', name: 'เถ้าขาว', kind: 'wood', color: '#e9ddc7' },
   { id: 'teak', name: 'สักทอง', kind: 'wood', color: '#b9814f' },
-  { id: 'walnut', name: 'วอลนัท', kind: 'wood', color: '#7a5236' },
+  { id: 'walnut', name: 'วอลนัท', kind: 'wood', color: '#6b4a33' },
   { id: 'white', name: 'ขาวด้าน', kind: 'solid', color: '#f3f1ec' },
   { id: 'cream', name: 'ครีม', kind: 'solid', color: '#e9e0cf' },
   { id: 'stone', name: 'เทาหิน', kind: 'solid', color: '#8d8f92' },
@@ -253,7 +253,7 @@ export function buildPiece(p, materials) {
   }
   if (p.countertop) {
     hw.countertopCm += W;
-    extras.push({ type: 'box', box: { x: -1, y: H, z: -bt, sx: W + 2, sy: 3, sz: D + bt + ft + 2 }, color: '#d6d3d1' });
+    extras.push({ type: 'box', box: { x: -1, y: H, z: -bt, sx: W + 2, sy: 3, sz: D + bt + ft + 2 }, color: '#a8a29a' });
   }
 
   const n = p.columns.length;
@@ -500,9 +500,26 @@ export function autoLayout(p, materials, colIndex, counts) {
 }
 
 // Props for the 3D showroom: folded clothes on shelves, garments on rods
+const BOOK = ['#7c2d12', '#1e3a5f', '#e7e2d8', '#3f4a3a', '#a16207', '#57534e', '#9f1239', '#d6d3d1', '#1c1917', '#b45309'];
+const SHOE = ['#1c1917', '#78350f', '#f5f5f4', '#44403c', '#9a3412', '#e7e5e4'];
 const CLOTH = ['#e7e2d8', '#9aa5b1', '#3f4a5a', '#c9b79c', '#7d8b6a', '#d8c3b0', '#5a5f66', '#efe9e1', '#a6806a', '#2f3640'];
 export function decorFor(p, materials) {
-  if (p.kind !== 'box' || p.D < 28) return [];
+  if (p.kind === 'bed') {
+    const t = matById(materials, p.carcass).t;
+    const x0 = t + 1, z0 = t + 1, y = p.H;
+    const out = [
+      { type: 'fold', box: { x: x0, y, z: z0, sx: p.W, sy: 22, sz: p.D }, color: '#f4f1ea' },
+      { type: 'fold', box: { x: x0 - 3, y: y + 14, z: z0 + p.D * 0.34, sx: p.W + 6, sy: 10, sz: p.D * 0.68 }, color: '#d8cdbd' },
+      { type: 'fold', box: { x: x0 - 3.5, y: y + 23, z: z0 + p.D * 0.34, sx: p.W + 7, sy: 2, sz: 38 }, color: '#bfae96' },
+    ];
+    const n = p.W >= 140 ? 2 : 1;
+    const pw = Math.min(65, (p.W - 20) / n - 6);
+    for (let k = 0; k < n; k++) out.push({ type: 'fold', box: { x: x0 + 10 + k * ((p.W - 20) / n) + ((p.W - 20) / n - pw) / 2, y: y + 22, z: z0 + 6, sx: pw, sy: 13, sz: 40 }, color: '#fbfaf7' });
+    return out;
+  }
+  if (p.kind !== 'box' || p.D < 25) return [];
+  const tpl = p.template || '';
+  const style = tpl.startsWith('kitchen') ? 'kitchen' : tpl === 'shoe' ? 'shoes' : tpl === 'bookshelf' || tpl === 'tvCabinet' ? 'books' : 'clothes';
   const t = matById(materials, p.carcass).t;
   const y0 = (p.plinth || 0) + t;
   const Hi = innerHeight(p, materials);
@@ -519,6 +536,40 @@ export function decorFor(p, materials) {
       if (blocked || (sf.y === 0 && els.some((e) => e.kind === 'drawer' && e.y < 1))) return;
       const clear = (above ? above.y : Hi) - sf.y;
       if (above?.kind === 'rod' || clear < 16 || clear > 90) return;
+      const yb = y0 + sf.y;
+      if (style === 'books') {
+        // a row of books with a gap or two, sometimes a small box
+        let bx = x + 2;
+        while (bx < x + c.w - 6) {
+          if (rnd() < 0.12) {
+            bx += 6 + rnd() * 10;
+            continue;
+          }
+          const bw = 2 + rnd() * 2.5;
+          const bh = Math.min(clear - 3, 18 + rnd() * 10);
+          out.push({ type: 'fold', box: { x: bx, y: yb, z: p.D - 4 - Math.min(22, p.D - 8), sx: bw, sy: bh, sz: Math.min(22, p.D - 8) }, color: BOOK[Math.floor(rnd() * BOOK.length)] });
+          bx += bw + 0.3;
+        }
+        return;
+      }
+      if (style === 'shoes') {
+        const n = Math.floor((c.w - 4) / 22);
+        for (let k = 0; k < n; k++) {
+          const col = SHOE[Math.floor(rnd() * SHOE.length)];
+          const sx = x + 3 + k * ((c.w - 4) / n);
+          [0, 9.5].forEach((dx) => out.push({ type: 'fold', box: { x: sx + dx, y: yb, z: p.D - 4 - Math.min(27, p.D - 6), sx: 8.5, sy: Math.min(clear - 2, 9), sz: Math.min(27, p.D - 6) }, color: col }));
+        }
+        return;
+      }
+      if (style === 'kitchen') {
+        const n = Math.floor((c.w - 4) / 26);
+        for (let k = 0; k < n; k++) {
+          const sx = x + 3 + k * ((c.w - 4) / n);
+          if (k % 2 === 0) for (let l = 0; l < Math.min(6, Math.floor((clear - 4) / 2.2)); l++) out.push({ type: 'fold', box: { x: sx, y: yb + l * 2.2, z: p.D * 0.25, sx: 22, sy: 1.8, sz: 22 }, color: '#f8f7f4' });
+          else out.push({ type: 'fold', box: { x: sx + 4, y: yb, z: p.D * 0.3, sx: 10, sy: Math.min(clear - 3, 16), sz: 10 }, color: rnd() < 0.5 ? '#d9c8a6' : '#b8c4c8' });
+        }
+        return;
+      }
       const n = Math.floor((c.w - 4) / 30);
       for (let k = 0; k < n; k++) {
         if (rnd() < 0.25) continue;
@@ -526,11 +577,11 @@ export function decorFor(p, materials) {
         const sw = 24 + rnd() * 3;
         const sx = x + 2 + k * ((c.w - 4) / n) + ((c.w - 4) / n - sw) / 2;
         for (let l = 0; l < layers; l++) {
-          out.push({ type: 'fold', box: { x: sx + (rnd() - 0.5) * 1.5, y: y0 + sf.y + l * 5.2, z: p.D * 0.2, sx: sw, sy: 5, sz: Math.min(30, p.D * 0.62) }, color: CLOTH[Math.floor(rnd() * CLOTH.length)] });
+          out.push({ type: 'fold', box: { x: sx + (rnd() - 0.5) * 1.5, y: yb + l * 5.2, z: p.D * 0.2, sx: sw, sy: 5, sz: Math.min(30, p.D * 0.62) }, color: CLOTH[Math.floor(rnd() * CLOTH.length)] });
         }
       }
     });
-    els.filter((e) => e.kind === 'rod').forEach((r) => {
+    els.filter((e) => e.kind === 'rod' && style === 'clothes').forEach((r) => {
       const below = els.filter((e) => e.top <= r.y && e.kind !== 'rod').reduce((a, e) => Math.max(a, e.top), 0);
       const room = r.y - below - 8;
       if (room < 30) return;

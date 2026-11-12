@@ -9,6 +9,7 @@ import SheetLayout from '../studio/SheetLayout';
 import { newPiece, newStudioDesign, DEFAULT_MATERIALS } from '../studio/model';
 import { analyzeProject, money } from '../studio/costing';
 import { lineChatUrl } from '../lib/line';
+import { HeroBanner, Products, Portfolio } from './LandingShowcase';
 import { baht, daysLabel } from '../data';
 
 // A small sample living room shown on the landing page
@@ -54,7 +55,7 @@ function Hero3D() {
     </div>
   );
   return (
-    <div ref={ref} className="relative h-[340px] sm:h-[420px] rounded-2xl overflow-hidden bg-gradient-to-b from-[#f4efe8] to-[#e6dfd6]">
+    <div ref={ref} className="relative h-64 rounded-2xl overflow-hidden bg-gradient-to-b from-[#f4efe8] to-[#e6dfd6]">
       {visible ? (
         <Suspense fallback={fallback}>
           <Viewer3D pieces={HERO_3D} materials={DEFAULT_MATERIALS} selectedId="hero3d" allOpen={open} showRoom showDecor wallColor="#ece7df" autoRotate={9} interactive={false} />
@@ -145,78 +146,9 @@ export default function Landing({ settings, plans, onBuy }) {
 
   return (
     <div ref={root} className="bg-[#0c0a09] text-stone-200 overflow-hidden">
-      {/* ---------- hero ---------- */}
-      <section className="relative isolate">
-        <div className="absolute inset-0 -z-10 bg-blueprint [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
-        <div className="absolute -z-10 -top-40 -left-32 w-[36rem] h-[36rem] rounded-full bg-orange-500/30 blur-[120px] animate-float" />
-        <div className="absolute -z-10 top-20 -right-40 w-[32rem] h-[32rem] rounded-full bg-rose-500/20 blur-[120px] animate-float-slow" />
-        <div className="absolute -z-10 bottom-0 left-1/3 w-[28rem] h-[20rem] rounded-full bg-amber-300/10 blur-[100px]" />
+      <HeroBanner settings={settings} />
 
-        <div className="mx-auto max-w-6xl px-4 pt-14 pb-20 sm:pt-20 sm:pb-28 grid lg:grid-cols-[1.05fr_1fr] gap-14 items-center">
-          <div className="reveal">
-            <span className="inline-flex items-center gap-2 rounded-full border border-orange-300/30 bg-orange-400/10 px-3.5 py-1.5 text-xs text-orange-200">
-              <Sparkles className="w-3.5 h-3.5" /> FORMA STUDIO · Furniture Designer
-            </span>
-            <h1 className="mt-6 text-4xl sm:text-6xl font-semibold leading-[1.12] tracking-tight text-white">
-              ออกแบบเฟอร์นิเจอร์
-              <br />
-              <span className="text-gradient animate-shine">ให้สวย ให้แม่น</span>
-              <br />
-              จบในเว็บเดียว
-            </h1>
-            <p className="mt-6 text-base sm:text-lg text-stone-400 max-w-xl leading-relaxed">
-              ตู้เสื้อผ้า ตู้ครัว โต๊ะ เตียง — ออกแบบ 2D / 3D ลากวางชั้นได้ คำนวณแผ่นไม้ ต้นทุน ออก<span className="text-stone-200">ใบเสนอราคาและใบตัดไม้ PDF</span> ได้ทันที
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <a href="#studio" className={btnGlow}>
-                เริ่มออกแบบฟรี <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-              </a>
-              <a href="#plans" className={btnGlass}>
-                ดูแพ็กเกจ
-              </a>
-            </div>
-            <p className="mt-4 text-xs text-stone-500">ทดลองใช้ได้ทุกฟีเจอร์ · บันทึกและส่งออกเมื่อซื้อแพ็กเกจ · ค่าบริการรายวัน ไม่ได้ขายสินค้า</p>
-            <dl className="mt-10 grid grid-cols-3 gap-4 max-w-md">
-              {[
-                ['13+', 'แม่แบบเฟอร์นิเจอร์'],
-                ['120×240', 'แผ่นไม้มาตรฐาน'],
-                ['PDF', 'ใบเสนอราคา / ตัดไม้'],
-              ].map(([n, l]) => (
-                <div key={l}>
-                  <dt className="text-2xl font-semibold text-white">{n}</dt>
-                  <dd className="text-xs text-stone-500 mt-0.5">{l}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          <div className="reveal relative" style={{ transitionDelay: '150ms' }}>
-            <Tilt className="relative">
-              <div className={`${glass} glow-border p-5 sm:p-6 shadow-[0_40px_120px_-30px_rgba(0,0,0,.9)]`}>
-                <div className="flex items-center gap-1.5 mb-4">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400/80" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-300/80" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
-                  <span className="ml-3 text-[11px] text-stone-500 tracking-wider">forma.studio / ห้องโชว์ 3D · ตู้เสื้อผ้า 3 บาน</span>
-                </div>
-                <Hero3D />
-              </div>
-            </Tilt>
-            {/* floating chips */}
-            <div className={`${chip} absolute -left-4 sm:-left-10 top-16 px-4 py-3 animate-bob shadow-2xl`}>
-              <p className="text-[11px] text-stone-400">ใช้แผ่นไม้</p>
-              <p className="text-lg font-semibold text-white">{DEMO.a.totalSheets} แผ่น · {Math.round(DEMO_MAT.utilization * 100)}%</p>
-            </div>
-            <div className={`${chip} absolute -right-2 sm:-right-8 bottom-24 px-4 py-3 animate-bob shadow-2xl`} style={{ animationDelay: '1.5s' }}>
-              <p className="text-[11px] text-stone-400">ยอดเสนอราคา</p>
-              <p className="text-lg font-semibold text-gradient">฿{money(DEMO.a.total)}</p>
-            </div>
-            <div className={`${chip} absolute left-6 -bottom-6 px-3.5 py-2 animate-bob shadow-2xl flex items-center gap-2 text-sm text-white`} style={{ animationDelay: '.8s' }}>
-              <Box className="w-4 h-4 text-orange-300" /> 3D เปิดบานได้
-            </div>
-          </div>
-        </div>
-
+      <section>
         {/* marquee */}
         <div className="border-y border-white/10 bg-white/[0.02] py-4 [mask-image:linear-gradient(90deg,transparent,black_15%,black_85%,transparent)]">
           <div className="flex w-max animate-marquee gap-10 text-stone-500 text-sm">
@@ -253,6 +185,9 @@ export default function Landing({ settings, plans, onBuy }) {
         </div>
       </section>
 
+      <Products />
+      <Portfolio />
+
       {/* ---------- showcase ---------- */}
       <section className="relative">
         <div className="absolute inset-0 -z-0 bg-gradient-to-b from-transparent via-orange-500/[0.06] to-transparent" />
@@ -264,12 +199,10 @@ export default function Landing({ settings, plans, onBuy }) {
           <div className="mt-12 grid gap-5 lg:grid-cols-3">
             <div className={`reveal ${glass} p-5`}>
               <p className="text-sm text-stone-400">
-                <span className="text-orange-300 font-semibold mr-2">01</span>ออกแบบตู้ ลากวางชั้น
+                <span className="text-orange-300 font-semibold mr-2">01</span>ห้องโชว์ 3D หมุนดู เปิดบานได้
               </p>
-              <div className="mt-4 rounded-2xl bg-stone-100 p-4 h-64 grid place-items-center">
-                <svg viewBox={KITCHEN_VB.vb} className="h-full w-auto">
-                  <FrontDrawing piece={KITCHEN} materials={DEFAULT_MATERIALS} built={KITCHEN_VB.built} />
-                </svg>
+              <div className="mt-4">
+                <Hero3D />
               </div>
             </div>
             <div className={`reveal ${glass} p-5`} style={{ transitionDelay: '120ms' }}>
