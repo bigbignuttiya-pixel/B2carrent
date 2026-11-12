@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Navigation, Route, Facebook, Lock } from 'lucide-react';
+import { Compass, ShieldCheck, HardHat, MapPin, Clock, Star, Quote, FileCheck2, HelpCircle, ChevronDown, Phone, MessageCircle, Navigation, Route, Facebook, Lock, X, Sun, Lightbulb, CheckCircle2 } from 'lucide-react';
 import { DESTINATIONS, REVIEWS, REQUIREMENTS, FAQS } from '../data';
-import { SectionHeading } from '../components/ui';
+import { SectionHeading, Modal } from '../components/ui';
 import { lineChatUrl, lineLabel } from '../lib/line';
 
 export function HowItWorks() {
@@ -28,27 +28,75 @@ export function HowItWorks() {
   );
 }
 
+function DestinationModal({ d, onClose, onPickVehicleType }) {
+  return (
+    <Modal open={!!d} onClose={onClose} maxWidth="max-w-lg">
+      {d && (
+        <div>
+          <div className="relative h-56">
+            <img src={d.image} alt={d.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
+            <button onClick={onClose} className="absolute top-3 right-3 w-9 h-9 rounded-full bg-slate-950/80 text-white flex items-center justify-center" aria-label="ปิด"><X className="w-5 h-5" /></button>
+            <div className="absolute bottom-3 left-5 right-5">
+              <span className="bg-yellow-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md">{d.tag}</span>
+              <h3 className="text-xl font-black text-white mt-1">{d.name}</h3>
+            </div>
+          </div>
+          <div className="p-5 space-y-4 text-xs">
+            <div className="flex items-center gap-2 text-yellow-300 font-bold"><Navigation className="w-4 h-4" /> {d.distance} • {d.drive} จากตัวเมือง</div>
+            <p className="text-slate-300 leading-relaxed">{d.desc}</p>
+            {d.highlights?.length > 0 && (
+              <ul className="space-y-1.5">
+                {d.highlights.map((h) => (
+                  <li key={h} className="flex gap-2 text-slate-200"><CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> {h}</li>
+                ))}
+              </ul>
+            )}
+            {d.bestTime && <div className="flex gap-2 text-slate-300 bg-slate-950 border border-slate-800 rounded-xl p-3"><Sun className="w-4 h-4 text-amber-400 shrink-0" /> <span><b className="text-white">ช่วงที่แนะนำ:</b> {d.bestTime}</span></div>}
+            {d.tip && <div className="flex gap-2 text-slate-300 bg-slate-950 border border-slate-800 rounded-xl p-3"><Lightbulb className="w-4 h-4 text-yellow-400 shrink-0" /> <span><b className="text-white">ทิปเดินทาง:</b> {d.tip}</span></div>}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {d.maps && (
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.maps)}`} target="_blank" rel="noreferrer" className="flex-1 min-w-[140px] text-center px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold flex items-center justify-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-rose-400" /> นำทาง Google Maps
+                </a>
+              )}
+              <button onClick={() => { onClose(); onPickVehicleType(); }} className="flex-1 min-w-[140px] px-4 py-3 rounded-xl bg-gradient-to-r from-blue-700 to-indigo-700 text-yellow-300 font-black border border-yellow-400/30">
+                เลือกรถสำหรับทริปนี้ →
+              </button>
+            </div>
+            {d.credit && <div className="text-[9px] text-slate-600 text-right">ภาพ: {d.credit}</div>}
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 export function Destinations({ onPickVehicleType }) {
+  const [open, setOpen] = useState(null);
   return (
     <section id="destinations" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 scroll-mt-24">
       <SectionHeading icon={Compass} eyebrow="RECOMMENDED DESTINATIONS" title="จุดหมายปลายทางยอดนิยม" desc="รับรถจาก B2 แล้วขับท่องเที่ยวไปยังแลนด์มาร์กสวยๆ ได้อย่างมั่นใจ" center />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {DESTINATIONS.map((d) => (
-          <div key={d.name} className="group relative h-80 rounded-3xl overflow-hidden border border-slate-800 shadow-xl">
+          <div key={d.name} role="button" tabIndex={0} onClick={() => setOpen(d)} onKeyDown={(e) => e.key === 'Enter' && setOpen(d)} className={`group relative h-72 sm:h-80 rounded-3xl overflow-hidden border border-slate-800 shadow-xl cursor-pointer ${d.featured ? 'sm:col-span-2' : ''}`}>
             <img src={d.image} alt={d.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-            <div className="absolute top-4 right-4 bg-slate-950/80 backdrop-blur-md border border-slate-700 rounded-xl px-2.5 py-1 text-[10px] text-slate-200 flex items-center gap-1">
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
+            <div className="absolute top-4 right-4 bg-slate-950/85 backdrop-blur-md border border-slate-700 rounded-xl px-2.5 py-1 text-[11px] text-slate-100 font-bold flex items-center gap-1">
               <Navigation className="w-3 h-3 text-yellow-400" /> {d.distance} • {d.drive}
             </div>
             <div className="absolute bottom-5 left-5 right-5 space-y-1">
               <span className="bg-yellow-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md inline-block">{d.tag}</span>
               <h3 className="text-lg font-bold text-white group-hover:text-yellow-300 transition-colors">{d.name}</h3>
-              <p className="text-xs text-slate-300 font-light">{d.desc}</p>
-              <button onClick={onPickVehicleType} className="text-[11px] font-bold text-yellow-300 pt-1 hover:underline">เลือกรถสำหรับทริปนี้ →</button>
+              <p className="text-xs text-slate-200 leading-relaxed">{d.desc}</p>
+              <span className="inline-block text-[11px] font-bold text-yellow-300 pt-1 group-hover:underline">อ่านรายละเอียด →</span>
             </div>
+            {d.credit && <span className="absolute bottom-1 right-3 text-[8px] text-slate-500/80">{d.credit}</span>}
           </div>
         ))}
       </div>
+      <p className="text-center text-[11px] text-slate-500 mt-4">* ระยะทางและเวลาขับรถโดยประมาณ จากตัวเมืองนครศรีธรรมราช • กดที่การ์ดเพื่ออ่านรายละเอียด</p>
+      <DestinationModal d={open} onClose={() => setOpen(null)} onPickVehicleType={onPickVehicleType} />
     </section>
   );
 }
