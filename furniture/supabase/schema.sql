@@ -98,7 +98,8 @@ create trigger furniture_projects_touch before update on public.furniture_projec
 drop trigger if exists furniture_settings_touch on public.furniture_settings;
 create trigger furniture_settings_touch before update on public.furniture_settings for each row execute function public.furniture_touch();
 
--- 10-character code from an alphabet without look-alike characters (32^10 ≈ 10^15 combinations)
+-- 10-character code from an alphabet without look-alike characters (32^10 ≈ 10^15 combinations);
+-- skips uuid bytes 6 and 8, which carry fixed version/variant bits
 create or replace function public.furniture_new_code() returns text
 language plpgsql volatile set search_path = public as $$
 declare
@@ -108,7 +109,7 @@ declare
   i int;
 begin
   for i in 0..9 loop
-    res := res || substr(alphabet, (get_byte(bytes, i) % 32) + 1, 1);
+    res := res || substr(alphabet, (get_byte(bytes, case when i < 6 then i else i + 4 end) % 32) + 1, 1);
   end loop;
   return res;
 end $$;
