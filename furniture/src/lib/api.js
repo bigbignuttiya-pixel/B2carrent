@@ -157,6 +157,16 @@ export const api = {
     const isAdmin = unwrap(await supabase.rpc('furniture_is_admin'));
     return { signedIn: true, isAdmin: Boolean(isAdmin), email: user.email };
   },
+  // Back office: password only — the server function finds the admin account (no email typed or exposed)
+  async signInWithPasswordOnly(password) {
+    const { data, error } = await supabase.functions.invoke('furniture-admin-login', { body: { password } });
+    if (error) {
+      const status = error.context?.status;
+      if (status === 401) throw toApiError(new Error('Invalid login credentials'));
+      throw toApiError(error);
+    }
+    unwrap(await supabase.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token }));
+  },
   async signIn(email, password) {
     unwrap(await supabase.auth.signInWithPassword({ email, password }));
   },

@@ -222,7 +222,7 @@ export default function App() {
             </div>
           ) : !isAdmin ? (
             <div className="py-10">
-              <AdminLogin adminState={adminState} onSignIn={api.signIn} onSignOut={api.signOut} />
+              <AdminLogin adminState={adminState} onSignOut={api.signOut} />
             </div>
           ) : adminTab === 'dashboard' ? (
             <Dashboard {...adminData} onOpenPayment={setOpenPaymentId} />

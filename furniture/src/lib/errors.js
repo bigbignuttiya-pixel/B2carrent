@@ -12,7 +12,7 @@ const MESSAGES = {
   not_found: 'ไม่พบแบบนี้',
   has_payments: 'ลูกค้ารายนี้มีประวัติการชำระเงิน ต้องเก็บไว้เป็นหลักฐาน จึงลบไม่ได้',
   not_allowed: 'ไม่สามารถทำรายการนี้ได้ (สถานะเปลี่ยนไปแล้ว)',
-  'Invalid login credentials': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+  'Invalid login credentials': 'รหัสผ่านไม่ถูกต้อง',
 };
 
 export class ApiError extends Error {
