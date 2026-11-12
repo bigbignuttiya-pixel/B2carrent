@@ -1,5 +1,5 @@
 -- =====================================================================
--- Furniture — online room / furniture layout designer (paid access)
+-- Furniture — FORMA STUDIO furniture designer + room layout planner (paid access)
 -- Lives in the same Supabase project as B2 Rental, in its own furniture_* tables
 -- and storage bucket, so the two sites never see each other's data.
 -- Safe to re-run: objects are created with IF NOT EXISTS / OR REPLACE.
@@ -335,7 +335,7 @@ returns setof jsonb language plpgsql stable security definer set search_path = p
 declare a public.furniture_accounts := public.furniture_account_by_code(p_code);
 begin
   return query
-    select jsonb_build_object('id', pr.id, 'name', pr.name,
+    select jsonb_build_object('id', pr.id, 'name', pr.name, 'kind', coalesce(pr.data->>'kind', 'room'),
              'room', pr.data->'room', 'itemCount', coalesce(jsonb_array_length(pr.data->'items'), 0),
              'updatedAt', to_char(pr.updated_at at time zone 'Asia/Bangkok', 'YYYY-MM-DD HH24:MI'))
       from public.furniture_projects pr where pr.account_id = a.id order by pr.updated_at desc;

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { LayoutDashboard, Receipt, Users, Tags, Settings as SettingsIcon, BarChart3, LogOut, Home, PencilRuler, UserRound, Lock } from 'lucide-react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { LayoutDashboard, Receipt, Users, Tags, Settings as SettingsIcon, BarChart3, LogOut, Home, PencilRuler, UserRound, Lock, Hammer } from 'lucide-react';
 import { DEFAULT_SETTINGS, formatCode } from './data';
 import { api } from './lib/api';
 import { errorMessage } from './lib/errors';
@@ -11,6 +11,8 @@ import BuyModal from './customer/BuyModal';
 import Account from './customer/Account';
 import Designer from './designer/Designer';
 
+const Studio = lazy(() => import('./studio/Studio'));
+
 import AdminLogin from './admin/AdminLogin';
 import Dashboard from './admin/Dashboard';
 import Payments, { PaymentDrawer } from './admin/Payments';
@@ -19,10 +21,11 @@ import Revenue from './admin/Revenue';
 import Plans from './admin/Plans';
 import Settings from './admin/Settings';
 
-// Pages: "#" landing, "#design" designer, "#account" customer account, "#admin" back office (not linked for customers)
-const PAGES = ['design', 'account', 'admin'];
+// Pages: "#" landing, "#studio" FORMA STUDIO furniture designer, "#design" room planner, "#account" customer account,
+// "#admin" back office (not linked for customers)
+const PAGES = ['studio', 'design', 'account', 'admin'];
 const pageFromHash = () => {
-  if (window.location.hash.startsWith('#login=')) return 'design';
+  if (window.location.hash.startsWith('#login=')) return 'studio';
   // …/admin (path) also opens the back office — same as …/#admin
   if (/^\/admin\/?$/.test(window.location.pathname)) return 'admin';
   return PAGES.find((p) => window.location.hash === `#${p}`) || 'home';
@@ -113,8 +116,8 @@ export default function App() {
     const tryLogin = async () => {
       const m = window.location.hash.match(/^#login=([A-Za-z0-9-]+)/);
       if (!m) return false;
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#design`);
-      setPage('design');
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#studio`);
+      setPage('studio');
       try {
         await loadSession(m[1], true);
         notify('เข้าใช้งานเรียบร้อย');
@@ -246,6 +249,8 @@ export default function App() {
 
   const active = Boolean(session?.account.active);
   const openBuy = (planId, reason) => setBuy({ planId, reason });
+  // Paid feature tapped without an active code: follow a pending payment, otherwise offer the packages
+  const needAccess = (reason) => ((session ? session.payments.some((p) => p.status === 'Pending') : claims.length > 0) && !active ? (window.location.hash = '#account') : openBuy(undefined, reason));
   const navLink = (id, label, Icon) => (
     <a href={`#${id === 'home' ? '' : id}`} className={`inline-flex items-center gap-1.5 text-sm px-2 py-1.5 rounded-lg ${page === id ? 'text-stone-900 font-medium bg-stone-100' : 'text-stone-600 hover:text-stone-900'}`}>
       <Icon className="w-4 h-4" /> <span className="hidden sm:inline">{label}</span>
@@ -255,27 +260,34 @@ export default function App() {
   return (
     <div className="min-h-screen font-sans text-stone-800 bg-stone-50">
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-stone-200">
-        <div className={`mx-auto ${page === 'design' ? '' : 'max-w-6xl'} px-4 h-16 flex items-center gap-2`}>
+        <div className={`mx-auto ${page === 'design' || page === 'studio' ? '' : 'max-w-6xl'} px-4 h-16 flex items-center gap-2`}>
           <a href="#" className="text-lg sm:text-xl font-bold tracking-tight mr-auto truncate">
             {settings.shopName}
           </a>
-          {navLink('design', 'ออกแบบ', PencilRuler)}
+          {navLink('studio', 'ออกแบบเฟอร์นิเจอร์', Hammer)}
+          {navLink('design', 'จัดห้อง', PencilRuler)}
           {navLink('account', session ? (active ? `ใช้ได้ถึง ${session.account.expiresAt.slice(5, 10).split('-').reverse().join('/')}` : 'บัญชีของฉัน') : 'เข้าใช้งาน', UserRound)}
           {!active && (
-            <button onClick={() => openBuy()} className={`${btnPrimary} py-2`}>
+            <button onClick={() => openBuy()} className={`${btnPrimary} py-2 whitespace-nowrap`}>
               ซื้อแพ็กเกจ
             </button>
           )}
         </div>
       </header>
 
-      {page === 'design' ? (
+      {page === 'design' || page === 'studio' ? (
         !loaded ? (
           <div className="py-32 grid place-items-center text-stone-400">
             <Spinner className="w-8 h-8" />
           </div>
         ) : active || settings.allowTrial ? (
-          <Designer settings={settings} session={session} notify={notify} onNeedAccess={(reason) => ((session ? session.payments.some((p) => p.status === 'Pending') : claims.length > 0) && !active ? (window.location.hash = '#account') : openBuy(undefined, reason))} />
+          page === 'studio' ? (
+            <Suspense fallback={<div className="py-32 grid place-items-center text-stone-400"><Spinner className="w-8 h-8" /></div>}>
+              <Studio settings={settings} session={session} notify={notify} onNeedAccess={needAccess} />
+            </Suspense>
+          ) : (
+            <Designer settings={settings} session={session} notify={notify} onNeedAccess={needAccess} />
+          )
         ) : (
           <main className="px-4 py-16">
             <div className="max-w-md mx-auto rounded-3xl bg-white border border-stone-200 p-8 text-center space-y-4">

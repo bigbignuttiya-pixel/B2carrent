@@ -78,7 +78,7 @@ export default function ClaimStatus({ claim, settings, notify, onApproved, initi
         <div className="space-y-3">
           <p className="text-sm text-emerald-700 font-medium">ชำระเงินเรียบร้อย — นี่คือรหัสสำหรับเข้าใช้งาน</p>
           <AccessCard code={data.code} expiresAt={data.expiresAt} compact={compact} />
-          <a href="#design" className={`${btnPrimary} w-full py-3`}>
+          <a href="#studio" className={`${btnPrimary} w-full py-3`}>
             <PencilRuler className="w-4 h-4" /> เริ่มออกแบบ
           </a>
         </div>

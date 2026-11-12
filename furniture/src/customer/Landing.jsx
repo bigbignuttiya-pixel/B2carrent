@@ -1,5 +1,7 @@
-import { PencilRuler, Save, Download, Smartphone, Ruler, Sofa, Phone, MessageCircle, Facebook, Clock } from 'lucide-react';
+import { PencilRuler, Save, Download, Smartphone, Ruler, Sofa, Phone, MessageCircle, Facebook, Clock, Box, Scissors, FileText, Camera, Layers, Calculator } from 'lucide-react';
 import { PlanContent } from '../designer/shapes';
+import { FrontDrawing, frontViewBox } from '../studio/FrontView';
+import { newPiece, DEFAULT_MATERIALS } from '../studio/model';
 import { lineChatUrl } from '../lib/line';
 import { btnPrimary, btnGhost } from '../components/ui';
 import { PlanCard } from './BuyModal';
@@ -21,6 +23,9 @@ const SAMPLE = {
   ],
 };
 
+const HERO_PIECE = newPiece('wardrobe3');
+const HERO_VB = frontViewBox(HERO_PIECE, DEFAULT_MATERIALS, 0.08);
+
 const STEPS = [
   ['เลือกจำนวนวัน', 'คิดค่าบริการรายวัน จ่ายเฉพาะวันที่ใช้'],
   ['ชำระผ่าน PromptPay', 'สแกน QR จ่ายเงิน แล้วแนบสลิปในเว็บ'],
@@ -29,12 +34,16 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  [Ruler, 'ขนาดจริงเป็นเซนติเมตร', 'กำหนดขนาดห้องและเฟอร์นิเจอร์ตามจริง เห็นระยะทุกชิ้น'],
-  [Sofa, 'เฟอร์นิเจอร์กว่า 35 แบบ', 'ห้องนั่งเล่น ห้องนอน ครัว ห้องทำงาน ห้องน้ำ ประตู หน้าต่าง'],
-  [PencilRuler, 'ลาก หมุน ปรับขนาด', 'เปลี่ยนสี ใส่ชื่อ ทำซ้ำ ย้อนกลับได้ไม่จำกัด'],
-  [Save, 'บันทึกบนคลาวด์', 'เปิดแบบเดิมได้จากทุกเครื่องด้วยรหัสเดียว'],
-  [Download, 'ส่งออกเป็นรูปภาพ', 'ไฟล์ PNG ความละเอียดสูง ส่งให้ช่างหรือร้านเฟอร์นิเจอร์ได้เลย'],
-  [Smartphone, 'ใช้ได้ทั้งมือถือและคอม', 'ซูมด้วยสองนิ้ว ลากด้วยนิ้วได้สะดวก'],
+  [Layers, 'ออกแบบตู้ 2D ลากวางชั้นได้', 'แบ่งช่อง ลากชั้นวาง ลิ้นชัก ราวแขวน ไปวางในตู้ ปรับขนาดได้ทุกส่วน'],
+  [Box, 'โมเดล 3D เปิด-ปิดประตูได้', 'หมุนดูรอบทิศ แตะบานหรือลิ้นชักเพื่อเปิดดูภายใน'],
+  [Sofa, 'ตู้ครัว โต๊ะ เตียง ตู้เสื้อผ้า', 'แม่แบบตู้ครัวล่าง/แขวน ชั้นหนังสือ ตู้ทีวี ตู้รองเท้า โต๊ะ เตียง และตู้กำหนดเอง'],
+  [Scissors, 'คำนวณแผ่นไม้มาตรฐาน', 'จัดวางชิ้นงานบนแผ่น 120 × 240 ซม. (หรือขนาดอื่น) บอกจำนวนแผ่นและเปอร์เซ็นต์การใช้ไม้'],
+  [FileText, 'ใบเสนอราคา + ใบตัดไม้ PDF', 'คำนวณต้นทุนวัสดุ ปิดขอบ อุปกรณ์ ค่าแรง กำไร ออกเอกสารให้ลูกค้าและช่างได้ทันที'],
+  [Camera, 'วัดขนาดจากรูปถ่าย', 'ตั้งสเกลจากระยะอ้างอิง แล้วลากกรอบวัดกว้าง × สูง พื้นที่ และต้นทุน'],
+  [Calculator, 'คำนวณพื้นที่และต้นทุน', 'พื้นที่วัสดุ ตร.ม. ต้นทุนต่อชิ้น และราคาขาย แก้ราคาวัสดุได้ทุกช่อง'],
+  [Save, 'เก็บได้หลายโปรเจกต์', 'บันทึกบนคลาวด์ เปิดจากทุกเครื่องด้วยรหัสเดียว หรือบันทึกเป็นไฟล์ .json'],
+  [Ruler, 'จัดห้องตามขนาดจริง', 'วางผังห้องด้วยเฟอร์นิเจอร์กว่า 35 แบบ ส่งออกเป็นรูป PNG'],
+  [Smartphone, 'ใช้ได้ทั้งมือถือและคอม', 'ลากด้วยนิ้ว ซูมสองนิ้ว ไม่ต้องลงโปรแกรม'],
 ];
 
 export default function Landing({ settings, plans, onBuy }) {
@@ -45,21 +54,31 @@ export default function Landing({ settings, plans, onBuy }) {
         <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16 grid lg:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-3xl sm:text-5xl font-semibold leading-tight">{settings.tagline}</h1>
-            <p className="mt-4 text-stone-600">วางแผนจัดห้องก่อนซื้อเฟอร์นิเจอร์จริง ไม่ต้องลงโปรแกรม เปิดเว็บแล้วเริ่มได้ทันที</p>
+            <p className="mt-2 text-xs font-bold tracking-[0.25em] text-amber-700">FORMA STUDIO — FURNITURE DESIGNER</p>
+            <p className="mt-4 text-stone-600">ออกแบบตู้ ตู้ครัว โต๊ะ เตียง แบบ 2D / 3D คำนวณแผ่นไม้ ต้นทุน ออกใบเสนอราคาและใบตัดไม้ PDF — และจัดผังห้องได้ในเว็บเดียว ไม่ต้องลงโปรแกรม</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#design" className={`${btnPrimary} px-6 py-3`}>
-                <PencilRuler className="w-4 h-4" /> ลองออกแบบฟรี
+              <a href="#studio" className={`${btnPrimary} px-6 py-3`}>
+                <PencilRuler className="w-4 h-4" /> ลองออกแบบเฟอร์นิเจอร์ฟรี
               </a>
               <a href="#plans" className={`${btnGhost} px-6 py-3`}>
                 ดูแพ็กเกจ
               </a>
             </div>
-            <p className="mt-3 text-xs text-stone-500">โหมดทดลองใช้ได้ทุกฟีเจอร์ บันทึกและส่งออกรูปเมื่อซื้อแพ็กเกจ</p>
+            <p className="mt-3 text-xs text-stone-500">โหมดทดลองใช้ได้ทุกฟีเจอร์ · บันทึกแบบและส่งออก (รูป PDF CSV) เมื่อซื้อแพ็กเกจ · ค่าบริการรายวัน ไม่ได้ขายสินค้า</p>
           </div>
-          <div className="rounded-3xl bg-white border border-stone-200 shadow-lg p-4">
-            <svg viewBox={`-30 -30 ${SAMPLE.room.w + 60} ${SAMPLE.room.d + 60}`} className="w-full h-auto">
-              <PlanContent design={SAMPLE} showLabels={false} />
-            </svg>
+          <div className="grid grid-cols-5 gap-3 items-end">
+            <div className="col-span-3 rounded-3xl bg-white border border-stone-200 shadow-lg p-4">
+              <svg viewBox={HERO_VB.vb} className="w-full h-auto">
+                <FrontDrawing piece={HERO_PIECE} materials={DEFAULT_MATERIALS} showDoors={false} built={HERO_VB.built} />
+              </svg>
+              <p className="text-xs text-stone-500 text-center mt-1">ตู้เสื้อผ้า 3 บาน — ชั้น ลิ้นชัก ราวแขวน</p>
+            </div>
+            <div className="col-span-2 rounded-3xl bg-white border border-stone-200 shadow-lg p-3">
+              <svg viewBox={`-30 -30 ${SAMPLE.room.w + 60} ${SAMPLE.room.d + 60}`} className="w-full h-auto">
+                <PlanContent design={SAMPLE} showLabels={false} />
+              </svg>
+              <p className="text-xs text-stone-500 text-center mt-1">จัดผังห้อง</p>
+            </div>
           </div>
         </div>
       </section>
@@ -108,7 +127,7 @@ export default function Landing({ settings, plans, onBuy }) {
         <div className="mx-auto max-w-6xl px-4 py-10 grid gap-6 sm:grid-cols-3 text-sm text-stone-600">
           <div>
             <p className="font-semibold text-stone-900 text-base">{settings.shopName}</p>
-            <p className="mt-2">บริการเว็บออกแบบจัดวางเฟอร์นิเจอร์ภายในห้อง</p>
+            <p className="mt-2">บริการเว็บออกแบบเฟอร์นิเจอร์และจัดวางห้อง (เก็บค่าบริการรายวัน ไม่ได้ขายสินค้า)</p>
             {settings.openHours && (
               <p className="mt-2 flex gap-2">
                 <Clock className="w-4 h-4 shrink-0 mt-0.5" /> {settings.openHours}
@@ -136,7 +155,8 @@ export default function Landing({ settings, plans, onBuy }) {
           <div className="space-y-2">
             <p className="font-semibold text-stone-900">บัญชี</p>
             <a href="#account" className="block hover:text-stone-900">เข้าใช้งานด้วยรหัส / ดูสถานะ</a>
-            <a href="#design" className="block hover:text-stone-900">หน้าออกแบบ</a>
+            <a href="#studio" className="block hover:text-stone-900">ออกแบบเฟอร์นิเจอร์ (FORMA STUDIO)</a>
+            <a href="#design" className="block hover:text-stone-900">จัดผังห้อง</a>
             <a href="#admin" className="block text-stone-400 hover:text-stone-900 pt-2">สำหรับร้าน (หลังบ้าน)</a>
           </div>
         </div>
