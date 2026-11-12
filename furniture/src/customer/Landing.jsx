@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import {
   ArrowRight, Sparkles, Save, Smartphone, Ruler, Sofa, Phone, MessageCircle, Facebook, Clock, Box, Scissors, FileText, Camera, Layers,
   Calculator, Check, QrCode, CreditCard, KeyRound, Wand2, DoorOpen,
@@ -29,7 +29,42 @@ const SAMPLE = {
 };
 
 // A real sample project: the numbers on this page come from the same engine the studio uses
+const Viewer3D = lazy(() => import('../studio/Viewer3D'));
 const HERO_PIECE = newPiece('wardrobe3', { color: '#efe3cf', frontColor: '#c8a27a' });
+// The piece shown in 3D on the hero: navy doors, oak interior, like a showroom closet
+const HERO_3D = [newPiece('wardrobe3', { id: 'hero3d', finish: 'white', color: '#f3f1ec', frontFinish: 'navy', frontColor: '#34507f', shelfFinish: 'oak' })];
+
+// Live 3D wardrobe that turns slowly and opens / closes its doors; the 2D drawing shows while it loads
+function Hero3D() {
+  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const t = setInterval(() => setOpen((v) => !v), 3200);
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver(([e]) => e.isIntersecting && setVisible(true), { rootMargin: '200px' }) : null;
+    if (io && ref.current) io.observe(ref.current);
+    else setVisible(true);
+    return () => (clearInterval(t), io?.disconnect());
+  }, []);
+  const fallback = (
+    <div className="absolute inset-0 p-6 grid place-items-center">
+      <svg viewBox={HERO_VB.vb} className="h-full w-auto">
+        <FrontDrawing piece={HERO_PIECE} materials={DEFAULT_MATERIALS} showDoors={false} built={HERO_VB.built} />
+      </svg>
+    </div>
+  );
+  return (
+    <div ref={ref} className="relative h-[340px] sm:h-[420px] rounded-2xl overflow-hidden bg-gradient-to-b from-[#f4efe8] to-[#e6dfd6]">
+      {visible ? (
+        <Suspense fallback={fallback}>
+          <Viewer3D pieces={HERO_3D} materials={DEFAULT_MATERIALS} selectedId="hero3d" allOpen={open} showRoom showDecor wallColor="#ece7df" autoRotate={9} interactive={false} />
+        </Suspense>
+      ) : (
+        fallback
+      )}
+    </div>
+  );
+}
 const HERO_VB = frontViewBox(HERO_PIECE, DEFAULT_MATERIALS, 0.08);
 const KITCHEN = newPiece('kitchenDrawer', { frontColor: '#5b4636' });
 const KITCHEN_VB = frontViewBox(KITCHEN, DEFAULT_MATERIALS, 0.08);
@@ -162,13 +197,9 @@ export default function Landing({ settings, plans, onBuy }) {
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-400/80" />
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-300/80" />
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
-                  <span className="ml-3 text-[11px] text-stone-500 tracking-wider">forma.studio / ตู้เสื้อผ้า 3 บาน</span>
+                  <span className="ml-3 text-[11px] text-stone-500 tracking-wider">forma.studio / ห้องโชว์ 3D · ตู้เสื้อผ้า 3 บาน</span>
                 </div>
-                <div className="rounded-2xl bg-gradient-to-b from-stone-100 to-stone-200 p-4">
-                  <svg viewBox={HERO_VB.vb} className="w-full h-auto max-h-[380px]">
-                    <FrontDrawing piece={HERO_PIECE} materials={DEFAULT_MATERIALS} showDoors={false} built={HERO_VB.built} />
-                  </svg>
-                </div>
+                <Hero3D />
               </div>
             </Tilt>
             {/* floating chips */}

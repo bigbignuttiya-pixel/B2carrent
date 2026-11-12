@@ -142,7 +142,7 @@ export function layoutPieces(pieces, materials) {
 }
 
 const Viewer3D = forwardRef(function Viewer3D(
-  { pieces, materials, selectedId, allOpen, onlySelected, showRoom = true, showDecor = true, wallColor = '#e8e4dc', transparentBg = false, onAzimuth },
+  { pieces, materials, selectedId, allOpen, onlySelected, showRoom = true, showDecor = true, wallColor = '#e8e4dc', transparentBg = false, onAzimuth, autoRotate = 0, interactive = true },
   ref
 ) {
   const wrapRef = useRef(null);
@@ -150,6 +150,8 @@ const Viewer3D = forwardRef(function Viewer3D(
   const openMap = useRef({});
   const azRef = useRef(onAzimuth);
   azRef.current = onAzimuth;
+  const opts = useRef({});
+  opts.current = { autoRotate, interactive };
 
   // ---------- one-time setup ----------
   useEffect(() => {
@@ -162,7 +164,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     wrap.appendChild(renderer.domElement);
-    renderer.domElement.style.touchAction = 'none';
+    renderer.domElement.style.touchAction = opts.current.interactive ? 'none' : 'pan-y';
 
     const scene = new THREE.Scene();
     const pmrem = new THREE.PMREMGenerator(renderer);
@@ -177,6 +179,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     controls.maxPolarAngle = Math.PI * 0.5;
     controls.minDistance = 60;
     controls.maxDistance = 2500;
+    if (!opts.current.interactive) controls.enabled = false;
     controls.addEventListener('change', () => {
       const off = camera.position.clone().sub(controls.target);
       azRef.current?.(Math.round((Math.atan2(off.x, off.z) * 180) / Math.PI));
@@ -237,6 +240,15 @@ const Viewer3D = forwardRef(function Viewer3D(
       raf = requestAnimationFrame(tick);
       const s = st.current;
       let dirty = s.dirty;
+      if (opts.current.autoRotate) {
+        // slow turntable: swing the camera around the target
+        const off = camera.position.clone().sub(controls.target);
+        const a = (opts.current.autoRotate * Math.PI) / 180 / 60;
+        off.applyAxisAngle(new THREE.Vector3(0, 1, 0), a);
+        camera.position.copy(controls.target).add(off);
+        camera.lookAt(controls.target);
+        dirty = true;
+      }
       s.movers.forEach((m) => {
         const target = openMap.current[m.id] ? m.openValue : 0;
         if (m.value === target && m.applied) return;
@@ -282,7 +294,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     const c = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     const r = Math.max(size.x * 0.62, size.y * 0.75, 60);
-    const dist = (r / Math.tan((s.camera.fov * Math.PI) / 360)) * 1.15;
+    const dist = (r / Math.tan((s.camera.fov * Math.PI) / 360)) * (opts.current.interactive ? 1.15 : 0.92);
     s.controls.target.set(c.x, c.y * 0.95, c.z);
     s.camera.position.set(c.x + dist * 0.38, c.y + dist * 0.18, c.z + dist * 0.92);
     s.camera.updateProjectionMatrix();
