@@ -1,20 +1,38 @@
 export const CATEGORIES = [
-  { id: 'all', name: 'ทั้งหมด' },
-  { id: 'living', name: 'ห้องนั่งเล่น' },
-  { id: 'bedroom', name: 'ห้องนอน' },
-  { id: 'dining', name: 'ห้องทานอาหาร' },
-  { id: 'office', name: 'ห้องทำงาน' },
+  { id: 'living', name: 'ห้องนั่งเล่น', emoji: '🛋️' },
+  { id: 'bedroom', name: 'ห้องนอน', emoji: '🛏️' },
+  { id: 'dining', name: 'ห้องทานอาหาร', emoji: '🍽️' },
+  { id: 'office', name: 'ห้องทำงาน', emoji: '🖥️' },
+  { id: 'outdoor', name: 'นอกบ้าน', emoji: '🌿' },
+  { id: 'decor', name: 'ของตกแต่ง', emoji: '🪴' },
 ];
+export const categoryOf = (id) => CATEGORIES.find((c) => c.id === id) || { id, name: id, emoji: '📦' };
 
-export const PRODUCTS = [
-  { id: 1, name: 'โซฟา 3 ที่นั่ง', category: 'living', price: 15900, color: 'bg-amber-200', emoji: '🛋️' },
-  { id: 2, name: 'โต๊ะกลางไม้โอ๊ค', category: 'living', price: 4590, color: 'bg-orange-200', emoji: '🪵' },
-  { id: 3, name: 'เตียงนอน 6 ฟุต', category: 'bedroom', price: 12900, color: 'bg-sky-200', emoji: '🛏️' },
-  { id: 4, name: 'ตู้เสื้อผ้า 2 บาน', category: 'bedroom', price: 8990, color: 'bg-stone-300', emoji: '🚪' },
-  { id: 5, name: 'ชุดโต๊ะอาหาร 4 ที่นั่ง', category: 'dining', price: 10500, color: 'bg-emerald-200', emoji: '🍽️' },
-  { id: 6, name: 'เก้าอี้ทานอาหาร', category: 'dining', price: 1290, color: 'bg-lime-200', emoji: '🪑' },
-  { id: 7, name: 'โต๊ะทำงานปรับระดับ', category: 'office', price: 9900, color: 'bg-indigo-200', emoji: '🖥️' },
-  { id: 8, name: 'เก้าอี้สำนักงาน', category: 'office', price: 3490, color: 'bg-rose-200', emoji: '💺' },
-];
+export const ORDER_STATUS = {
+  Pending: { label: 'รอตรวจสอบการชำระเงิน', short: 'รอตรวจสอบ', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+  Confirmed: { label: 'ยืนยันแล้ว กำลังเตรียมสินค้า', short: 'ยืนยันแล้ว', cls: 'bg-sky-100 text-sky-800 border-sky-200' },
+  Shipped: { label: 'จัดส่งแล้ว', short: 'จัดส่งแล้ว', cls: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+  Completed: { label: 'ได้รับสินค้าแล้ว', short: 'สำเร็จ', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  Cancelled: { label: 'ยกเลิกแล้ว', short: 'ยกเลิก', cls: 'bg-stone-200 text-stone-600 border-stone-300' },
+};
+export const STATUS_FLOW = ['Pending', 'Confirmed', 'Shipped', 'Completed'];
 
-export const baht = (n) => '฿' + n.toLocaleString('th-TH');
+export const DEFAULT_SETTINGS = {
+  shopName: 'Furniture',
+  tagline: 'เฟอร์นิเจอร์สำหรับทุกห้องในบ้าน ดีไซน์เรียบง่าย วัสดุคุณภาพ',
+  phone: '',
+  lineOaId: '',
+  facebookUrl: '',
+  address: '',
+  openHours: '',
+  promptPayId: '',
+  accountName: '',
+  shippingFee: 0,
+  freeShippingMin: 0,
+  shippingNote: '',
+};
+
+export const baht = (n) => '฿' + Number(n || 0).toLocaleString('th-TH');
+export const unitPrice = (p) => (p.salePrice != null ? p.salePrice : p.price);
+export const shippingFor = (subtotal, s) =>
+  subtotal <= 0 ? 0 : s.freeShippingMin > 0 && subtotal >= s.freeShippingMin ? 0 : Number(s.shippingFee) || 0;
