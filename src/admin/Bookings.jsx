@@ -57,6 +57,9 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
             <div className="text-sm font-bold text-white">{b.customerName}</div>
             {b.phone && <a href={`tel:${b.phone}`} className="flex items-center gap-2 text-slate-300 hover:text-yellow-300"><Phone className="w-3.5 h-3.5" /> {b.phone}</a>}
+            {b.lineId && (
+              <a href={`https://line.me/ti/p/~${encodeURIComponent(b.lineId)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-emerald-300 hover:text-emerald-200">💬 LINE: <span className="font-mono">{b.lineId}</span></a>
+            )}
             {b.email && <div className="text-slate-400">✉ {b.email}</div>}
             <div className="text-slate-400">บัตร/Passport: <span className="font-mono text-slate-200">{b.idCard || '-'}</span></div>
             <div className="text-slate-400">ใบขับขี่: <span className="font-mono text-slate-200">{b.license || '-'}</span></div>
@@ -108,7 +111,7 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
 }
 
 function toCsv(rows) {
-  const cols = ['id', 'source', 'externalRef', 'customerName', 'phone', 'vehicleName', 'startDate', 'endDate', 'totalDays', 'subtotal', 'discount', 'totalPrice', 'status', 'createdAt'];
+  const cols = ['id', 'source', 'externalRef', 'customerName', 'phone', 'lineId', 'vehicleName', 'startDate', 'endDate', 'totalDays', 'subtotal', 'discount', 'totalPrice', 'status', 'createdAt'];
   const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   return '﻿' + [cols.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\n');
 }

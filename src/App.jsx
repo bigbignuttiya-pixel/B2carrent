@@ -304,7 +304,7 @@ export default function App() {
           couponCode,
           name: info.name,
           phone: info.phone,
-          email: info.email,
+          lineId: info.lineId?.trim().replace(/^@/, '') || '',
           idCard: info.idCard,
           license: info.license,
           note: info.note,

@@ -238,7 +238,7 @@ begin
   values (new_id, p->>'vehicleId', s, e, 'Pending', phone, (q->>'total')::int,
     jsonb_strip_nulls(jsonb_build_object(
       'vehicleName', v->>'name', 'vehicleType', v->>'type',
-      'customerName', name, 'email', left(p->>'email', 200), 'idCard', coalesce(nullif(left(p->>'idCard', 40), ''), '-'),
+      'customerName', name, 'email', nullif(left(p->>'email', 200), ''), 'lineId', nullif(left(regexp_replace(coalesce(p->>'lineId', ''), '[^A-Za-z0-9._@-]', '', 'g'), 40), ''), 'idCard', coalesce(nullif(left(p->>'idCard', 40), ''), '-'),
       'license', left(p->>'license', 40), 'note', left(p->>'note', 500),
       'pickupLocation', left(p->>'location', 200), 'returnLocation', left(p->>'location', 200),
       'pickupTime', to_char(st, 'HH24:MI'), 'returnTime', to_char(et, 'HH24:MI'), 'totalDays', days,
