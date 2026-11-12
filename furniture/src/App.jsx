@@ -252,23 +252,27 @@ export default function App() {
   // Paid feature tapped without an active code: follow a pending payment, otherwise offer the packages
   const needAccess = (reason) => ((session ? session.payments.some((p) => p.status === 'Pending') : claims.length > 0) && !active ? (window.location.hash = '#account') : openBuy(undefined, reason));
   const navLink = (id, label, Icon) => (
-    <a href={`#${id === 'home' ? '' : id}`} className={`inline-flex items-center gap-1.5 text-sm px-2 py-1.5 rounded-lg ${page === id ? 'text-stone-900 font-medium bg-stone-100' : 'text-stone-600 hover:text-stone-900'}`}>
+    <a href={`#${id === 'home' ? '' : id}`} className={`inline-flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-xl transition ${page === id ? 'text-white font-medium bg-white/10 ring-1 ring-white/15' : 'text-stone-400 hover:text-white hover:bg-white/5'}`}>
       <Icon className="w-4 h-4" /> <span className="hidden sm:inline">{label}</span>
     </a>
   );
 
   return (
-    <div className="min-h-screen font-sans text-stone-800 bg-stone-50">
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-stone-200">
+    <div className={`min-h-screen font-sans text-stone-800 ${page === 'home' ? 'bg-[#0c0a09]' : 'bg-stone-50'}`}>
+      <header className={`sticky top-0 z-30 ${page === "home" ? "bg-[#0c0a09]/75" : "bg-[#0c0a09]"} backdrop-blur-xl border-b border-white/10 text-white`}>
         <div className={`mx-auto ${page === 'design' || page === 'studio' ? '' : 'max-w-6xl'} px-4 h-16 flex items-center gap-2`}>
-          <a href="#" className="text-lg sm:text-xl font-bold tracking-tight mr-auto truncate">
-            {settings.shopName}
+          <a href="#" className="mr-auto flex items-center gap-2.5 min-w-0">
+            <span className="w-8 h-8 shrink-0 rounded-xl bg-gradient-to-br from-amber-300 via-orange-400 to-rose-400 grid place-items-center text-stone-950 font-bold shadow-[0_0_24px_-4px_rgba(251,146,60,.8)]">F</span>
+            <span className="min-w-0 leading-tight">
+              <span className="block text-base sm:text-lg font-semibold tracking-tight truncate">{settings.shopName}</span>
+              <span className="hidden sm:block text-[10px] tracking-[0.3em] text-orange-300">FORMA STUDIO</span>
+            </span>
           </a>
           {navLink('studio', 'ออกแบบเฟอร์นิเจอร์', Hammer)}
           {navLink('design', 'จัดห้อง', PencilRuler)}
           {navLink('account', session ? (active ? `ใช้ได้ถึง ${session.account.expiresAt.slice(5, 10).split('-').reverse().join('/')}` : 'บัญชีของฉัน') : 'เข้าใช้งาน', UserRound)}
           {!active && (
-            <button onClick={() => openBuy()} className={`${btnPrimary} py-2 whitespace-nowrap`}>
+            <button onClick={() => openBuy()} className="whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold text-stone-950 bg-gradient-to-r from-amber-300 via-orange-400 to-rose-400 hover:shadow-[0_0_30px_-6px_rgba(251,146,60,.9)] transition">
               ซื้อแพ็กเกจ
             </button>
           )}

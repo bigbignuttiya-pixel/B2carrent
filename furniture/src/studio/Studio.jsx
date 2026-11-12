@@ -312,7 +312,7 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
   const editor = (
     <div className="flex-1 min-h-0 flex flex-col md:flex-row">
       <aside className="hidden md:block w-64 shrink-0 bg-white border-r border-stone-200 overflow-y-auto p-3">{piecesPanel}</aside>
-      <div className="relative flex-1 min-h-[48vh] md:min-h-0 bg-stone-100 overflow-hidden">
+      <div className="relative flex-1 min-h-[48vh] md:min-h-0 overflow-hidden bg-stone-100 bg-[radial-gradient(circle,rgba(120,113,108,.18)_1px,transparent_1px)] [background-size:18px_18px]">
         {tab === 'design' ? (
           piece ? (
             <>
