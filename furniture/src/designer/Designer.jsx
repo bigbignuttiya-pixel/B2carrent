@@ -8,7 +8,8 @@ import { PlanContent, itemName, formatLength } from './shapes';
 import { usePersistentState } from '../lib/storage';
 import { api } from '../lib/api';
 import { errorMessage } from '../lib/errors';
-import { Modal, ModalHeader, inputCls, btnPrimary, btnGhost } from '../components/ui';
+import { inputCls, btnPrimary, btnGhost } from '../components/ui';
+import ProjectsModal, { openInStudio } from '../components/ProjectsModal';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const clampNum = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -69,64 +70,6 @@ function ColorPicker({ value, onChange }) {
       ))}
       <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" aria-label="เลือกสีเอง" />
     </div>
-  );
-}
-
-function ProjectsModal({ code, onClose, onOpen, notify }) {
-  const [list, setList] = useState(null);
-  const load = useCallback(async () => {
-    try {
-      setList(await api.listProjects(code));
-    } catch (err) {
-      notify(errorMessage(err), 'error');
-      setList([]);
-    }
-  }, [code, notify]);
-  useEffect(() => {
-    load();
-  }, [load]);
-  const remove = async (p) => {
-    if (!window.confirm(`ลบแบบ "${p.name}"?`)) return;
-    try {
-      await api.deleteProject(code, p.id);
-      load();
-    } catch (err) {
-      notify(errorMessage(err), 'error');
-    }
-  };
-  return (
-    <Modal open onClose={onClose}>
-      <ModalHeader title="แบบของฉัน" onClose={onClose} />
-      <div className="p-5">
-        {!list ? (
-          <div className="py-10 grid place-items-center text-stone-400">
-            <Loader2 className="w-6 h-6 animate-spin" />
-          </div>
-        ) : list.length === 0 ? (
-          <p className="py-10 text-center text-stone-500">ยังไม่มีแบบที่บันทึกไว้</p>
-        ) : (
-          <ul className="divide-y divide-stone-100">
-            {list.map((p) => (
-              <li key={p.id} className="py-3 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{p.name}</p>
-                  <p className="text-xs text-stone-500">
-                    {p.room ? `${formatLength(p.room.w)} × ${formatLength(p.room.d)} · ` : ''}
-                    {p.itemCount} ชิ้น · แก้ไขล่าสุด {p.updatedAt}
-                  </p>
-                </div>
-                <button onClick={() => onOpen(p)} className={btnPrimary}>
-                  เปิด
-                </button>
-                <button onClick={() => remove(p)} className="p-2 text-stone-400 hover:text-rose-600" aria-label="ลบ">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </Modal>
   );
 }
 
@@ -389,6 +332,7 @@ export default function Designer({ settings, session, onNeedAccess, notify }) {
   const openProject = async (p) => {
     try {
       const r = await api.getProject(session.code, p.id);
+      if (r.data?.kind === 'studio') return openInStudio(r);
       setDraft({ projectId: r.id, name: r.name, design: { ...newDesign(), ...r.data } });
       setPast([]);
       setFuture([]);

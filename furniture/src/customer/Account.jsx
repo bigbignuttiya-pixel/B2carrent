@@ -114,8 +114,11 @@ export default function Account({ session, settings, claims, onSession, onSignOu
             {account.name} · {account.phone} · แบบที่บันทึก {projectCount} แบบ
           </p>
           <div className="flex flex-wrap gap-2 mt-3">
-            <a href="#design" className={`${btnPrimary} py-2`}>
-              <PencilRuler className="w-4 h-4" /> ออกแบบ
+            <a href="#studio" className={`${btnPrimary} py-2`}>
+              <PencilRuler className="w-4 h-4" /> ออกแบบเฟอร์นิเจอร์
+            </a>
+            <a href="#design" className={`${btnGhost} py-2`}>
+              จัดห้อง
             </a>
             <button onClick={() => onBuy()} className={`${btnAccent} py-2`}>
               {account.active ? 'ซื้อเพิ่มวัน' : 'ซื้อแพ็กเกจ'}
