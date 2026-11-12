@@ -119,7 +119,7 @@ end $$;
 
 -- Customer-typed code → stored form (case-insensitive, dashes/spaces ignored)
 create or replace function public.furniture_norm_code(p text) returns text
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select upper(regexp_replace(coalesce(p, ''), '[^A-Za-z0-9]', '', 'g'));
 $$;
 
