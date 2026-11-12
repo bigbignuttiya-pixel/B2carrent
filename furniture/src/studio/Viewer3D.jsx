@@ -262,6 +262,7 @@ const Viewer3D = forwardRef(function Viewer3D(
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const s = st.current;
+      if (s.pathTracing) return;
       let dirty = s.dirty;
       if (opts.current.autoRotate) {
         // slow turntable: swing the camera around the target
@@ -347,6 +348,41 @@ const Viewer3D = forwardRef(function Viewer3D(
       const len = Math.min(s.controls.maxDistance, Math.max(s.controls.minDistance, off.length()));
       s.camera.position.copy(s.controls.target).add(off.setLength(len));
       s.controls.update();
+    },
+    // Photorealistic still: path tracing (light bounces between walls, floor and furniture). Returns a JPEG data URL.
+    renderPhotoreal: async ({ samples = 120, onProgress, isCancelled } = {}) => {
+      const s = st.current;
+      const { WebGLPathTracer, GradientEquirectTexture } = await import('three-gpu-pathtracer');
+      s.pathTracing = true;
+      const prevEnv = s.scene.environment;
+      const prevInt = s.scene.environmentIntensity;
+      const sky = new GradientEquirectTexture();
+      sky.topColor.set('#fff7ec');
+      sky.bottomColor.set('#b9ad9c');
+      sky.update();
+      s.scene.environment = sky;
+      s.scene.environmentIntensity = 0.9;
+      const pt = new WebGLPathTracer(s.renderer);
+      Object.assign(pt, { renderDelay: 0, fadeDuration: 0, minSamples: 1, bounces: 6, filterGlossyFactor: 0.5 });
+      pt.tiles.set(2, 2);
+      try {
+        s.camera.updateMatrixWorld();
+        pt.setScene(s.scene, s.camera);
+        while (pt.samples < samples) {
+          if (isCancelled?.()) return null;
+          pt.renderSample();
+          onProgress?.(Math.min(1, pt.samples / samples));
+          await new Promise((r) => requestAnimationFrame(r));
+        }
+        return s.renderer.domElement.toDataURL('image/jpeg', 0.92);
+      } finally {
+        pt.dispose();
+        sky.dispose();
+        s.scene.environment = prevEnv;
+        s.scene.environmentIntensity = prevInt;
+        s.pathTracing = false;
+        s.dirty = true;
+      }
     },
     distance: () => {
       const s = st.current;

@@ -486,6 +486,13 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
           canRedo={future.length > 0}
           onQuote={doQuote}
           onSnapshot={doSnapshot}
+          onSaveImage={(url) => {
+            if (!requireActive('บันทึกภาพเรนเดอร์')) return;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${safeName(name)}-render.jpg`;
+            a.click();
+          }}
           viewerRef={viewerRef}
           locked={!active}
         />

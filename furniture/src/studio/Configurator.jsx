@@ -2,7 +2,7 @@
 import { Suspense, lazy, useRef, useState } from 'react';
 import {
   Undo2, Redo2, RotateCcw, Minus, Plus, LayoutGrid, Ruler, DoorOpen, DoorClosed, Lock, FileText, ImageDown, Home, Shirt, Layers, Archive,
-  ChevronDown, Palette, Sparkles,
+  ChevronDown, Palette, Sparkles, Aperture, X,
 } from 'lucide-react';
 import { FINISHES, TEMPLATES, autoLayout, countItems, finishById, matById } from './model';
 import { money } from './costing';
@@ -95,7 +95,7 @@ function FinishSwatches({ value, onChange, front, allowNone }) {
   );
 }
 
-export default function Configurator({ design, piece, analysis, selectedId, onSelect, onAdd, update, undo, redo, canUndo, canRedo, onQuote, onSnapshot, viewerRef, locked }) {
+export default function Configurator({ design, piece, analysis, selectedId, onSelect, onAdd, update, undo, redo, canUndo, canRedo, onQuote, onSnapshot, onSaveImage, viewerRef, locked }) {
   const materials = design.pricing.materials;
   const [col, setCol] = useState(0);
   const [allOpen, setAllOpen] = useState(false);
@@ -107,6 +107,24 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
   const [addOpen, setAddOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState('inside');
   const azTimer = useRef(0);
+  const [pt, setPt] = useState(null); // { progress } while rendering
+  const [photo, setPhoto] = useState(null); // finished photoreal image
+  const cancelRef = useRef(false);
+  const photoreal = async () => {
+    if (pt) return;
+    cancelRef.current = false;
+    setPt({ progress: 0, started: Date.now() });
+    try {
+      const small = window.innerWidth < 768;
+      const url = await viewerRef.current?.renderPhotoreal({ samples: small ? 60 : 140, onProgress: (p) => setPt((x) => x && { ...x, progress: p }), isCancelled: () => cancelRef.current });
+      if (url) setPhoto(url);
+    } catch (err) {
+      console.error(err);
+      alert('อุปกรณ์นี้เรนเดอร์ภาพสมจริงไม่ได้ (ต้องใช้เบราว์เซอร์ที่รองรับ WebGL2)');
+    } finally {
+      setPt(null);
+    }
+  };
 
   const isBox = piece?.kind === 'box';
   const ci = isBox ? Math.min(col, piece.columns.length - 1) : 0;
@@ -284,6 +302,9 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
       <button className={toolBtn(false)} onClick={onSnapshot} title="บันทึกรูป">
         <ImageDown className="w-4 h-4" />
       </button>
+      <button onClick={photoreal} disabled={Boolean(pt)} className="ml-1 h-9 px-3 rounded-xl inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-[0_6px_20px_-6px_rgba(234,88,12,.9)] disabled:opacity-50 transition" title="เรนเดอร์ภาพสมจริง (แสงสะท้อนหลายรอบ)">
+        <Aperture className="w-4 h-4" /> <span className="hidden sm:inline">เรนเดอร์ภาพสมจริง</span>
+      </button>
     </div>
   );
 
@@ -341,6 +362,28 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
         <div className="hidden lg:block absolute left-4 bottom-4">{priceCard}</div>
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 lg:bottom-4">{toolbar}</div>
         <div className="hidden lg:block absolute right-4 bottom-4">{zoomCtl}</div>
+        {pt && (
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 w-[min(92%,360px)] rounded-2xl bg-stone-900/90 text-white backdrop-blur p-4 shadow-2xl">
+            <p className="text-sm font-medium flex items-center gap-2"><Aperture className="w-4 h-4 text-orange-300 animate-spin" /> กำลังเรนเดอร์ภาพสมจริง… {Math.round(pt.progress * 100)}%</p>
+            <div className="mt-2 h-1.5 rounded-full bg-white/15 overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-300 to-orange-500 transition-all" style={{ width: `${pt.progress * 100}%` }} /></div>
+            <p className="mt-2 text-[11px] text-stone-400">คำนวณแสงสะท้อนจริงทีละรอบ ภาพจะค่อย ๆ ชัดขึ้น (ประมาณ 10–60 วินาที ขึ้นกับเครื่อง)</p>
+            <button onClick={() => (cancelRef.current = true)} className="mt-2 text-xs text-stone-300 underline">ยกเลิก</button>
+          </div>
+        )}
+        {photo && (
+          <div className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-sm flex flex-col p-3 sm:p-8 animate-fade-in" onClick={() => setPhoto(null)}>
+            <div className="flex items-center justify-between text-white mb-3" onClick={(e) => e.stopPropagation()}>
+              <p className="font-medium">ภาพเรนเดอร์สมจริง · {piece?.name}</p>
+              <div className="flex gap-2">
+                <button onClick={() => onSaveImage(photo)} className="rounded-xl px-4 py-2 text-sm font-semibold text-stone-950 bg-gradient-to-r from-amber-300 to-orange-400 inline-flex items-center gap-1.5">
+                  <ImageDown className="w-4 h-4" /> บันทึกรูป {locked && <Lock className="w-3.5 h-3.5" />}
+                </button>
+                <button onClick={() => setPhoto(null)} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 grid place-items-center" aria-label="ปิด"><X className="w-5 h-5" /></button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 grid place-items-center"><img src={photo} alt="ภาพเรนเดอร์" className="max-w-full max-h-full rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()} /></div>
+          </div>
+        )}
       </div>
 
       {/* mobile panels */}
