@@ -360,7 +360,9 @@ const Viewer3D = forwardRef(function Viewer3D(
       sky.topColor.set('#fff7ec');
       sky.bottomColor.set('#b9ad9c');
       sky.update();
+      const prevBg = s.scene.background;
       s.scene.environment = sky;
+      s.scene.background = sky; // open sides of the room show soft sky instead of black
       s.scene.environmentIntensity = 0.9;
       const pt = new WebGLPathTracer(s.renderer);
       Object.assign(pt, { renderDelay: 0, fadeDuration: 0, minSamples: 1, bounces: 6, filterGlossyFactor: 0.5 });
@@ -383,6 +385,7 @@ const Viewer3D = forwardRef(function Viewer3D(
         }
         sky.dispose();
         s.scene.environment = prevEnv;
+        s.scene.background = prevBg;
         s.scene.environmentIntensity = prevInt;
         s.pathTracing = false;
         s.dirty = true;
