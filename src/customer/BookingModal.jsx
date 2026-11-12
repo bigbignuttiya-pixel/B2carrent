@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
-import { ADDONS } from '../data';
+import { ADDONS, depositOf } from '../data';
 import { priceQuote, baht, formatThaiDate } from '../lib/pricing';
 import { buildPromptPayPayload } from '../lib/promptpay';
 import { Modal, inputCls } from '../components/ui';
@@ -307,7 +307,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
                 <span>รวมยอดชำระทั้งสิ้น</span>
                 <span className="text-yellow-400 text-lg font-black">{baht(quote.total)}</span>
               </div>
-              <div className="text-[10px] text-slate-500">* เงินมัดจำ {baht(vehicle.deposit || 1000)} ชำระวันรับรถ และคืนเต็มจำนวนเมื่อคืนรถ</div>
+              <div className="text-[10px] text-slate-500">* เงินมัดจำ {baht(depositOf(vehicle))} ชำระวันรับรถ และคืนเต็มจำนวนเมื่อคืนรถ</div>
             </div>
 
             <label className="flex items-start gap-2 text-[11px] text-slate-300 cursor-pointer">
