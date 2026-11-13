@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html { scroll-behavior: smooth; }
-body { background: #fff; color: #18181b; }
+body { background: #fde047; color: #18181b; }
 input[type='date']::-webkit-calendar-picker-indicator,
 input[type='time']::-webkit-calendar-picker-indicator { opacity: .6; cursor: pointer; }
 

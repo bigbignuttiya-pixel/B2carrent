@@ -16,7 +16,7 @@ export function HowItWorks() {
       <SectionHeading icon={Route} eyebrow="HOW IT WORKS" title="จองง่ายใน 4 ขั้นตอน" desc="ไม่ต้องใช้บัตรเครดิต ไม่ต้องเดินทางมาหน้าร้าน" center />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
         {steps.map(([n, t, d], i) => (
-          <div key={n} className="relative bg-zinc-50/70 border border-zinc-200 rounded-3xl p-6">
+          <div key={n} className="relative bg-white/70 border border-zinc-200 rounded-3xl p-6">
             <div className="w-10 h-10 rounded-2xl bg-yellow-400 text-zinc-950 font-black flex items-center justify-center text-lg shadow-lg">{n}</div>
             <h4 className="font-bold text-zinc-900 text-sm mt-4">{t}</h4>
             <p className="text-xs text-zinc-500 mt-1">{d}</p>
@@ -110,7 +110,7 @@ export function WhyPunso() {
   ];
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-      <div className="bg-zinc-50/60 border border-zinc-200 rounded-3xl p-8 md:p-12">
+      <div className="bg-white/60 border border-zinc-200 rounded-3xl p-8 md:p-12">
         <div className="text-center max-w-xl mx-auto mb-10">
           <h2 className="text-2xl font-black text-zinc-900">ทำไมต้องเลือกเช่ารถกับ PUNSO CAR RENTAL?</h2>
           <p className="text-xs text-zinc-500 mt-1">การันตีบริการมาตรฐาน สะดวก รวดเร็ว สบายใจตลอดการเดินทาง</p>
@@ -137,7 +137,7 @@ export function Reviews() {
       <SectionHeading icon={Star} eyebrow="CUSTOMER REVIEWS" title="เสียงจากลูกค้าจริง" desc="คะแนนเฉลี่ย 4.9 / 5 จากรีวิวกว่า 680 รายการ" center />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {REVIEWS.map((r) => (
-          <div key={r.name} className="bg-zinc-50/80 border border-zinc-200 rounded-3xl p-6 flex flex-col gap-4 relative">
+          <div key={r.name} className="bg-white/80 border border-zinc-200 rounded-3xl p-6 flex flex-col gap-4 relative">
             <Quote className="w-8 h-8 text-yellow-600/20 absolute top-5 right-5" />
             <div className="flex gap-0.5 text-amber-600">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -168,7 +168,7 @@ export function RequirementsAndFaq() {
           <SectionHeading icon={FileCheck2} eyebrow="RENTAL REQUIREMENTS" title="เอกสารที่ต้องใช้" desc="หลังจองแล้ว ส่งรูปบัตรประชาชน/Passport และใบขับขี่ทาง LINE ได้เลย วันรับรถนำตัวจริงมาด้วย ส่งมอบได้ภายใน 10 นาที" />
           <div className="space-y-3">
             {REQUIREMENTS.map((r, i) => (
-              <div key={r.title} className="flex gap-4 bg-zinc-50/70 border border-zinc-200 rounded-2xl p-4">
+              <div key={r.title} className="flex gap-4 bg-white/70 border border-zinc-200 rounded-2xl p-4">
                 <div className="w-8 h-8 rounded-xl bg-zinc-950 border border-zinc-900 text-yellow-400 font-black text-xs flex items-center justify-center shrink-0">{i + 1}</div>
                 <div>
                   <div className="text-sm font-bold text-zinc-900">{r.title}</div>
@@ -199,7 +199,7 @@ export function RequirementsAndFaq() {
 
 export function Footer({ settings, onNav, onStaff }) {
   return (
-    <footer className="bg-zinc-50 border-t-4 border-yellow-400 mt-20 no-print">
+    <footer className="bg-white border-t-4 border-yellow-400 mt-20 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
         <div className="md:col-span-2 space-y-3">
           <div className="flex items-center gap-3">

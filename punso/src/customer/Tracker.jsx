@@ -71,7 +71,7 @@ export default function Tracker({ myBookings, onSearch, onCancel, onAttachSlip, 
         <button onClick={onBrowse} className="px-4 py-2 bg-zinc-900 text-yellow-300 text-xs font-bold rounded-xl hover:bg-zinc-800 border border-yellow-400/30">+ จองพาหนะเพิ่ม</button>
       </div>
 
-      <form onSubmit={search} className="mb-8 bg-zinc-50 border border-zinc-200 p-4 rounded-2xl flex flex-col sm:flex-row gap-3">
+      <form onSubmit={search} className="mb-8 bg-white border border-zinc-200 p-4 rounded-2xl flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -103,7 +103,7 @@ export default function Tracker({ myBookings, onSearch, onCancel, onAttachSlip, 
       )}
 
       {list.length === 0 ? (
-        <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-10 text-center">
+        <div className="bg-white border border-zinc-200 rounded-3xl p-10 text-center">
           <AlertTriangle className="w-10 h-10 text-amber-600 mx-auto mb-2" />
           <h3 className="text-sm font-bold text-zinc-700">{results ? 'ไม่พบข้อมูลการจองตามที่ค้นหา' : 'ยังไม่มีรายการจองบนอุปกรณ์นี้'}</h3>
           <p className="text-xs text-zinc-500 mt-1">{results ? 'โปรดตรวจสอบเบอร์โทรศัพท์หรือรหัสจองอีกครั้ง' : 'ค้นหาด้วยเบอร์โทรศัพท์ที่ใช้จองด้านบน'}</p>
@@ -115,7 +115,7 @@ export default function Tracker({ myBookings, onSearch, onCancel, onAttachSlip, 
             const cancellable = ['Pending', 'Confirmed'].includes(b.status);
             const freeCancel = hoursUntil(b) >= 48;
             return (
-              <div key={b.id} className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 shadow-xl space-y-5">
+              <div key={b.id} className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl space-y-5">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center pb-4 border-b border-zinc-200 gap-2">
                   <div>
                     <div className="flex flex-wrap items-center gap-3">

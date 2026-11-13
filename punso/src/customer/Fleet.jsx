@@ -9,7 +9,7 @@ export function VehicleCard({ v, free, units = 1, freeUnits = free ? 1 : 0, rent
   const bookable = v.status === 'Available' && free;
   const reason = units > 1 && freeUnits === 0 ? 'เต็มทุกคันช่วงนี้' : v.status === 'Maintenance' ? 'ซ่อมบำรุง' : v.status === 'Rented' ? 'ติดคิวเช่า' : !free ? 'ไม่ว่างช่วงนี้' : '';
   return (
-    <div className="group bg-zinc-50/90 border border-zinc-200/90 hover:border-yellow-400/70 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-zinc-900/10 hover:-translate-y-1 flex flex-col relative">
+    <div className="group bg-white/90 border border-zinc-200/90 hover:border-yellow-400/70 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-zinc-900/10 hover:-translate-y-1 flex flex-col relative">
       <div className={`relative h-56 overflow-hidden ${isCutout(v.image) ? STUDIO_BG : 'bg-white'}`}>
         <img src={v.image} alt={v.name} loading="lazy" className={`w-full h-full group-hover:scale-110 transition-transform duration-700 ${isCutout(v.image) ? `object-contain px-6 pt-12 pb-6 ${STUDIO_SHADOW}` : 'object-cover'} ${bookable ? '' : 'grayscale-[60%] opacity-70'}`} />
         {!isCutout(v.image) && <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />}
@@ -106,7 +106,7 @@ export default function Fleet({ vehicles, list, filters, setFilters, freeMap, re
     <section id="fleet-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 scroll-mt-24">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
         <SectionHeading icon={Flame} eyebrow="PUNSO VEHICLE FLEET" title="กองยานพาหนะพร้อมส่งมอบ" desc="คัดสรรเฉพาะรถสภาพใหม่ ตรวจเช็กระยะสม่ำเสมอ ล้างฆ่าเชื้อสะอาดก่อนส่งทุกครั้ง" />
-        <div className="flex flex-wrap gap-2 items-center bg-zinc-50 p-1.5 rounded-2xl border border-zinc-200 text-xs font-bold w-full md:w-auto md:mb-8">
+        <div className="flex flex-wrap gap-2 items-center bg-white p-1.5 rounded-2xl border border-zinc-200 text-xs font-bold w-full md:w-auto md:mb-8">
           {[
             ['All', `ทั้งหมด (${vehicles.length})`, null],
             ['Motorcycle', `จักรยานยนต์ (${vehicles.filter((v) => v.type === 'Motorcycle').length})`, Bike],
@@ -120,7 +120,7 @@ export default function Fleet({ vehicles, list, filters, setFilters, freeMap, re
       </div>
 
       {/* Toolbar */}
-      <div className="bg-zinc-50/70 border border-zinc-200 rounded-2xl p-3 mb-8 flex flex-col lg:flex-row gap-3 lg:items-center">
+      <div className="bg-white/70 border border-zinc-200 rounded-2xl p-3 mb-8 flex flex-col lg:flex-row gap-3 lg:items-center">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -157,7 +157,7 @@ export default function Fleet({ vehicles, list, filters, setFilters, freeMap, re
       </div>
 
       {list.length === 0 ? (
-        <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-12 text-center">
+        <div className="bg-white border border-zinc-200 rounded-3xl p-12 text-center">
           <CalendarX className="w-10 h-10 text-amber-600 mx-auto mb-3" />
           <h3 className="text-sm font-bold text-zinc-700">ไม่พบพาหนะที่ตรงกับเงื่อนไข</h3>
           <p className="text-xs text-zinc-500 mt-1">ลองเปลี่ยนวันที่ ประเภทรถ หรือล้างตัวกรอง</p>

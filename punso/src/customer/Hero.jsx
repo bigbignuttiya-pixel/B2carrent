@@ -104,10 +104,10 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <div className="flex items-center gap-2 bg-zinc-50/80 border border-zinc-200 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 backdrop-blur-sm">
+                <div className="flex items-center gap-2 bg-white/80 border border-zinc-200 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 backdrop-blur-sm">
                   <Bike className="w-4 h-4 text-yellow-600" /> จักรยานยนต์ (Scooter / Bigbike)
                 </div>
-                <div className="flex items-center gap-2 bg-zinc-50/80 border border-zinc-200 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 backdrop-blur-sm">
+                <div className="flex items-center gap-2 bg-white/80 border border-zinc-200 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 backdrop-blur-sm">
                   <Car className="w-4 h-4 text-zinc-900" /> รถยนต์ (Sedan / SUV / EV)
                 </div>
                 <div className="flex items-center gap-2 bg-yellow-400/15 border border-yellow-400/50 px-3 py-1.5 rounded-xl text-xs font-black text-yellow-600 backdrop-blur-sm">
@@ -122,7 +122,7 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
                   ['3,500+', 'ทริปที่ให้บริการ'],
                   ['24 ชม.', 'ช่วยเหลือฉุกเฉิน'],
                 ].map(([v, l]) => (
-                  <div key={l} className="bg-zinc-50/60 border border-zinc-200 rounded-2xl px-3 py-2.5 backdrop-blur-sm">
+                  <div key={l} className="bg-white/60 border border-zinc-200 rounded-2xl px-3 py-2.5 backdrop-blur-sm">
                     <div className="text-lg font-black text-yellow-600">{v}</div>
                     <div className="text-[10px] text-zinc-500">{l}</div>
                   </div>

@@ -443,7 +443,7 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-zinc-800 font-sans flex flex-col selection:bg-yellow-400 selection:text-zinc-950">
+    <div className="min-h-screen bg-gradient-to-b from-white via-yellow-50 to-yellow-300 text-zinc-800 font-sans flex flex-col selection:bg-yellow-400 selection:text-zinc-950">
       <Header
         viewMode={viewMode}
         setViewMode={setStaffView}
@@ -607,7 +607,7 @@ export default function App() {
       <BookingDrawer booking={drawerBooking} onClose={() => setDrawerBookingId(null)} onStatus={changeBookingStatus} getSlipUrl={api.getSlipUrl} />
 
       {viewMode === 'admin' && (
-        <footer className="bg-white border-t border-zinc-100 py-6 mt-auto text-center text-xs text-zinc-500 no-print">
+        <footer className="border-t border-yellow-400/60 py-6 mt-auto text-center text-xs text-zinc-500 no-print">
           © 2026 PUNSO CAR RENTAL SERVICES — Admin Console
         </footer>
       )}

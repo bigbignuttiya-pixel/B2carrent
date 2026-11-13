@@ -38,7 +38,7 @@ export default function PreviewModal({ vehicle, unitCount = 1, bookable, onClose
               </button>
             ))}
           </div>
-          <div className="text-[11px] text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl p-3 flex gap-2">
+          <div className="text-[11px] text-zinc-500 bg-white border border-zinc-200 rounded-xl p-3 flex gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             ผ่านการตรวจสภาพ 30 รายการก่อนส่งมอบ • เงินมัดจำ {baht(depositOf(vehicle))} (คืนเต็มจำนวน)
           </div>
