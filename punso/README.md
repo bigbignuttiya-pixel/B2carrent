@@ -20,10 +20,31 @@ npm run build
 - โค้ดส่วนลด `PUNSO2026` (10%), `EVGREEN` (15% เฉพาะ EV) — จัดการได้ที่หลังบ้าน
 - รหัสรถขึ้นต้นด้วย `PS-` (เช่น `PS-M101`, `PS-C201`) และเลขจอง `PS-2026-0001`
 
-## ฐานข้อมูล
-ยังไม่ได้ผูกกับ Supabase — ตอนนี้เว็บทำงานใน **โหมดเดโม** (ข้อมูลอยู่ในเบราว์เซอร์) จนกว่าจะสร้างโปรเจกต์ Supabase ของ PUNSO
-แล้วใส่คีย์ใน `src/lib/supabase.js` (`DEFAULT_URL`, `DEFAULT_ANON_KEY`) หรือ env `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`
-**อย่าใช้โปรเจกต์ Supabase เดียวกับ B2** เพื่อไม่ให้ข้อมูลรถ/การจองปนกัน — ทำตามขั้นตอนตั้งค่าด้านล่าง (ใช้ไฟล์ใน `punso/supabase/`)
+## ขึ้นเว็บจริง (ทำครั้งเดียว ~15 นาที)
+
+### 1) ฐานข้อมูล — Supabase บัญชีฟรีใหม่ของ PUNSO
+1. สมัคร/ล็อกอิน https://supabase.com ด้วยบัญชีใหม่ (บัญชีฟรีสร้างได้ 2 โปรเจกต์ต่อบัญชี)
+2. **New project** → ตั้งชื่อ `punso-car-rental` → Region **Southeast Asia (Singapore)** → ตั้งรหัสผ่านฐานข้อมูลแล้วเก็บไว้
+3. เมนู **SQL Editor** → New query → วางทั้งไฟล์ `punso/supabase/setup.sql` → **Run** (สร้างตาราง + รถ 6 คัน + การตั้งค่า + โค้ดส่วนลด)
+4. **Authentication → Users → Add user → Create new user** ใส่อีเมล/รหัสผ่านเจ้าของร้าน (ติ๊ก *Auto Confirm User*)
+5. กลับไป **SQL Editor** แล้วรัน (เปลี่ยนอีเมลเป็นของคุณ)
+   ```sql
+   insert into public.punso_admins (user_id) select id from auth.users where email = 'owner@example.com';
+   ```
+6. **Authentication → Sign In / Providers** → ปิด *Allow new users to sign up*
+7. **Project Settings → API** → คัดลอก *Project URL* และ *anon public key*
+
+> ตาราง/ฟังก์ชัน/ที่เก็บรูปทุกตัวขึ้นต้นด้วย `punso_` จึงใส่ร่วมกับโปรเจกต์อื่นได้โดยไม่ชนกัน แต่แนะนำให้ใช้โปรเจกต์แยกของ PUNSO
+
+### 2) เว็บ — Vercel
+1. https://vercel.com → **Add New → Project** → เลือก repo `B2carrent`
+2. **Root Directory = `punso`** (Framework: Vite จะถูกเลือกให้เอง)
+3. **Environment Variables**: `VITE_SUPABASE_URL` = Project URL, `VITE_SUPABASE_ANON_KEY` = anon key (จากข้อ 1.7)
+4. **Deploy** → เปิดเว็บ → หลังบ้าน (`/#admin`) → ล็อกอินด้วยบัญชีจากข้อ 1.4 → ควรเห็นป้าย "ข้อมูลกลางบนคลาวด์"
+5. ไปที่ **หลังบ้าน → ตั้งค่าระบบ** ใส่ PromptPay, เบอร์โทร, LINE, Facebook, ที่อยู่ร้านจริง
+
+> ถ้ายังไม่ใส่คีย์ เว็บจะทำงานใน **โหมดเดโม** (ข้อมูลอยู่ในเบราว์เซอร์เครื่องนั้นเท่านั้น)
+> จะใส่คีย์ไว้ในโค้ดแทน env ก็ได้: `src/lib/supabase.js` → `DEFAULT_URL`, `DEFAULT_ANON_KEY` (anon key เปิดเผยได้ — ห้ามใส่ `service_role key`)
 
 ## โครงสร้าง
 ```
@@ -31,12 +52,13 @@ src/
   data.js                 ข้อมูลตัวอย่าง (รถ, การจอง, บริการเสริม, โค้ดส่วนลด, FAQ, รีวิว)
   lib/pricing.js          คำนวณวันเช่า, ส่วนลด, เช็กรถว่างตามช่วงวัน
   lib/promptpay.js        สร้าง PromptPay QR payload มาตรฐาน EMVCo (สแกนจากแอปธนาคารได้จริง)
-  lib/supabase.js         เชื่อมต่อ Supabase ของร้าน (ตั้งค่าไว้ในโค้ดแล้ว — env ใช้เปลี่ยนโปรเจกต์ได้)
+  lib/supabase.js         เชื่อมต่อ Supabase ของร้าน (ใส่คีย์ใน env หรือในไฟล์นี้)
   lib/api/                ชั้นข้อมูลกลาง: remote.js = ฐานข้อมูลคลาวด์, local.js = โหมดเดโมในเบราว์เซอร์
   lib/storage.js          เก็บค่าเฉพาะเครื่อง (รายการโปรด, เบอร์ที่เคยจอง)
 supabase/
   schema.sql              ตาราง, สิทธิ์การเข้าถึง (RLS), ฟังก์ชันจอง/คำนวณราคาฝั่งเซิร์ฟเวอร์, ที่เก็บรูป
   seed.sql                ข้อมูลเริ่มต้น (รถ 6 คัน, การตั้งค่าร้าน, โค้ดส่วนลด, ราคาบริการเสริม)
+  setup.sql               schema + seed รวมไฟล์เดียว (ใช้ไฟล์นี้ตอนตั้งค่าครั้งแรก)
 scripts/make-seed.mjs     สร้าง seed.sql ใหม่จาก src/data.js
   components/             Header, Toast, Modal, StatusBadge
   customer/               หน้าบ้าน: Hero/ค้นหา, ฟลีตรถ, จอง+ชำระเงิน, ติดตามสถานะ, FAQ/รีวิว/ที่เที่ยว
@@ -70,29 +92,14 @@ scripts/make-seed.mjs     สร้าง seed.sql ใหม่จาก src/dat
 - **โหมดคลาวด์ (Supabase)** — เปิดเมื่อใส่คีย์ใน `src/lib/supabase.js` หรือ env แล้ว ข้อมูลรถ รูป การจอง สลิป และการตั้งค่า อยู่บนฐานข้อมูลกลาง แอดมินต้องล็อกอินก่อนเข้าหลังบ้าน
 - **โหมดเดโม** — ตั้ง `VITE_DEMO_MODE=true` ข้อมูลจะอยู่ในเบราว์เซอร์นั้นเท่านั้น (หลังบ้านจะแสดงป้าย "โหมดเดโม")
 
-### ขั้นตอนตั้งค่า (ทำครั้งเดียว ~15 นาที)
-1. สมัครที่ https://supabase.com → **New project** (Region แนะนำ *Southeast Asia (Singapore)*) ตั้งรหัสผ่านฐานข้อมูลแล้วเก็บไว้
-2. เมนู **SQL Editor** → New query → วางเนื้อหาไฟล์ `supabase/schema.sql` → **Run**
-3. New query อีกครั้ง → วาง `supabase/seed.sql` → **Run** (ใส่รถ 6 คันและการตั้งค่าร้านเริ่มต้น)
-4. สร้างบัญชีแอดมิน: เมนู **Authentication → Users → Add user → Create new user** ใส่อีเมล/รหัสผ่านของเจ้าของร้าน (ติ๊ก *Auto Confirm User*)
-5. ให้สิทธิ์แอดมิน: กลับไป **SQL Editor** แล้วรัน (เปลี่ยนอีเมลเป็นของคุณ)
-   ```sql
-   insert into public.admins (user_id)
-   select id from auth.users where email = 'owner@example.com';
-   ```
-6. ปิดการสมัครสมาชิกเอง: **Authentication → Sign In / Providers → ปิด "Allow new users to sign up"** (ให้มีแต่บัญชีที่คุณสร้างเอง)
-7. คัดลอกคีย์: **Project Settings → API** → *Project URL* และ *anon public key*
-8. ใส่คีย์ใน `src/lib/supabase.js` (`DEFAULT_URL`, `DEFAULT_ANON_KEY`) — หรือตั้ง Environment Variables `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` ที่โฮสต์แทนก็ได้ (ค่า env ใช้แทนค่าในโค้ด)
-9. เปิดเว็บ → หลังบ้าน → ล็อกอิน → ควรเห็นป้าย "ข้อมูลกลางบนคลาวด์"
-
-> `anon key` เปิดเผยได้ (ออกแบบมาให้อยู่ในหน้าเว็บ) ความปลอดภัยมาจากสิทธิ์ใน `schema.sql` — **ห้าม** ใส่ `service_role key` ในหน้าเว็บเด็ดขาด
+> ขั้นตอนตั้งค่าดูหัวข้อ **ขึ้นเว็บจริง** ด้านบน
 
 ### ความปลอดภัยที่ตั้งไว้ใน schema.sql
 - ลูกค้าทั่วไปอ่านได้แค่ข้อมูลรถและข้อมูลร้าน — ดูรายการจอง/โค้ดส่วนลดของคนอื่นไม่ได้
 - ราคาคำนวณใหม่บนเซิร์ฟเวอร์ทุกครั้ง (แก้ราคาจากหน้าเว็บไม่ได้) และกันจองซ้อนวันเดียวกัน
 - ค้นหาสถานะการจองต้องใช้เบอร์โทรที่จอง (รหัสจองอย่างเดียวไม่พอ)
 - สลิปโอนเงินเก็บในที่เก็บส่วนตัว เฉพาะแอดมินเปิดดูได้
-- แก้ไขรถ/ราคา/การตั้งค่า/สถานะการจอง ได้เฉพาะบัญชีที่อยู่ในตาราง `admins`
+- แก้ไขรถ/ราคา/การตั้งค่า/สถานะการจอง ได้เฉพาะบัญชีที่อยู่ในตาราง `punso_admins`
 
 ### ข้อมูลเดิมในโหมดเดโม
 ข้อมูลที่เคยแก้ในเบราว์เซอร์ (โหมดเดโม) จะไม่ถูกย้ายขึ้นคลาวด์อัตโนมัติ — หลังเชื่อมต่อแล้ว ให้เพิ่ม/แก้รถและรูปใหม่ผ่านหลังบ้านครั้งเดียว ข้อมูลจะเห็นตรงกันทุกเครื่อง
