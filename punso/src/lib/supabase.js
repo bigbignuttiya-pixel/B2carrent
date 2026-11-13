@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// PUNSO Car Rental's Supabase project. Fill in DEFAULT_URL / DEFAULT_ANON_KEY (or set
-// VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY at the host) once the project is created — see README.
-// Until then the site runs in browser-only demo mode. The anon key is designed to be public;
-// security is enforced by the database policies in supabase/schema.sql.
-// VITE_DEMO_MODE=true forces demo mode even when keys are set.
-const DEFAULT_URL = '';
-const DEFAULT_ANON_KEY = '';
+// PUNSO Car Rental's database. It lives in the shop owner's Supabase project, where every PUNSO
+// table, function, bucket and policy is prefixed punso_ (see supabase/schema.sql), so it stays
+// separate from the other sites in that project. The anon key is designed to be public; security is
+// enforced by the database policies. VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY override these
+// (e.g. to move PUNSO to its own project), and VITE_DEMO_MODE=true runs browser-only demo mode.
+const DEFAULT_URL = 'https://fxnvwjugcapmyybvgymv.supabase.co';
+const DEFAULT_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4bnZ3anVnY2FwbXl5YnZneW12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNjQyNjEsImV4cCI6MjEwOTk0MDI2MX0.dRv__PLhVX3KmKntfj6bTIH1c0LaOhR4zRfNTaFHrRM';
 const demoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 const url = import.meta.env.VITE_SUPABASE_URL || DEFAULT_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_ANON_KEY;
