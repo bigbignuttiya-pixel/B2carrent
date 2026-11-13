@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Search, Sparkles, Bike, Car, AlertTriangle, Percent, Copy, UserCheck, ChevronLeft, ChevronRight, MapPin, Navigation } from 'lucide-react';
 import { HERO_SLIDES, HERO_COPY, LOCATIONS } from '../data';
 import { addDaysISO, todayISO, durationTier } from '../lib/pricing';
@@ -42,7 +42,7 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
           ))}
 
           <div className="absolute inset-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-28 sm:pb-32">
-            <div key={slide.id} className="max-w-2xl space-y-3 animate-slide-up">
+            <div key={slide.id} className="max-w-2xl space-y-3 hero-seq">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 bg-yellow-400 text-zinc-950 text-[11px] font-black px-3 py-1 rounded-full">
                   <MapPin className="w-3.5 h-3.5" /> ที่เที่ยวแนะนำ • {slide.tag}
@@ -54,7 +54,7 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
               <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-lg">{slide.name}</h2>
               <p className="text-sm sm:text-base text-zinc-100 max-w-xl leading-relaxed line-clamp-2">{slide.desc}</p>
               <div className="flex flex-wrap gap-2 pt-1">
-                <button onClick={() => document.getElementById('hero-search')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-black text-xs px-5 py-3 rounded-xl shadow-lg transition">
+                <button onClick={() => document.getElementById('hero-search')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="shine shine-hover bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-black text-xs px-5 py-3 rounded-xl shadow-lg transition">
                   เช่ารถไปเที่ยวที่นี่
                 </button>
                 <a href="#destinations" className="bg-white/10 hover:bg-white/20 border border-white/40 backdrop-blur-md text-white font-bold text-xs px-5 py-3 rounded-xl transition">
@@ -83,6 +83,7 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+          <div key={`timer-${slideIndex}`} className="slide-timer absolute bottom-0 left-0 h-1 w-full bg-yellow-400" />
           {slide.credit && <span className="absolute top-2 right-3 text-[8px] text-white/60">ภาพ: {slide.credit}</span>}
         </div>
 
@@ -98,7 +99,7 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-zinc-900 tracking-tight leading-tight">
                   {HERO_COPY.title.includes('|') ? HERO_COPY.title.split('|').map((t) => <span key={t} className="inline-block">{t.trim()}&nbsp;</span>) : HERO_COPY.title} <br />
-                  <span className="inline-block bg-yellow-400 text-zinc-950 px-3 mt-2 rounded-xl -rotate-1 shadow-[6px_6px_0_0_#09090b]">PUNSO CAR RENTAL</span>
+                  <span className="shine inline-block bg-yellow-400 text-zinc-950 px-3 mt-2 rounded-xl -rotate-1 shadow-[6px_6px_0_0_#09090b]">PUNSO CAR RENTAL</span>
                 </h1>
                 <p className="text-zinc-600 text-sm sm:text-base max-w-xl font-light leading-relaxed">{HERO_COPY.subtitle}</p>
               </div>
@@ -123,7 +124,7 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
                   ['24 ชม.', 'ช่วยเหลือฉุกเฉิน'],
                 ].map(([v, l]) => (
                   <div key={l} className="bg-white/60 border border-zinc-200 rounded-2xl px-3 py-2.5 backdrop-blur-sm">
-                    <div className="text-lg font-black text-yellow-600">{v}</div>
+                    <div className="text-lg font-black text-yellow-600 tabular-nums"><CountUp value={v} /></div>
                     <div className="text-[10px] text-zinc-500">{l}</div>
                   </div>
                 ))}
@@ -253,6 +254,53 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
           </button>
         </div>
       </section>
+
+      {/* Road band: selling points roll past on a lane line */}
+      <div className="road mt-10 py-4 select-none" aria-label="จุดเด่นของ PUNSO">
+        <div className="marquee">
+          {[0, 1].map((k) => (
+            <div key={k} className="flex shrink-0" aria-hidden={k === 1}>
+              {ROAD_POINTS.map((t) => (
+                <span key={t} className="mx-3 inline-flex items-center gap-2 bg-zinc-950 px-4 py-1.5 rounded-full border border-yellow-400/60 text-yellow-300 text-xs sm:text-sm font-black whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" /> {t}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
+}
+
+const ROAD_POINTS = ['รับ-ส่งฟรีสนามบิน', 'รถใหม่ ตรวจ 30 รายการ', 'ประกันชั้น 1', 'จ่ายผ่าน PromptPay', 'ไม่ต้องใช้บัตรเครดิต', 'บริการพร้อมคนขับ', 'ช่วยเหลือ 24 ชม.', 'รถ EV 100%'];
+
+// Counts a stat like "3,500+" up from zero once it is on screen; keeps any prefix/suffix as written.
+function CountUp({ value }) {
+  const m = String(value).match(/^([^\d]*)([\d,.]+)(.*)$/);
+  const ref = useRef(null);
+  const target = m ? Number(m[2].replace(/,/g, '')) : 0;
+  const decimals = m && m[2].includes('.') ? m[2].split('.')[1].length : 0;
+  const [n, setN] = useState(target);
+  useEffect(() => {
+    if (!m || !ref.current || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    let raf;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      const t0 = performance.now();
+      const step = (t) => {
+        const p = Math.min(1, (t - t0) / 1400);
+        setN(target * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      setN(0);
+      raf = requestAnimationFrame(step);
+    });
+    io.observe(ref.current);
+    return () => { io.disconnect(); cancelAnimationFrame(raf); };
+  }, [target]);
+  if (!m) return value;
+  const shown = n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return <span ref={ref}>{m[1]}{shown}{m[3]}</span>;
 }

@@ -9,7 +9,7 @@ export function VehicleCard({ v, free, units = 1, freeUnits = free ? 1 : 0, rent
   const bookable = v.status === 'Available' && free;
   const reason = units > 1 && freeUnits === 0 ? 'เต็มทุกคันช่วงนี้' : v.status === 'Maintenance' ? 'ซ่อมบำรุง' : v.status === 'Rented' ? 'ติดคิวเช่า' : !free ? 'ไม่ว่างช่วงนี้' : '';
   return (
-    <div className="group bg-white/90 border border-zinc-200/90 hover:border-yellow-400/70 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-zinc-900/10 hover:-translate-y-1 flex flex-col relative">
+    <div className="car-card group bg-white/90 border border-zinc-200/90 hover:border-yellow-400/70 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-zinc-900/10 hover:-translate-y-1 flex flex-col relative">
       <div className={`relative h-56 overflow-hidden ${isCutout(v.image) ? STUDIO_BG : 'bg-white'}`}>
         <img src={v.image} alt={v.name} loading="lazy" className={`w-full h-full group-hover:scale-110 transition-transform duration-700 ${isCutout(v.image) ? `object-contain px-6 pt-12 pb-6 ${STUDIO_SHADOW}` : 'object-cover'} ${bookable ? '' : 'grayscale-[60%] opacity-70'}`} />
         {!isCutout(v.image) && <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />}
@@ -166,7 +166,7 @@ export default function Fleet({ vehicles, list, filters, setFilters, freeMap, re
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {list.map((g) => (
             <VehicleCard
               key={g.key}

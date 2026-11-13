@@ -14,7 +14,7 @@ export function HowItWorks() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
       <SectionHeading icon={Route} eyebrow="HOW IT WORKS" title="จองง่ายใน 4 ขั้นตอน" desc="ไม่ต้องใช้บัตรเครดิต ไม่ต้องเดินทางมาหน้าร้าน" center />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+      <div className="stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
         {steps.map(([n, t, d], i) => (
           <div key={n} className="relative bg-white/70 border border-zinc-200 rounded-3xl p-6">
             <div className="w-10 h-10 rounded-2xl bg-yellow-400 text-zinc-950 font-black flex items-center justify-center text-lg shadow-lg">{n}</div>
@@ -77,7 +77,7 @@ export function Destinations({ onPickVehicleType }) {
   return (
     <section id="destinations" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 scroll-mt-24">
       <SectionHeading icon={Compass} eyebrow="RECOMMENDED DESTINATIONS" title="จุดหมายปลายทางยอดนิยม" desc="รับรถจาก PUNSO แล้วขับท่องเที่ยวไปยังแลนด์มาร์กสวยๆ ได้อย่างมั่นใจ" center />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {DESTINATIONS.map((d) => (
           <div key={d.name} role="button" tabIndex={0} onClick={() => setOpen(d)} onKeyDown={(e) => e.key === 'Enter' && setOpen(d)} className={`group relative h-72 sm:h-80 rounded-3xl overflow-hidden border border-zinc-200 shadow-xl cursor-pointer ${d.featured ? 'sm:col-span-2' : ''}`}>
             <img src={d.image} alt={d.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -115,7 +115,7 @@ export function WhyPunso() {
           <h2 className="text-2xl font-black text-zinc-900">ทำไมต้องเลือกเช่ารถกับ PUNSO CAR RENTAL?</h2>
           <p className="text-xs text-zinc-500 mt-1">การันตีบริการมาตรฐาน สะดวก รวดเร็ว สบายใจตลอดการเดินทาง</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="stagger grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {items.map(([Icon, t, d]) => (
             <div key={t} className="bg-white p-6 rounded-2xl border border-zinc-200/80 text-center space-y-3 hover:border-yellow-400/40 transition">
               <div className="w-12 h-12 bg-zinc-950 border border-zinc-900 text-yellow-400 rounded-2xl flex items-center justify-center mx-auto">
@@ -135,7 +135,7 @@ export function Reviews() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
       <SectionHeading icon={Star} eyebrow="CUSTOMER REVIEWS" title="เสียงจากลูกค้าจริง" desc="คะแนนเฉลี่ย 4.9 / 5 จากรีวิวกว่า 680 รายการ" center />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="stagger grid grid-cols-1 md:grid-cols-3 gap-6">
         {REVIEWS.map((r) => (
           <div key={r.name} className="bg-white/80 border border-zinc-200 rounded-3xl p-6 flex flex-col gap-4 relative">
             <Quote className="w-8 h-8 text-yellow-600/20 absolute top-5 right-5" />
@@ -266,7 +266,7 @@ export function FloatingContact({ settings }) {
           <span className="hidden sm:inline">Facebook</span>
         </a>
       )}
-      <a href={lineChatUrl(settings.lineOaId)} target="_blank" rel="noreferrer" className="group flex items-center gap-2 bg-[#06C755] text-white rounded-full shadow-2xl shadow-zinc-900/10 pl-3 pr-4 py-3 text-xs font-black hover:scale-105 transition" aria-label="แชท LINE">
+      <a href={lineChatUrl(settings.lineOaId)} target="_blank" rel="noreferrer" className="pulse-ring group flex items-center gap-2 bg-[#06C755] text-white rounded-full shadow-2xl shadow-zinc-900/10 pl-3 pr-4 py-3 text-xs font-black hover:scale-105 transition" aria-label="แชท LINE">
         <MessageCircle className="w-5 h-5" />
         <span className="hidden sm:inline">แชท LINE</span>
       </a>
