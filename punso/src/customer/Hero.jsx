@@ -1,11 +1,13 @@
 import React from 'react';
-import { Search, Sparkles, Bike, Car, AlertTriangle, Percent, Copy, UserCheck } from 'lucide-react';
-import { HERO_SLIDES, LOCATIONS } from '../data';
+import { Search, Sparkles, Bike, Car, AlertTriangle, Percent, Copy, UserCheck, ChevronLeft, ChevronRight, MapPin, Navigation } from 'lucide-react';
+import { HERO_SLIDES, HERO_COPY, LOCATIONS } from '../data';
 import { addDaysISO, todayISO, durationTier } from '../lib/pricing';
 import { inputCls } from '../components/ui';
 
 export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearchParams, rentalDays, availableCount, onSearch, notify }) {
   const slide = HERO_SLIDES[slideIndex];
+  const n = HERO_SLIDES.length;
+  const go = (d) => setSlideIndex((slideIndex + d + n) % n);
   const invalid = rentalDays <= 0;
   const tier = durationTier(rentalDays);
   const set = (patch) => setSearchParams({ ...searchParams, ...patch });
@@ -23,33 +25,82 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
 
   return (
     <>
-      <section className="relative overflow-hidden min-h-[640px] flex items-center border-b border-zinc-900/30">
-        {HERO_SLIDES.map((s, idx) => (
-          <div
-            key={s.id}
-            className={`absolute inset-0 transition-all ease-in-out ${idx === slideIndex ? 'opacity-100 scale-105 duration-[8000ms]' : 'opacity-0 scale-100 duration-1000'}`}
-          >
-            <img src={s.bgImage} alt="" className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/20" />
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
-          </div>
-        ))}
+      <section className="relative">
+        {/* Travel photo slider — recommended destinations */}
+        <div className="relative h-[460px] sm:h-[540px] overflow-hidden bg-zinc-900">
+          {HERO_SLIDES.map((s, idx) => (
+            <div
+              key={s.id}
+              aria-hidden={idx !== slideIndex}
+              className={`absolute inset-0 ${idx === slideIndex ? 'opacity-100 scale-105' : 'opacity-0 scale-100'}`}
+              style={{ transition: `opacity 1000ms ease-in-out, transform ${idx === slideIndex ? 8000 : 1000}ms ease-out` }}
+            >
+              <img src={s.bgImage} alt={s.name} className="w-full h-full object-cover object-center" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/10" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
+            </div>
+          ))}
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="absolute inset-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-28 sm:pb-32">
+            <div key={slide.id} className="max-w-2xl space-y-3 animate-slide-up">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 bg-yellow-400 text-zinc-950 text-[11px] font-black px-3 py-1 rounded-full">
+                  <MapPin className="w-3.5 h-3.5" /> ที่เที่ยวแนะนำ • {slide.tag}
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-white/15 border border-white/30 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full">
+                  <Navigation className="w-3 h-3" /> {slide.distance} • {slide.drive} จากตัวเมือง
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-lg">{slide.name}</h2>
+              <p className="text-sm sm:text-base text-zinc-100 max-w-xl leading-relaxed line-clamp-2">{slide.desc}</p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button onClick={() => document.getElementById('hero-search')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-black text-xs px-5 py-3 rounded-xl shadow-lg transition">
+                  เช่ารถไปเที่ยวที่นี่
+                </button>
+                <a href="#destinations" className="bg-white/10 hover:bg-white/20 border border-white/40 backdrop-blur-md text-white font-bold text-xs px-5 py-3 rounded-xl transition">
+                  ดูที่เที่ยวทั้งหมด
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-20 sm:bottom-24 right-4 sm:right-8 flex items-center gap-3">
+            <button onClick={() => go(-1)} aria-label="สไลด์ก่อนหน้า" className="hidden sm:flex w-9 h-9 rounded-full bg-white/15 hover:bg-yellow-400 hover:text-zinc-950 border border-white/30 backdrop-blur-md text-white items-center justify-center transition">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-white/80 text-[11px] font-bold tabular-nums">{String(slideIndex + 1).padStart(2, '0')} / {String(n).padStart(2, '0')}</span>
+            <div className="flex items-center gap-1.5">
+              {HERO_SLIDES.map((s, idx) => (
+                <button
+                  key={s.id}
+                  aria-label={`สไลด์ ${idx + 1}: ${s.name}`}
+                  onClick={() => setSlideIndex(idx)}
+                  className={`h-2 rounded-full transition-all duration-500 ${idx === slideIndex ? 'w-8 bg-yellow-400' : 'w-2 bg-white/50 hover:bg-white'}`}
+                />
+              ))}
+            </div>
+            <button onClick={() => go(1)} aria-label="สไลด์ถัดไป" className="hidden sm:flex w-9 h-9 rounded-full bg-white/15 hover:bg-yellow-400 hover:text-zinc-950 border border-white/30 backdrop-blur-md text-white items-center justify-center transition">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          {slide.credit && <span className="absolute top-2 right-3 text-[8px] text-white/60">ภาพ: {slide.credit}</span>}
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full z-10 -mt-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Copy */}
-            <div className="lg:col-span-7 space-y-6">
-              <div key={slide.id} className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-zinc-950 border border-yellow-400/40 backdrop-blur-md rounded-full text-yellow-300 text-xs font-bold shadow-lg animate-fade-in">
+            <div className="lg:col-span-7 space-y-6 lg:pt-28">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-zinc-950 border border-yellow-400/40 backdrop-blur-md rounded-full text-yellow-300 text-xs font-bold shadow-lg animate-fade-in">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-600 animate-pulse" />
-                <span>{slide.badge}</span>
+                <span>{HERO_COPY.badge}</span>
               </div>
 
-              <div key={`t-${slide.id}`} className="space-y-3 animate-slide-up">
+              <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-zinc-900 tracking-tight leading-tight">
-                  {slide.title.includes('|') ? slide.title.split('|').map((t) => <span key={t} className="inline-block">{t.trim()}&nbsp;</span>) : slide.title} <br />
+                  {HERO_COPY.title.includes('|') ? HERO_COPY.title.split('|').map((t) => <span key={t} className="inline-block">{t.trim()}&nbsp;</span>) : HERO_COPY.title} <br />
                   <span className="inline-block bg-yellow-400 text-zinc-950 px-3 mt-2 rounded-xl -rotate-1 shadow-[6px_6px_0_0_#09090b]">PUNSO CAR RENTAL</span>
                 </h1>
-                <p className="text-zinc-600 text-sm sm:text-base max-w-xl font-light leading-relaxed">{slide.subtitle}</p>
+                <p className="text-zinc-600 text-sm sm:text-base max-w-xl font-light leading-relaxed">{HERO_COPY.subtitle}</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -77,22 +128,11 @@ export default function Hero({ slideIndex, setSlideIndex, searchParams, setSearc
                   </div>
                 ))}
               </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                {HERO_SLIDES.map((_, idx) => (
-                  <button
-                    key={idx}
-                    aria-label={`สไลด์ ${idx + 1}`}
-                    onClick={() => setSlideIndex(idx)}
-                    className={`h-2 rounded-full transition-all duration-500 ${idx === slideIndex ? 'w-8 bg-yellow-400' : 'w-2 bg-zinc-200 hover:bg-zinc-400'}`}
-                  />
-                ))}
-              </div>
             </div>
 
             {/* Search engine */}
-            <div className="lg:col-span-5">
-              <div className="bg-zinc-50/85 backdrop-blur-2xl border border-zinc-900/60 p-6 rounded-3xl shadow-2xl shadow-zinc-900/10 space-y-4">
+            <div id="hero-search" className="lg:col-span-5 order-first lg:order-none scroll-mt-28">
+              <div className="bg-white border-2 border-zinc-950 p-6 rounded-3xl shadow-2xl shadow-zinc-900/10 space-y-4">
                 <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
                   <h2 className="text-base font-bold text-zinc-900 flex items-center">
                     <Search className="w-4 h-4 mr-2 text-yellow-600" /> ค้นหารถว่าง & เช็คราคาด่วน

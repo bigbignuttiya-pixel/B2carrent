@@ -4,29 +4,12 @@ import { HardHat, Smartphone, Shield, MapPin, Baby, Wifi, UserCheck } from 'luci
 // MOCK DATA & CONSTANTS
 // ==========================================
 
-export const HERO_SLIDES = [
-  {
-    id: 1,
-    title: 'เช่ารถขับเอง | หรือพร้อมคนขับมืออาชีพ', // '|' = keep each part on one line
-    subtitle: 'คนขับชำนาญเส้นทาง ประสบการณ์สูง พาเที่ยวทั่วนครศรีฯ อย่างปลอดภัย • รถใหม่สะอาด รับ-ส่งฟรีสนามบินและตัวเมือง',
-    bgImage: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1800&q=80',
-    badge: '🔥 โปรโมชั่นพิเศษ! จองวันนี้ ฟรีหมวกกันน็อก 2 ใบ + ประกันภัย',
-  },
-  {
-    id: 2,
-    title: 'อิสระแห่งการเดินทาง ทุกจุดหมายปลายทาง',
-    subtitle: 'ฟลีตรถใหม่สะอาด Honda PCX, Forza, Giorno+, BYD EV, Yaris และ Fortuner 4WD',
-    bgImage: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1800&q=80',
-    badge: '⚡ Fleet รถไฟฟ้า EV 100% ประหยัดค่าเดินทาง',
-  },
-  {
-    id: 3,
-    title: 'ตรวจเช็กสภาพมาตรฐาน 30 รายการก่อนส่งมอบ',
-    subtitle: 'อุ่นใจด้วยบริการช่วยเหลือฉุกเฉินตลอด 24 ชั่วโมง อนุมัติไว ไม่ต้องใช้บัตรเครดิต',
-    bgImage: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1800&q=80',
-    badge: '🛡️ ประกันภัยชั้น 1 คุ้มครองเต็มรูปแบบ',
-  },
-];
+// Fixed brand copy beside the hero search box
+export const HERO_COPY = {
+  title: 'เช่ารถขับเอง | หรือพร้อมคนขับมืออาชีพ', // '|' = keep each part on one line
+  subtitle: 'คนขับชำนาญเส้นทาง ประสบการณ์สูง พาเที่ยวทั่วนครศรีฯ อย่างปลอดภัย • รถใหม่สะอาด รับ-ส่งฟรีสนามบินและตัวเมือง',
+  badge: '🔥 โปรโมชั่นพิเศษ! จองวันนี้ ฟรีหมวกกันน็อก 2 ใบ + ประกันภัย',
+};
 
 export const LOCATIONS = [
   'สนามบินนครศรีธรรมราช (จัดส่งฟรี)',
@@ -441,3 +424,6 @@ export const DEFAULT_SETTINGS = {
   openHours: '07:00 - 21:00 ทุกวัน',
   paymentWindowMin: 15,
 };
+
+// Top-of-page photo slider: the recommended travel destinations
+export const HERO_SLIDES = DESTINATIONS.map((d, i) => ({ id: i + 1, ...d, bgImage: d.image }));
