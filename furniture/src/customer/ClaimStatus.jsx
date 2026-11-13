@@ -48,7 +48,13 @@ export default function ClaimStatus({ claim, settings, notify, onApproved, initi
     try {
       const payment = await api.claimSlip(claim.id, claim.token, dataUrl);
       setData((d) => ({ ...d, payment }));
-      notify('แนบสลิปเรียบร้อย รอร้านยืนยัน');
+      const v = await api.verifySlip({ id: claim.id, token: claim.token });
+      if (v?.result === 'approved') {
+        await load();
+        notify('ตรวจสลิปผ่าน — อนุมัติอัตโนมัติแล้ว');
+      } else if (v?.result === 'verified') notify('ตรวจสลิปผ่านแล้ว รอร้านกดยืนยัน');
+      else if (v?.result === 'review') notify('แนบสลิปเรียบร้อย ร้านจะตรวจสอบให้อีกครั้ง', 'info');
+      else notify('แนบสลิปเรียบร้อย รอร้านยืนยัน');
     } catch (err) {
       throw new Error(errorMessage(err));
     }

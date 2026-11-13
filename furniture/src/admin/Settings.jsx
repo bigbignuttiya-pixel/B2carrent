@@ -80,6 +80,16 @@ export default function Settings({ settings, onSaved, notify }) {
             </div>
           )}
         </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" checked={Boolean(s.autoApproveSlip)} onChange={set('autoApproveSlip')} className="w-4 h-4 mt-0.5 accent-stone-900" />
+          <span>
+            อนุมัติอัตโนมัติเมื่อตรวจสลิปผ่าน
+            <span className="block text-xs text-stone-500">
+              ใช้บริการตรวจสลิป EasySlip (ต้องใส่คีย์ EASYSLIP_API_KEY ในระบบก่อน) — อนุมัติเองเฉพาะเมื่อยอดตรงกับแพ็กเกจ บัญชีผู้รับลงท้ายตรงกับ PromptPay ด้านบน
+              และเลขอ้างอิงสลิปไม่เคยใช้มาก่อน นอกนั้นจะรอให้ร้านตรวจเหมือนเดิม · ถ้าปิดไว้ ระบบยังตรวจและแสดงผลให้ดูในหน้าการชำระเงิน
+            </span>
+          </span>
+        </label>
       </section>
 
       <button disabled={busy} className={`${btnPrimary} px-6`}>

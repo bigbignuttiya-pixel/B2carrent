@@ -50,6 +50,16 @@ export const api = {
     const path = await uploadSlip(dataUrl);
     return unwrap(await supabase.rpc('furniture_claim_slip', { p_id: id, p_token: token, p_path: path }));
   },
+  // Automatic slip check on the server (EasySlip). Never throws: without the service the shop checks by hand.
+  // Returns { result: 'approved' | 'verified' | 'review' | 'not_configured' | 'skipped', reasons? } or null
+  async verifySlip(params) {
+    try {
+      const { data, error } = await supabase.functions.invoke('furniture-verify-slip', { body: params });
+      return error ? null : data;
+    } catch {
+      return null;
+    }
+  },
   async attachSlip(code, paymentId, dataUrl) {
     const path = await uploadSlip(dataUrl);
     return unwrap(await supabase.rpc('furniture_attach_slip', { p_code: code, p_payment_id: paymentId, p_path: path }));
@@ -99,6 +109,7 @@ export const api = {
       amount: r.amount,
       status: r.status,
       slipPath: r.slip_path,
+      slipCheck: r.slip_check || null,
       oldSlips: r.old_slips || [],
       hasSlip: Boolean(r.slip_path),
       decidedAtIso: r.decided_at,
