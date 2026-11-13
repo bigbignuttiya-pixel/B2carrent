@@ -3,8 +3,8 @@ import { supabase } from '../supabase';
 import { DEFAULT_SETTINGS } from '../../data';
 import { toApiError } from './errors';
 
-const PHOTO_BUCKET = 'vehicle-photos';
-const SLIP_BUCKET = 'slips';
+const PHOTO_BUCKET = 'punso-vehicle-photos';
+const SLIP_BUCKET = 'punso-slips';
 
 const unwrap = ({ data, error }) => {
   if (error) throw toApiError(error);
@@ -62,9 +62,9 @@ export const remoteApi = {
 
   async loadPublic() {
     const [v, s, r] = await Promise.all([
-      supabase.from('vehicles').select('id, data').order('sort_order').order('created_at'),
-      supabase.from('settings').select('data').eq('id', 1).maybeSingle(),
-      supabase.rpc('booked_ranges'),
+      supabase.from('punso_vehicles').select('id, data').order('sort_order').order('created_at'),
+      supabase.from('punso_settings').select('data').eq('id', 1).maybeSingle(),
+      supabase.rpc('punso_booked_ranges'),
     ]);
     return {
       vehicles: unwrap(v).map(rowToVehicle),
@@ -75,8 +75,8 @@ export const remoteApi = {
 
   async loadAdmin() {
     const [b, c] = await Promise.all([
-      supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(1000),
-      supabase.from('coupons').select('*').order('code'),
+      supabase.from('punso_bookings').select('*').order('created_at', { ascending: false }).limit(1000),
+      supabase.from('punso_coupons').select('*').order('code'),
     ]);
     return {
       bookings: unwrap(b).map(rowToBooking),
@@ -86,36 +86,36 @@ export const remoteApi = {
 
   async checkCoupon(code, vehicle) {
     if (!code?.trim()) return null;
-    return unwrap(await supabase.rpc('check_coupon', { p_code: code, p_vehicle_id: vehicle.id })) || null;
+    return unwrap(await supabase.rpc('punso_check_coupon', { p_code: code, p_vehicle_id: vehicle.id })) || null;
   },
 
   async createBooking(p) {
     const slipPath = await uploadSlip(p.slip);
     const { slip, ...payload } = p;
-    return unwrap(await supabase.rpc('create_booking', { p: { ...payload, slipPath } }));
+    return unwrap(await supabase.rpc('punso_create_booking', { p: { ...payload, slipPath } }));
   },
 
   async findBookings(phone, id) {
-    return unwrap(await supabase.rpc('find_bookings', { p_phone: phone, p_id: id || null })) || [];
+    return unwrap(await supabase.rpc('punso_find_bookings', { p_phone: phone, p_id: id || null })) || [];
   },
 
   async cancelBooking(id, phone) {
-    return unwrap(await supabase.rpc('cancel_booking', { p_id: id, p_phone: phone }));
+    return unwrap(await supabase.rpc('punso_cancel_booking', { p_id: id, p_phone: phone }));
   },
 
   async attachSlip(id, phone, dataUrl) {
     const path = await uploadSlip(dataUrl);
-    return unwrap(await supabase.rpc('attach_slip', { p_id: id, p_phone: phone, p_path: path }));
+    return unwrap(await supabase.rpc('punso_attach_slip', { p_id: id, p_phone: phone, p_path: path }));
   },
 
   // ----- admin (allowed only for users in public.admins — enforced by RLS) -----
   // Booking made on another channel (DriveHub, phone, LINE…): blocks the dates, no slip/price rules
   async addExternalBooking(p) {
-    return unwrap(await supabase.rpc('admin_add_booking', { p }));
+    return unwrap(await supabase.rpc('punso_admin_add_booking', { p }));
   },
 
   async setBookingStatus(id, status) {
-    unwrap(await supabase.from('bookings').update({ status }).eq('id', id).select('id').single());
+    unwrap(await supabase.from('punso_bookings').update({ status }).eq('id', id).select('id').single());
   },
 
   async getSlipUrl(booking) {
@@ -130,34 +130,34 @@ export const remoteApi = {
     const saved = { ...vehicle, image, gallery };
     const row = { id: vehicle.id, data: saved };
     if (isNew) {
-      const { data: first } = await supabase.from('vehicles').select('sort_order').order('sort_order').limit(1).maybeSingle();
+      const { data: first } = await supabase.from('punso_vehicles').select('sort_order').order('sort_order').limit(1).maybeSingle();
       row.sort_order = (first?.sort_order ?? 0) - 1; // newest first
-      unwrap(await supabase.from('vehicles').insert(row).select('id').single());
+      unwrap(await supabase.from('punso_vehicles').insert(row).select('id').single());
     } else {
-      unwrap(await supabase.from('vehicles').update({ data: saved }).eq('id', vehicle.id).select('id').single());
+      unwrap(await supabase.from('punso_vehicles').update({ data: saved }).eq('id', vehicle.id).select('id').single());
     }
     return saved;
   },
 
   async setVehicleStatus(id, status) {
-    const { data } = unwrap(await supabase.from('vehicles').select('data').eq('id', id).single());
-    unwrap(await supabase.from('vehicles').update({ data: { ...data, status } }).eq('id', id).select('id').single());
+    const { data } = unwrap(await supabase.from('punso_vehicles').select('data').eq('id', id).single());
+    unwrap(await supabase.from('punso_vehicles').update({ data: { ...data, status } }).eq('id', id).select('id').single());
   },
 
   async deleteVehicle(id) {
-    unwrap(await supabase.from('vehicles').delete().eq('id', id));
+    unwrap(await supabase.from('punso_vehicles').delete().eq('id', id));
   },
 
   async saveSettings(settings) {
     const { lineChannelToken, ...publicSettings } = settings; // secrets never go into the public settings row
-    unwrap(await supabase.from('settings').upsert({ id: 1, data: publicSettings }));
+    unwrap(await supabase.from('punso_settings').upsert({ id: 1, data: publicSettings }));
   },
 
   async saveCoupons(list) {
     const rows = list.map((c) => ({ code: c.code, percent: c.percent, active: c.active, label: c.label || '', only_category: c.onlyCategory || null }));
-    if (rows.length) unwrap(await supabase.from('coupons').upsert(rows));
+    if (rows.length) unwrap(await supabase.from('punso_coupons').upsert(rows));
     const keep = rows.map((r) => r.code);
-    let del = supabase.from('coupons').delete();
+    let del = supabase.from('punso_coupons').delete();
     del = keep.length ? del.not('code', 'in', `(${keep.map((c) => `"${c}"`).join(',')})`) : del.neq('code', '');
     unwrap(await del);
   },
@@ -167,7 +167,7 @@ export const remoteApi = {
     const { data } = await supabase.auth.getSession();
     const user = data.session?.user;
     if (!user) return { signedIn: false, isAdmin: false, email: null };
-    const isAdmin = unwrap(await supabase.rpc('is_admin'));
+    const isAdmin = unwrap(await supabase.rpc('punso_is_admin'));
     return { signedIn: true, isAdmin: Boolean(isAdmin), email: user.email };
   },
 
@@ -193,8 +193,8 @@ export const remoteApi = {
   subscribe(cb) {
     const ch = supabase
       .channel('punso-admin')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, cb)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, cb)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'punso_bookings' }, cb)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'punso_vehicles' }, cb)
       .subscribe();
     return () => supabase.removeChannel(ch);
   },
