@@ -61,6 +61,7 @@ export function PaymentDrawer({ payment, onClose, onChanged, notify }) {
           )}
         </div>
         <div>
+          {payment.slipCheck && <SlipCheck check={payment.slipCheck} />}
           {payment.hasSlip ? (
             slipUrl ? (
               <a href={slipUrl} target="_blank" rel="noreferrer">
@@ -203,6 +204,34 @@ export default function Payments({ payments, onOpenPayment }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+const REASONS = {
+  amount_mismatch: 'ยอดเงินไม่ตรงกับแพ็กเกจ',
+  receiver_mismatch: 'บัญชีผู้รับไม่ตรงกับ PromptPay ของร้าน',
+  duplicate_slip: 'สลิปนี้เคยใช้กับรายการอื่นแล้ว',
+  slip_older_than_order: 'วันที่โอนเก่ากว่าวันที่สั่งซื้อ',
+  no_reference: 'อ่านเลขอ้างอิงสลิปไม่ได้',
+  read_slip_failed: 'เปิดไฟล์สลิปไม่ได้',
+};
+function SlipCheck({ check }) {
+  const ok = check.ok;
+  return (
+    <div className={`mb-3 rounded-xl border p-3 text-xs ${ok ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+      <p className="font-semibold text-sm">{ok ? '✓ ตรวจสลิปอัตโนมัติผ่าน' : '! ตรวจสลิปอัตโนมัติไม่ผ่าน — กรุณาตรวจเอง'}</p>
+      {check.amount != null && <p>ยอดในสลิป ฿{Number(check.amount).toLocaleString('th-TH')}</p>}
+      {check.receiver && <p>ผู้รับ {check.receiver}</p>}
+      {check.sender && <p>ผู้โอน {check.sender}</p>}
+      {check.transRef && <p>เลขอ้างอิง {check.transRef}</p>}
+      {!ok && check.reasons?.length > 0 && (
+        <ul className="mt-1 list-disc pl-4">
+          {check.reasons.map((r) => (
+            <li key={r}>{REASONS[r] || r.replace(/^provider:/, 'บริการตรวจสลิปแจ้ง: ')}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS = {
   promptPayId: '',
   accountName: '',
   allowTrial: true,
+  autoApproveSlip: false, // approve automatically when the slip check passes (needs EASYSLIP_API_KEY)
 };
 
 export const baht = (n) => '฿' + Number(n || 0).toLocaleString('th-TH');

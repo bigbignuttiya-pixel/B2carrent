@@ -2,7 +2,7 @@
 import { Suspense, lazy, useRef, useState } from 'react';
 import {
   Undo2, Redo2, RotateCcw, Minus, Plus, LayoutGrid, Ruler, DoorOpen, DoorClosed, Lock, FileText, ImageDown, Home, Shirt, Layers, Archive,
-  ChevronDown, Palette, Sparkles, Aperture, X,
+  ChevronDown, Palette, Sparkles, Aperture, X, Footprints, ShoppingBasket, GripHorizontal,
 } from 'lucide-react';
 import { FINISHES, TEMPLATES, autoLayout, countItems, finishById, matById } from './model';
 import { money } from './costing';
@@ -175,6 +175,23 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
       <Stepper icon={Layers} label="ชั้นวาง" value={counts.shelves} max={12} onChange={(v) => setCounts({ shelves: v })} />
       <Stepper icon={Shirt} label="ราวแขวน" value={counts.rods} max={2} onChange={(v) => setCounts({ rods: v })} />
       <Stepper icon={Archive} label="ลิ้นชัก" value={counts.drawers} max={8} onChange={(v) => setCounts({ drawers: v })} />
+      <p className="text-[11px] font-medium text-stone-400 mt-3 mb-1">ชั้นโชว์ปลายตู้ (มุม) กว้าง 30 ซม.</p>
+      <Segmented options={[['none', 'ไม่มี'], ['left', 'ซ้าย'], ['right', 'ขวา']]} value={piece.endShelf || 'none'} onChange={(v) => update((p) => ({ ...p, endShelf: v }))} />
+      <p className="text-[11px] font-medium text-stone-400 mt-3 mb-0.5">อุปกรณ์เสริม (สำเร็จรูป)</p>
+      <Stepper icon={Footprints} label="ชั้นวางรองเท้า" value={counts.shoes} max={4} onChange={(v) => setCounts({ shoes: v })} />
+      <Stepper icon={ShoppingBasket} label="ตะกร้าลวดดึงออก" value={counts.baskets} max={5} onChange={(v) => setCounts({ baskets: v })} />
+      <label className="flex items-center gap-2 py-1.5 text-sm text-stone-600">
+        <GripHorizontal className="w-4 h-4 text-stone-400" /> ราวแขวนกางเกงดึงออก
+        <button
+          type="button"
+          role="switch"
+          aria-checked={counts.pants > 0}
+          onClick={() => setCounts({ pants: counts.pants > 0 ? 0 : 1 })}
+          className={`ml-auto w-11 h-6 rounded-full transition relative ${counts.pants > 0 ? 'bg-orange-500' : 'bg-stone-300'}`}
+        >
+          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${counts.pants > 0 ? 'left-[22px]' : 'left-0.5'}`} />
+        </button>
+      </label>
       {doorMode === 'hinged' && (
         <label className="flex items-center gap-2 pt-2 text-sm text-stone-600">
           <DoorOpen className="w-4 h-4 text-stone-400" /> บานช่องนี้
@@ -344,7 +361,7 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
         {addMenu}
         {/* desktop floating cards */}
         <div className="hidden lg:block absolute left-4 top-20 w-72">
-          <div className={card}>
+          <div className={`${card} max-h-[calc(100vh-29rem)] min-h-[12rem] overflow-y-auto`}>
             <CardTitle icon={LayoutGrid}>จัดภายในตู้</CardTitle>
             {insidePanel}
           </div>

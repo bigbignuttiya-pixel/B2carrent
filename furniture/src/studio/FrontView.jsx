@@ -1,7 +1,7 @@
 // Front elevation of a piece (SVG, centimetres). Interactive mode: drag shelves / drawers / rods up and down,
 // drag dividers left and right, click a column to select it.
 import { useRef } from 'react';
-import { buildPiece, columnX, innerHeight, matById, overlaps, ELEMENT_KINDS } from './model';
+import { buildPiece, columnX, innerHeight, matById, overlaps, elementH, ELEMENT_KINDS } from './model';
 
 const INK = '#292524';
 const r1 = (n) => Math.round(n * 10) / 10;
@@ -10,7 +10,8 @@ const stroke = { stroke: INK, strokeWidth: 1, vectorEffect: 'non-scaling-stroke'
 export function FrontDrawing({ piece, materials, showDoors = true, dims = true, built }) {
   const b = built || buildPiece(piece, materials);
   const W = b.outer.outerW;
-  const H = b.outer.outerH;
+  const X0 = b.outer.minX || 0;
+  const H = b.outer.outerH + (piece.mirror ? 86 : 0);
   const Y = (y) => H - y;
   // back → front, so nearer panels cover farther ones
   const parts = [...b.parts].sort((a, c) => a.box.z + a.box.sz - (c.box.z + c.box.sz));
@@ -39,6 +40,12 @@ export function FrontDrawing({ piece, materials, showDoors = true, dims = true, 
             <circle cx={e.from[0] + 1.5} cy={Y(e.from[1])} r={1.4} fill="#57534e" />
             <circle cx={e.to[0] - 1.5} cy={Y(e.to[1])} r={1.4} fill="#57534e" />
           </g>
+        ) : e.type === 'shoe' || e.type === 'basket' || e.type === 'pants' ? (
+          <g key={i} stroke="#71717a" strokeWidth={0.6} fill="none">
+            <rect x={e.box.x} y={Y(e.box.y + e.box.sy)} width={e.box.sx} height={e.box.sy} strokeDasharray={e.type === 'basket' ? '1.5 1' : undefined} fill={e.type === 'basket' ? 'rgba(161,161,170,.12)' : 'none'} />
+            {e.type === 'shoe' && [0.35, 0.85].map((f) => <line key={f} x1={e.box.x} y1={Y(e.box.y + e.box.sy * f - 3)} x2={e.box.x + e.box.sx} y2={Y(e.box.y + e.box.sy * f - 3)} strokeWidth={1.2} />)}
+            {e.type === 'pants' && Array.from({ length: Math.max(2, Math.floor(e.box.sx / 6)) }, (_, k) => <circle key={k} cx={e.box.x + 3 + k * 6} cy={Y(e.box.y + e.box.sy - 1)} r={0.8} fill="#71717a" />)}
+          </g>
         ) : e.type === 'box' ? (
           <rect key={i} x={e.box.x} y={Y(e.box.y + e.box.sy)} width={e.box.sx} height={e.box.sy} fill={e.color} {...stroke} />
         ) : e.type === 'leg' && e.at[1] > piece.D / 2 ? (
@@ -47,10 +54,10 @@ export function FrontDrawing({ piece, materials, showDoors = true, dims = true, 
       )}
       {dims && (
         <g fill="#57534e" fontSize={fontSize} textAnchor="middle" style={{ fontFamily: 'Prompt, sans-serif' }}>
-          <line x1={0} y1={H + fontSize * 1.2} x2={W} y2={H + fontSize * 1.2} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-          <text x={W / 2} y={H + fontSize * 2.6}>{r1(W)}</text>
-          <line x1={-fontSize * 1.2} y1={0} x2={-fontSize * 1.2} y2={H} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-          <text x={-fontSize * 2} y={H / 2} transform={`rotate(-90 ${-fontSize * 2} ${H / 2})`}>{r1(H)}</text>
+          <line x1={X0} y1={H + fontSize * 1.2} x2={X0 + W} y2={H + fontSize * 1.2} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          <text x={X0 + W / 2} y={H + fontSize * 2.6}>{r1(W)}</text>
+          <line x1={X0 - fontSize * 1.2} y1={0} x2={X0 - fontSize * 1.2} y2={H} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          <text x={X0 - fontSize * 2} y={H / 2} transform={`rotate(-90 ${X0 - fontSize * 2} ${H / 2})`}>{r1(H)}</text>
         </g>
       )}
     </g>
@@ -76,9 +83,10 @@ function Handle({ box, kind, Y }) {
 export const frontViewBox = (piece, materials, pad = 0.12) => {
   const b = buildPiece(piece, materials);
   const W = b.outer.outerW;
-  const H = b.outer.outerH;
+  const H = b.outer.outerH + (piece.mirror ? 86 : 0);
+  const X0 = b.outer.minX || 0;
   const m = Math.max(W, H) * pad + 8;
-  return { vb: `${-m} ${-m * 0.6} ${W + 2 * m} ${H + m * 1.6}`, W, H, built: b };
+  return { vb: `${X0 - m} ${-m * 0.6} ${W + 2 * m} ${H + m * 1.6}`, W, H, built: b };
 };
 
 // Interactive editor
@@ -176,7 +184,7 @@ export default function FrontView({ piece, materials, showDoors, selection, onSe
             let cur = 0;
             sorted.forEach((it) => {
               if (it.y - cur > 6) gaps.push([cur, it.y]);
-              cur = it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 3);
+              cur = it.y + elementH(it, t);
             });
             if (Hi - cur > 6) gaps.push([cur, Hi]);
             return (
@@ -205,9 +213,9 @@ export default function FrontView({ piece, materials, showDoors, selection, onSe
                   {r1(c.w)}
                 </text>
                 {c.items.map((it) => {
-                  const h = it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 3;
+                  const h = elementH(it, t);
                   const sel = selection.item === it.id;
-                  const max = it.kind === 'shelf' ? Hi - t : it.kind === 'drawer' ? Hi - it.h : Hi - 5;
+                  const max = it.kind === 'rod' ? Hi - 5 : Hi - h;
                   const hitPad = it.kind === 'shelf' ? 2.5 : 0;
                   // with doors shown only the drawer fronts in door-less columns are visible
                   if (showDoors && c.door !== 'none') return null;

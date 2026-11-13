@@ -35,6 +35,9 @@ export const DEFAULT_PRICING = {
   handle: 45,
   rodPerM: 120,
   slidingPerDoor: 650, // track + rollers per sliding door
+  shoeRack: 450,
+  basket: 690,
+  pantsRack: 950,
   metalLegs: 1200, // per set of 4
   countertopPerM: 1800,
   laborPerSheet: 450, // cutting, edging, assembly per sheet used
@@ -80,7 +83,14 @@ export const ELEMENT_KINDS = {
   shelf: { name: 'ชั้นวาง', defaultH: 0 },
   drawer: { name: 'ลิ้นชัก', defaultH: 18 },
   rod: { name: 'ราวแขวน', defaultH: 0 },
+  // ready-made accessories (hardware, not cut from sheets)
+  shoe: { name: 'ชั้นรองเท้า', defaultH: 22, accessory: true },
+  basket: { name: 'ตะกร้าลวด', defaultH: 16, accessory: true },
+  pants: { name: 'ราวกางเกง', defaultH: 10, accessory: true },
 };
+// height an element takes inside a column (cm)
+export const elementH = (it, t) => (it.kind === 'shelf' ? t : it.kind === 'rod' ? 3 : it.h || ELEMENT_KINDS[it.kind]?.defaultH || 3);
+const hasH = (kind) => kind === 'drawer' || ELEMENT_KINDS[kind]?.accessory;
 
 // ---------- templates ----------
 const col = (w, door, items = []) => ({ id: uid(), w, door, items: items.map((it) => ({ id: uid(), ...it })) });
@@ -141,6 +151,44 @@ export const TEMPLATES = [
       columns: [col(76.4, 'double', [sh(20), sh(40), sh(60), sh(80)])],
     }),
   },
+  {
+    id: 'wardrobeCorner', group: 'ตู้', name: 'ตู้เสื้อผ้า + ชั้นโชว์ปลายตู้', make: () => ({
+      kind: 'box', W: 120, H: 220, D: 60, plinth: 8, endShelf: 'left',
+      columns: [col(57.3, 'left', [rod(165), sh(175)]), col(57.3, 'right', [dr(0, 20), dr(20.5, 20), sh(80), sh(120), sh(160)])],
+    }),
+  },
+  {
+    id: 'nightstand', group: 'ห้องนอน', name: 'ตู้ข้างเตียง 2 ลิ้นชัก', make: () => ({
+      kind: 'box', W: 45, H: 50, D: 40, plinth: 5, columns: [col(41.4, 'none', [dr(0, 20.5), dr(21, 20.4)])],
+    }),
+  },
+  {
+    id: 'chest', group: 'ห้องนอน', name: 'ตู้ลิ้นชัก 5 ชั้น', make: () => ({
+      kind: 'box', W: 80, H: 110, D: 45, plinth: 8, columns: [col(76.4, 'none', [dr(0, 19), dr(19.5, 19), dr(39, 19), dr(58.5, 19), dr(78, 19.4)])],
+    }),
+  },
+  { id: 'vanity', group: 'ห้องนอน', name: 'โต๊ะเครื่องแป้ง + กระจก', make: () => ({ kind: 'table', W: 100, H: 75, D: 45, legs: 'panel', apron: 15, mirror: true }) },
+  {
+    id: 'pantry', group: 'ครัว', name: 'ตู้ครัวสูง (ตู้เก็บของ)', make: () => ({
+      kind: 'box', W: 60, H: 220, D: 58, plinth: 10, carcass: 'hmr18', columns: [col(56.4, 'double', [sh(40), sh(80), sh(120), sh(160)])],
+    }),
+  },
+  {
+    id: 'island', group: 'ครัว', name: 'เคาน์เตอร์ไอส์แลนด์', make: () => ({
+      kind: 'box', W: 120, H: 86, D: 90, plinth: 10, countertop: true, carcass: 'hmr18',
+      columns: [col(56.4, 'none', [dr(0, 24), dr(24.5, 24), dr(49, 22.4)]), col(56.4, 'double', [sh(32)])],
+    }),
+  },
+  {
+    id: 'sideboard', group: 'ตู้', name: 'ตู้ไซด์บอร์ด', make: () => ({
+      kind: 'box', W: 160, H: 80, D: 45, plinth: 10, columns: [col(50, 'double', [sh(30)]), col(50, 'none', [dr(0, 21), dr(21.5, 21), dr(43, 21.4)]), col(50, 'double', [sh(30)])],
+    }),
+  },
+  {
+    id: 'wallShelf', group: 'ตู้', name: 'ชั้นลอยติดผนัง', make: () => ({
+      kind: 'box', W: 100, H: 35, D: 25, plinth: 0, elev: 150, columns: [col(48.2, 'none', [sh(14)]), col(48.2, 'none', [])],
+    }),
+  },
   { id: 'desk', group: 'โต๊ะ', name: 'โต๊ะทำงาน', make: () => ({ kind: 'table', W: 120, H: 75, D: 60, legs: 'panel', apron: 30 }) },
   { id: 'dining', group: 'โต๊ะ', name: 'โต๊ะอาหาร ขาเหล็ก', make: () => ({ kind: 'table', W: 150, H: 75, D: 80, legs: 'metal', apron: 0 }) },
   { id: 'bed5', group: 'เตียง', name: 'เตียง 5 ฟุต', make: () => ({ kind: 'bed', W: 150, H: 30, D: 200, headH: 100 }) },
@@ -196,8 +244,8 @@ export function normalizePiece(p, materials) {
     ...c,
     w: r1((Math.max(1, c.w) / sum) * inner),
     items: c.items.map((it) => {
-      const h = it.kind === 'drawer' ? Math.max(8, Math.min(it.h || 18, innerH)) : 0;
-      const top = it.kind === 'shelf' ? innerH - t : it.kind === 'drawer' ? innerH - h : innerH - 5;
+      const h = hasH(it.kind) ? Math.max(6, Math.min(it.h || ELEMENT_KINDS[it.kind].defaultH, innerH)) : 0;
+      const top = it.kind === 'shelf' ? innerH - t : hasH(it.kind) ? innerH - h : innerH - 5;
       return { ...it, h, y: r1(Math.max(0, Math.min(it.y, top))) };
     }),
   }));
@@ -225,7 +273,7 @@ export const hingesFor = (h) => (h <= 90 ? 2 : h <= 150 ? 3 : h <= 200 ? 4 : 5);
 // anim: { id, type: 'door'|'drawer'|'flip', ... } — parts with the same anim.id move together in 3D
 export function buildPiece(p, materials) {
   const parts = [];
-  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0 };
+  const hw = { hinge: 0, slide: 0, handle: 0, rodCm: 0, metalLegs: 0, countertopCm: 0, slidingDoor: 0, shoeRack: 0, basket: 0, pantsRack: 0 };
   const extras = []; // non-panel 3D objects: rods, legs, countertop
   const add = (part) => parts.push(part);
 
@@ -274,6 +322,15 @@ export function buildPiece(p, materials) {
     c.items.forEach((it) => {
       if (it.kind === 'shelf') {
         add({ name: 'ชั้นวาง', mat: cm.id, a: c.w, b: D - setback, bandA: 1, bandB: 0, box: { x, y: y0 + it.y, z: 0, sx: c.w, sy: t, sz: D - setback }, color: finishById(p.shelfFinish)?.color || color, shelf: true });
+      } else if (it.kind === 'shoe') {
+        hw.shoeRack += 1;
+        extras.push({ type: 'shoe', box: { x: x + 1, y: y0 + it.y, z: 4, sx: c.w - 2, sy: it.h, sz: D - 8 - setback } });
+      } else if (it.kind === 'basket') {
+        hw.basket += 1;
+        extras.push({ type: 'basket', box: { x: x + 1.5, y: y0 + it.y + 1, z: 4, sx: c.w - 3, sy: it.h - 2, sz: D - 9 - setback } });
+      } else if (it.kind === 'pants') {
+        hw.pantsRack += 1;
+        extras.push({ type: 'pants', box: { x: x + 1.5, y: y0 + it.y, z: 4, sx: c.w - 3, sy: it.h, sz: D - 9 - setback } });
       } else if (it.kind === 'rod') {
         hw.rodCm += c.w;
         extras.push({ type: 'rod', from: [x, y0 + it.y, D / 2], to: [x + c.w, y0 + it.y, D / 2] });
@@ -328,6 +385,25 @@ export function buildPiece(p, materials) {
     }
   });
 
+  // Open corner / end shelf unit fixed to one side (no doors), shelves about every 35 cm
+  if (p.endShelf === 'left' || p.endShelf === 'right') {
+    const E = END_W;
+    const ex = p.endShelf === 'left' ? -E : W; // unit spans ex … ex + E
+    const outerX = p.endShelf === 'left' ? ex : ex + E - t;
+    const innerX = p.endShelf === 'left' ? ex + t : ex;
+    const iw = E - t;
+    const sc = finishById(p.shelfFinish)?.color || color;
+    add({ name: 'ข้างชั้นปลายตู้', mat: cm.id, a: H, b: D, bandA: 1, bandB: 0, box: { x: outerX, y: 0, z: 0, sx: t, sy: H, sz: D }, color });
+    add({ name: 'พื้น/หลังคาชั้นปลายตู้', mat: cm.id, a: iw, b: D, bandA: 1, bandB: 0, box: { x: innerX, y: pl, z: 0, sx: iw, sy: t, sz: D }, color });
+    add({ name: 'พื้น/หลังคาชั้นปลายตู้', mat: cm.id, a: iw, b: D, bandA: 1, bandB: 0, box: { x: innerX, y: H - t, z: 0, sx: iw, sy: t, sz: D }, color });
+    add({ name: 'แผ่นหลังชั้นปลายตู้', mat: bm.id, a: H - pl, b: E, bandA: 0, bandB: 0, box: { x: ex, y: pl, z: -bt, sx: E, sy: H - pl, sz: bt }, color: shadeHex(color, -0.08) });
+    if (pl > 0) add({ name: 'บังโป๊ชั้นปลายตู้', mat: cm.id, a: iw, b: pl, bandA: 1, bandB: 0, box: { x: innerX, y: 0, z: D - 3 - t, sx: iw, sy: pl, sz: t }, color: shadeHex(color, -0.25) });
+    const n = Math.max(1, Math.round(Hi / 35) - 1);
+    for (let k = 1; k <= n; k++) {
+      add({ name: 'ชั้นปลายตู้', mat: cm.id, a: iw, b: D - 2, bandA: 1, bandB: 0, box: { x: innerX, y: y0 + (k * Hi) / (n + 1), z: 0, sx: iw, sy: t, sz: D - 2 }, color: sc, shelf: true });
+    }
+  }
+
   if (sliding) {
     const N = Math.max(2, Math.min(4, p.slideCount || 2));
     const ov = 3; // overlap between neighbouring doors
@@ -362,6 +438,11 @@ function buildTable(p, materials, parts, hw, extras) {
     const li = 3;
     parts.push({ name: 'ขาโต๊ะ (แผ่น)', mat: cm.id, a: H - t, b: D - 6, bandA: 2, bandB: 1, box: { x: li, y: 0, z: 3, sx: t, sy: H - t, sz: D - 6 }, color });
     parts.push({ name: 'ขาโต๊ะ (แผ่น)', mat: cm.id, a: H - t, b: D - 6, bandA: 2, bandB: 1, box: { x: W - li - t, y: 0, z: 3, sx: t, sy: H - t, sz: D - 6 }, color });
+  }
+  if (p.mirror) {
+    const mw = Math.min(70, W * 0.6);
+    extras.push({ type: 'box', box: { x: (W - mw) / 2 - 2, y: H, z: 1, sx: mw + 4, sy: 84, sz: 2 }, color: p.frontColor });
+    extras.push({ type: 'box', box: { x: (W - mw) / 2, y: H + 2, z: 3, sx: mw, sy: 80, sz: 0.6 }, color: '#c9d3dc', finish: 'mirror' });
   }
   if (p.apron > 0) {
     const ax = p.legs === 'metal' ? 8 : 3 + t;
@@ -398,6 +479,8 @@ function buildBed(p, materials, parts, hw, extras) {
   return finish(p, parts, hw, extras, { outerW: Wo, outerD: Lo, outerH: headH });
 }
 
+export const END_W = 30; // width of the open end-shelf unit (cm)
+
 function finish(p, parts, hw, extras, outer) {
   parts.forEach((x, i) => {
     x.finish = x.role === 'front' ? p.frontFinish : x.shelf ? p.shelfFinish || p.finish : p.finish;
@@ -410,14 +493,20 @@ function finish(p, parts, hw, extras, outer) {
     parts,
     hw,
     extras,
-    outer: outer || { outerW: p.W, outerD: p.D + (p.kind === 'box' ? 1 : 0), outerH: p.H + (p.countertop ? 3 : 0) },
+    // minX < 0 when an end shelf is fixed to the left side
+    outer: outer || {
+      outerW: p.W + (p.kind === 'box' && (p.endShelf === 'left' || p.endShelf === 'right') ? END_W : 0),
+      minX: p.kind === 'box' && p.endShelf === 'left' ? -END_W : 0,
+      outerD: p.D + (p.kind === 'box' ? 1 : 0),
+      outerH: p.H + (p.countertop ? 3 : 0),
+    },
   };
 }
 
 // Collision check for the 2D editor: elements overlapping in the same column
 export function overlaps(p, materials, c) {
   const t = matById(materials, p.carcass).t;
-  const spans = c.items.map((it) => ({ id: it.id, lo: it.y, hi: it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 3) }));
+  const spans = c.items.map((it) => ({ id: it.id, lo: it.y, hi: it.y + elementH(it, t) }));
   const bad = new Set();
   spans.forEach((a, i) => spans.forEach((b, j) => i < j && a.lo < b.hi - 0.05 && b.lo < a.hi - 0.05 && (bad.add(a.id), bad.add(b.id))));
   return bad;
@@ -427,9 +516,9 @@ export function overlaps(p, materials, c) {
 export function freeSpot(p, materials, c, kind) {
   const t = matById(materials, p.carcass).t;
   const Hi = innerHeight(p, materials);
-  const size = kind === 'drawer' ? 18 : kind === 'shelf' ? t : 3;
+  const size = elementH({ kind }, t);
   const spans = c.items
-    .map((it) => [it.y, it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 3)])
+    .map((it) => [it.y, it.y + elementH(it, t)])
     .sort((a, b) => a[0] - b[0]);
   let best = { lo: 0, hi: Hi };
   let bestLen = -1;
@@ -441,7 +530,7 @@ export function freeSpot(p, materials, c, kind) {
     }
     cur = Math.max(cur, hi);
   });
-  if (kind === 'drawer') return r1(best.lo);
+  if (hasH(kind)) return r1(best.lo);
   return r1(Math.max(0, Math.min(Hi - size, (best.lo + best.hi) / 2 - size / 2)));
 }
 
@@ -459,6 +548,9 @@ export const countItems = (c) => ({
   shelves: c.items.filter((i) => i.kind === 'shelf').length,
   rods: c.items.filter((i) => i.kind === 'rod').length,
   drawers: c.items.filter((i) => i.kind === 'drawer').length,
+  shoes: c.items.filter((i) => i.kind === 'shoe').length,
+  baskets: c.items.filter((i) => i.kind === 'basket').length,
+  pants: c.items.filter((i) => i.kind === 'pants').length,
 });
 
 // Lay out a column from counts: drawers stacked at the bottom, hanging space at the top, shelves spread evenly
@@ -470,13 +562,25 @@ export function autoLayout(p, materials, colIndex, counts) {
   let shelves = Math.max(0, Math.min(12, counts.shelves));
   const dh = Hi < 100 ? Math.max(10, Math.min(25, Math.floor(Hi / Math.max(1, drawers)) - 1)) : 20;
   const items = [];
-  for (let k = 0; k < drawers; k++) items.push({ id: uid(), kind: 'drawer', y: r1(k * (dh + 0.5)), h: dh });
-  const base = drawers ? r1(drawers * (dh + 0.5) + (shelves || rods ? 0.5 : 0)) : 0;
-  if (drawers && (shelves || rods)) {
+  // bottom of the column, from the floor up: shoe racks, drawers, wire baskets, pull-out trouser rack
+  let yb = 0;
+  const stack = (kind, n, h) => {
+    for (let k = 0; k < n; k++) {
+      items.push({ id: uid(), kind, y: r1(yb), h });
+      yb += h + 0.5;
+    }
+  };
+  stack('shoe', Math.max(0, Math.min(4, counts.shoes || 0)), ELEMENT_KINDS.shoe.defaultH);
+  stack('drawer', drawers, dh);
+  stack('basket', Math.max(0, Math.min(5, counts.baskets || 0)), ELEMENT_KINDS.basket.defaultH);
+  stack('pants', Math.max(0, Math.min(1, counts.pants || 0)), ELEMENT_KINDS.pants.defaultH);
+  const stacked = items.length;
+  const base = stacked ? r1(yb + (shelves || rods ? 0 : -0.5)) : 0;
+  if (stacked && (shelves || rods)) {
     items.push({ id: uid(), kind: 'shelf', y: base });
     shelves = Math.max(0, shelves - 1);
   }
-  const floor = drawers && items.length > drawers ? base + t : base;
+  const floor = stacked && items.length > stacked ? base + t : base;
   let top = Hi;
   if (rods > 0 && Hi - floor < 60) rods = 0;
   if (rods > 0) {
@@ -528,12 +632,20 @@ export function decorFor(p, materials) {
   const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
   p.columns.forEach((c, i) => {
     const x = columnX(p, materials, i);
-    const els = c.items.map((it) => ({ ...it, top: it.y + (it.kind === 'shelf' ? t : it.kind === 'drawer' ? it.h : 0) })).sort((a, b) => a.y - b.y);
+    const els = c.items.map((it) => ({ ...it, top: it.y + (it.kind === 'rod' ? 0 : elementH(it, t)) })).sort((a, b) => a.y - b.y);
+    els.filter((e) => e.kind === 'shoe').forEach((e) => {
+      const n = Math.floor((c.w - 4) / 22);
+      for (let k = 0; k < n; k++) {
+        const col = SHOE[Math.floor(rnd() * SHOE.length)];
+        const sx = x + 3 + k * ((c.w - 4) / n);
+        [0, 9.5].forEach((dx) => out.push({ type: 'fold', box: { x: sx + dx, y: y0 + e.y + 6, z: p.D * 0.25, sx: 8.5, sy: 8, sz: Math.min(26, p.D - 14) }, color: col, tilt: -0.32 }));
+      }
+    });
     const surfaces = [{ y: 0 }, ...els.filter((e) => e.kind === 'shelf').map((e) => ({ y: e.top }))];
     surfaces.forEach((sf) => {
       const above = els.filter((e) => e.y >= sf.y - 0.1 && e.y > sf.y + 0.1).sort((a, b) => a.y - b.y)[0];
-      const blocked = els.some((e) => e.kind === 'drawer' && e.y <= sf.y + 0.1 && e.top > sf.y);
-      if (blocked || (sf.y === 0 && els.some((e) => e.kind === 'drawer' && e.y < 1))) return;
+      const blocked = els.some((e) => hasH(e.kind) && e.y <= sf.y + 0.1 && e.top > sf.y);
+      if (blocked || (sf.y === 0 && els.some((e) => hasH(e.kind) && e.y < 1))) return;
       const clear = (above ? above.y : Hi) - sf.y;
       if (above?.kind === 'rod' || clear < 16 || clear > 90) return;
       const yb = y0 + sf.y;

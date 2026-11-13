@@ -86,8 +86,9 @@ export default function Account({ session, settings, claims, onSession, onSignOu
   const attach = (pay) => async (dataUrl) => {
     try {
       await api.attachSlip(session.code, pay.id, dataUrl);
+      const v = await api.verifySlip({ id: pay.id, code: session.code });
       await onSession(session.code);
-      notify('แนบสลิปเรียบร้อย');
+      notify(v?.result === 'approved' ? 'ตรวจสลิปผ่าน — อนุมัติอัตโนมัติแล้ว' : 'แนบสลิปเรียบร้อย');
     } catch (err) {
       throw new Error(errorMessage(err));
     }

@@ -3,9 +3,9 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Undo2, Redo2, Save, FolderOpen, FilePlus2, Lock, Loader2, Upload, FileJson, PencilRuler, Box, Scissors, Calculator, Camera,
-  DoorOpen, DoorClosed, Eye, Maximize, ImageDown, Layers, Archive, Shirt,
+  DoorOpen, DoorClosed, Eye, Maximize, ImageDown, Layers, Archive, Shirt, Footprints, ShoppingBasket, GripHorizontal,
 } from 'lucide-react';
-import { buildPiece, newPiece, newStudioDesign, normalizePiece, freeSpot, DEFAULT_PRICING, DEFAULT_MATERIALS, uid, matById, innerHeight } from './model';
+import { ELEMENT_KINDS, buildPiece, newPiece, newStudioDesign, normalizePiece, freeSpot, DEFAULT_PRICING, DEFAULT_MATERIALS, uid, matById, innerHeight } from './model';
 import { analyzeProject } from './costing';
 import FrontView from './FrontView';
 import { PiecesPanel, PropsPanel } from './Panels';
@@ -33,6 +33,9 @@ const ELEMENTS = [
   ['shelf', 'ชั้นวาง', Layers],
   ['drawer', 'ลิ้นชัก', Archive],
   ['rod', 'ราวแขวน', Shirt],
+  ['shoe', 'ชั้นรองเท้า', Footprints],
+  ['basket', 'ตะกร้าลวด', ShoppingBasket],
+  ['pants', 'ราวกางเกง', GripHorizontal],
 ];
 
 // Bring any saved / imported design up to the current shape
@@ -169,8 +172,8 @@ export default function Studio({ settings, session, onNeedAccess, notify }) {
       const col = piece.columns[ci] ?? piece.columns[0];
       const idx = piece.columns.indexOf(col);
       const id = uid();
-      const h = kind === 'drawer' ? 18 : 0;
-      const at = y == null ? freeSpot(piece, materials, col, kind) : Math.max(0, y - (kind === 'drawer' ? h / 2 : 0));
+      const h = ELEMENT_KINDS[kind]?.defaultH || 0;
+      const at = y == null ? freeSpot(piece, materials, col, kind) : Math.max(0, y - h / 2);
       updatePiece((p) => ({ ...p, columns: p.columns.map((c, i) => (i === idx ? { ...c, items: [...c.items, { id, kind, y: Math.round(at), h }] } : c)) }));
       setSelection({ col: idx, item: id });
     },
