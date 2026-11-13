@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+body { background: #fde047; color: #18181b; }
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator { opacity: .6; cursor: pointer; }
+
+.scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 9999px; }
+
+@media print {
+  body * { visibility: hidden; }
+  #print-receipt, #print-receipt * { visibility: visible; }
+  #print-receipt { position: absolute; inset: 0; background: #fff; color: #000; padding: 24px; }
+  .no-print { display: none !important; }
+}
+
+/* ===================== PUNSO motion ===================== */
+/* Sections rise in as they scroll into view (see src/lib/reveal.js). Content is only hidden once the
+   script has armed it, and anything already on screen is revealed on the first frame. */
+.reveal-armed { opacity: 0; transform: translateY(28px); }
+.reveal-in { opacity: 1; transform: none; transition: opacity .7s ease-out, transform .7s cubic-bezier(.2,.7,.2,1); }
+.reveal-in .stagger > * { animation: rise .6s cubic-bezier(.2,.7,.2,1) both; }
+.reveal-in .stagger > *:nth-child(2) { animation-delay: .08s; }
+.reveal-in .stagger > *:nth-child(3) { animation-delay: .16s; }
+.reveal-in .stagger > *:nth-child(4) { animation-delay: .24s; }
+.reveal-in .stagger > *:nth-child(5) { animation-delay: .32s; }
+.reveal-in .stagger > *:nth-child(n+6) { animation-delay: .4s; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* Hero copy enters in sequence on every slide */
+.hero-seq > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+.hero-seq > *:nth-child(2) { animation-delay: .12s; }
+.hero-seq > *:nth-child(3) { animation-delay: .24s; }
+.hero-seq > *:nth-child(4) { animation-delay: .36s; }
+
+/* Slide timer under the hero dots */
+.slide-timer { animation: slide-timer 6s linear both; transform-origin: left; }
+@keyframes slide-timer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Light sweep across yellow brand surfaces */
+.shine { position: relative; overflow: hidden; isolation: isolate; }
+.shine::after {
+  content: ''; position: absolute; inset: -20% auto -20% -60%; width: 40%; z-index: 1; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.75), transparent);
+  transform: skewX(-20deg); animation: shine 4.5s ease-in-out infinite;
+}
+.shine-hover::after { animation: none; }
+.shine-hover:hover::after { animation: shine 1s ease-out 1; }
+@keyframes shine { 0% { left: -60%; } 30%, 100% { left: 130%; } }
+
+/* Road band: lane dashes rolling under scrolling selling points */
+.road { background: #09090b; position: relative; overflow: hidden; }
+.road::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; opacity: .9;
+  background: repeating-linear-gradient(90deg, #facc15 0 46px, transparent 46px 92px);
+  animation: lane 1.4s linear infinite;
+}
+@keyframes lane { to { background-position: -92px 0; } }
+.marquee { display: flex; width: max-content; animation: marquee 38s linear infinite; position: relative; }
+.road:hover .marquee { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* Car cards: warm glow and a lane line that draws in on hover */
+.car-card { position: relative; }
+.car-card::after {
+  content: ''; position: absolute; left: 24px; right: 24px; bottom: 0; height: 3px; border-radius: 3px;
+  background: #facc15; transform: scaleX(0); transition: transform .45s cubic-bezier(.2,.7,.2,1);
+}
+.car-card:hover { box-shadow: 0 24px 48px -16px rgba(202, 138, 4, .45); }
+.car-card:hover::after { transform: scaleX(1); }
+
+/* Soft pulse ring on the floating LINE button */
+.pulse-ring { position: relative; }
+.pulse-ring::before { content: ''; position: absolute; inset: 0; border-radius: 9999px; box-shadow: 0 0 0 0 rgba(6,199,85,.55); animation: pulse-ring 2.4s ease-out infinite; }
+@keyframes pulse-ring { 70% { box-shadow: 0 0 0 14px rgba(6,199,85,0); } 100% { box-shadow: 0 0 0 0 rgba(6,199,85,0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-armed { opacity: 1; transform: none; }
+  .reveal-in, .reveal-in .stagger > *, .hero-seq > *, .slide-timer, .shine::after, .road::before, .marquee, .pulse-ring::before { animation: none !important; transition: none !important; }
+  .slide-timer { transform: scaleX(1); }
+}
