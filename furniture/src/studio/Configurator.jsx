@@ -175,6 +175,8 @@ export default function Configurator({ design, piece, analysis, selectedId, onSe
       <Stepper icon={Layers} label="ชั้นวาง" value={counts.shelves} max={12} onChange={(v) => setCounts({ shelves: v })} />
       <Stepper icon={Shirt} label="ราวแขวน" value={counts.rods} max={2} onChange={(v) => setCounts({ rods: v })} />
       <Stepper icon={Archive} label="ลิ้นชัก" value={counts.drawers} max={8} onChange={(v) => setCounts({ drawers: v })} />
+      <p className="text-[11px] font-medium text-stone-400 mt-3 mb-1">ชั้นโชว์ปลายตู้ (มุม) กว้าง 30 ซม.</p>
+      <Segmented options={[['none', 'ไม่มี'], ['left', 'ซ้าย'], ['right', 'ขวา']]} value={piece.endShelf || 'none'} onChange={(v) => update((p) => ({ ...p, endShelf: v }))} />
       <p className="text-[11px] font-medium text-stone-400 mt-3 mb-0.5">อุปกรณ์เสริม (สำเร็จรูป)</p>
       <Stepper icon={Footprints} label="ชั้นวางรองเท้า" value={counts.shoes} max={4} onChange={(v) => setCounts({ shoes: v })} />
       <Stepper icon={ShoppingBasket} label="ตะกร้าลวดดึงออก" value={counts.baskets} max={5} onChange={(v) => setCounts({ baskets: v })} />

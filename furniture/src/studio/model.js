@@ -151,6 +151,44 @@ export const TEMPLATES = [
       columns: [col(76.4, 'double', [sh(20), sh(40), sh(60), sh(80)])],
     }),
   },
+  {
+    id: 'wardrobeCorner', group: 'ตู้', name: 'ตู้เสื้อผ้า + ชั้นโชว์ปลายตู้', make: () => ({
+      kind: 'box', W: 120, H: 220, D: 60, plinth: 8, endShelf: 'left',
+      columns: [col(57.3, 'left', [rod(165), sh(175)]), col(57.3, 'right', [dr(0, 20), dr(20.5, 20), sh(80), sh(120), sh(160)])],
+    }),
+  },
+  {
+    id: 'nightstand', group: 'ห้องนอน', name: 'ตู้ข้างเตียง 2 ลิ้นชัก', make: () => ({
+      kind: 'box', W: 45, H: 50, D: 40, plinth: 5, columns: [col(41.4, 'none', [dr(0, 20.5), dr(21, 20.4)])],
+    }),
+  },
+  {
+    id: 'chest', group: 'ห้องนอน', name: 'ตู้ลิ้นชัก 5 ชั้น', make: () => ({
+      kind: 'box', W: 80, H: 110, D: 45, plinth: 8, columns: [col(76.4, 'none', [dr(0, 19), dr(19.5, 19), dr(39, 19), dr(58.5, 19), dr(78, 19.4)])],
+    }),
+  },
+  { id: 'vanity', group: 'ห้องนอน', name: 'โต๊ะเครื่องแป้ง + กระจก', make: () => ({ kind: 'table', W: 100, H: 75, D: 45, legs: 'panel', apron: 15, mirror: true }) },
+  {
+    id: 'pantry', group: 'ครัว', name: 'ตู้ครัวสูง (ตู้เก็บของ)', make: () => ({
+      kind: 'box', W: 60, H: 220, D: 58, plinth: 10, carcass: 'hmr18', columns: [col(56.4, 'double', [sh(40), sh(80), sh(120), sh(160)])],
+    }),
+  },
+  {
+    id: 'island', group: 'ครัว', name: 'เคาน์เตอร์ไอส์แลนด์', make: () => ({
+      kind: 'box', W: 120, H: 86, D: 90, plinth: 10, countertop: true, carcass: 'hmr18',
+      columns: [col(56.4, 'none', [dr(0, 24), dr(24.5, 24), dr(49, 22.4)]), col(56.4, 'double', [sh(32)])],
+    }),
+  },
+  {
+    id: 'sideboard', group: 'ตู้', name: 'ตู้ไซด์บอร์ด', make: () => ({
+      kind: 'box', W: 160, H: 80, D: 45, plinth: 10, columns: [col(50, 'double', [sh(30)]), col(50, 'none', [dr(0, 21), dr(21.5, 21), dr(43, 21.4)]), col(50, 'double', [sh(30)])],
+    }),
+  },
+  {
+    id: 'wallShelf', group: 'ตู้', name: 'ชั้นลอยติดผนัง', make: () => ({
+      kind: 'box', W: 100, H: 35, D: 25, plinth: 0, elev: 150, columns: [col(48.2, 'none', [sh(14)]), col(48.2, 'none', [])],
+    }),
+  },
   { id: 'desk', group: 'โต๊ะ', name: 'โต๊ะทำงาน', make: () => ({ kind: 'table', W: 120, H: 75, D: 60, legs: 'panel', apron: 30 }) },
   { id: 'dining', group: 'โต๊ะ', name: 'โต๊ะอาหาร ขาเหล็ก', make: () => ({ kind: 'table', W: 150, H: 75, D: 80, legs: 'metal', apron: 0 }) },
   { id: 'bed5', group: 'เตียง', name: 'เตียง 5 ฟุต', make: () => ({ kind: 'bed', W: 150, H: 30, D: 200, headH: 100 }) },
@@ -347,6 +385,25 @@ export function buildPiece(p, materials) {
     }
   });
 
+  // Open corner / end shelf unit fixed to one side (no doors), shelves about every 35 cm
+  if (p.endShelf === 'left' || p.endShelf === 'right') {
+    const E = END_W;
+    const ex = p.endShelf === 'left' ? -E : W; // unit spans ex … ex + E
+    const outerX = p.endShelf === 'left' ? ex : ex + E - t;
+    const innerX = p.endShelf === 'left' ? ex + t : ex;
+    const iw = E - t;
+    const sc = finishById(p.shelfFinish)?.color || color;
+    add({ name: 'ข้างชั้นปลายตู้', mat: cm.id, a: H, b: D, bandA: 1, bandB: 0, box: { x: outerX, y: 0, z: 0, sx: t, sy: H, sz: D }, color });
+    add({ name: 'พื้น/หลังคาชั้นปลายตู้', mat: cm.id, a: iw, b: D, bandA: 1, bandB: 0, box: { x: innerX, y: pl, z: 0, sx: iw, sy: t, sz: D }, color });
+    add({ name: 'พื้น/หลังคาชั้นปลายตู้', mat: cm.id, a: iw, b: D, bandA: 1, bandB: 0, box: { x: innerX, y: H - t, z: 0, sx: iw, sy: t, sz: D }, color });
+    add({ name: 'แผ่นหลังชั้นปลายตู้', mat: bm.id, a: H - pl, b: E, bandA: 0, bandB: 0, box: { x: ex, y: pl, z: -bt, sx: E, sy: H - pl, sz: bt }, color: shadeHex(color, -0.08) });
+    if (pl > 0) add({ name: 'บังโป๊ชั้นปลายตู้', mat: cm.id, a: iw, b: pl, bandA: 1, bandB: 0, box: { x: innerX, y: 0, z: D - 3 - t, sx: iw, sy: pl, sz: t }, color: shadeHex(color, -0.25) });
+    const n = Math.max(1, Math.round(Hi / 35) - 1);
+    for (let k = 1; k <= n; k++) {
+      add({ name: 'ชั้นปลายตู้', mat: cm.id, a: iw, b: D - 2, bandA: 1, bandB: 0, box: { x: innerX, y: y0 + (k * Hi) / (n + 1), z: 0, sx: iw, sy: t, sz: D - 2 }, color: sc, shelf: true });
+    }
+  }
+
   if (sliding) {
     const N = Math.max(2, Math.min(4, p.slideCount || 2));
     const ov = 3; // overlap between neighbouring doors
@@ -381,6 +438,11 @@ function buildTable(p, materials, parts, hw, extras) {
     const li = 3;
     parts.push({ name: 'ขาโต๊ะ (แผ่น)', mat: cm.id, a: H - t, b: D - 6, bandA: 2, bandB: 1, box: { x: li, y: 0, z: 3, sx: t, sy: H - t, sz: D - 6 }, color });
     parts.push({ name: 'ขาโต๊ะ (แผ่น)', mat: cm.id, a: H - t, b: D - 6, bandA: 2, bandB: 1, box: { x: W - li - t, y: 0, z: 3, sx: t, sy: H - t, sz: D - 6 }, color });
+  }
+  if (p.mirror) {
+    const mw = Math.min(70, W * 0.6);
+    extras.push({ type: 'box', box: { x: (W - mw) / 2 - 2, y: H, z: 1, sx: mw + 4, sy: 84, sz: 2 }, color: p.frontColor });
+    extras.push({ type: 'box', box: { x: (W - mw) / 2, y: H + 2, z: 3, sx: mw, sy: 80, sz: 0.6 }, color: '#c9d3dc', finish: 'mirror' });
   }
   if (p.apron > 0) {
     const ax = p.legs === 'metal' ? 8 : 3 + t;
@@ -417,6 +479,8 @@ function buildBed(p, materials, parts, hw, extras) {
   return finish(p, parts, hw, extras, { outerW: Wo, outerD: Lo, outerH: headH });
 }
 
+export const END_W = 30; // width of the open end-shelf unit (cm)
+
 function finish(p, parts, hw, extras, outer) {
   parts.forEach((x, i) => {
     x.finish = x.role === 'front' ? p.frontFinish : x.shelf ? p.shelfFinish || p.finish : p.finish;
@@ -429,7 +493,13 @@ function finish(p, parts, hw, extras, outer) {
     parts,
     hw,
     extras,
-    outer: outer || { outerW: p.W, outerD: p.D + (p.kind === 'box' ? 1 : 0), outerH: p.H + (p.countertop ? 3 : 0) },
+    // minX < 0 when an end shelf is fixed to the left side
+    outer: outer || {
+      outerW: p.W + (p.kind === 'box' && (p.endShelf === 'left' || p.endShelf === 'right') ? END_W : 0),
+      minX: p.kind === 'box' && p.endShelf === 'left' ? -END_W : 0,
+      outerD: p.D + (p.kind === 'box' ? 1 : 0),
+      outerH: p.H + (p.countertop ? 3 : 0),
+    },
   };
 }
 

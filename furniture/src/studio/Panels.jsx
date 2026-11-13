@@ -205,6 +205,14 @@ export function PropsPanel({ piece, design, selection, onSelect, update, actions
               <option value="sliding">บานเลื่อน</option>
             </select>
           </label>
+          <label className="block">
+            <span className="text-xs text-stone-500">ชั้นโชว์ปลายตู้ (มุม)</span>
+            <select className={`${inputCls} py-2`} value={piece.endShelf || 'none'} onChange={(e) => set({ endShelf: e.target.value })}>
+              <option value="none">ไม่มี</option>
+              <option value="left">ด้านซ้าย</option>
+              <option value="right">ด้านขวา</option>
+            </select>
+          </label>
           {piece.doorStyle === 'sliding' && (
             <label className="block">
               <span className="text-xs text-stone-500">จำนวนบานเลื่อน</span>

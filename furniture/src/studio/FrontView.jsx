@@ -10,7 +10,8 @@ const stroke = { stroke: INK, strokeWidth: 1, vectorEffect: 'non-scaling-stroke'
 export function FrontDrawing({ piece, materials, showDoors = true, dims = true, built }) {
   const b = built || buildPiece(piece, materials);
   const W = b.outer.outerW;
-  const H = b.outer.outerH;
+  const X0 = b.outer.minX || 0;
+  const H = b.outer.outerH + (piece.mirror ? 86 : 0);
   const Y = (y) => H - y;
   // back → front, so nearer panels cover farther ones
   const parts = [...b.parts].sort((a, c) => a.box.z + a.box.sz - (c.box.z + c.box.sz));
@@ -53,10 +54,10 @@ export function FrontDrawing({ piece, materials, showDoors = true, dims = true, 
       )}
       {dims && (
         <g fill="#57534e" fontSize={fontSize} textAnchor="middle" style={{ fontFamily: 'Prompt, sans-serif' }}>
-          <line x1={0} y1={H + fontSize * 1.2} x2={W} y2={H + fontSize * 1.2} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-          <text x={W / 2} y={H + fontSize * 2.6}>{r1(W)}</text>
-          <line x1={-fontSize * 1.2} y1={0} x2={-fontSize * 1.2} y2={H} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-          <text x={-fontSize * 2} y={H / 2} transform={`rotate(-90 ${-fontSize * 2} ${H / 2})`}>{r1(H)}</text>
+          <line x1={X0} y1={H + fontSize * 1.2} x2={X0 + W} y2={H + fontSize * 1.2} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          <text x={X0 + W / 2} y={H + fontSize * 2.6}>{r1(W)}</text>
+          <line x1={X0 - fontSize * 1.2} y1={0} x2={X0 - fontSize * 1.2} y2={H} stroke="#a8a29e" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          <text x={X0 - fontSize * 2} y={H / 2} transform={`rotate(-90 ${X0 - fontSize * 2} ${H / 2})`}>{r1(H)}</text>
         </g>
       )}
     </g>
@@ -82,9 +83,10 @@ function Handle({ box, kind, Y }) {
 export const frontViewBox = (piece, materials, pad = 0.12) => {
   const b = buildPiece(piece, materials);
   const W = b.outer.outerW;
-  const H = b.outer.outerH;
+  const H = b.outer.outerH + (piece.mirror ? 86 : 0);
+  const X0 = b.outer.minX || 0;
   const m = Math.max(W, H) * pad + 8;
-  return { vb: `${-m} ${-m * 0.6} ${W + 2 * m} ${H + m * 1.6}`, W, H, built: b };
+  return { vb: `${X0 - m} ${-m * 0.6} ${W + 2 * m} ${H + m * 1.6}`, W, H, built: b };
 };
 
 // Interactive editor

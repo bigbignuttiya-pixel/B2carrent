@@ -189,7 +189,7 @@ export function layoutPieces(pieces, materials) {
   return pieces.map((p) => {
     const b = buildPiece(p, materials);
     // posX: fixed position (e.g. wall cabinets above base cabinets); otherwise side by side, 30 cm apart
-    const at = { x: p.posX ?? x, y: p.elev || 0 };
+    const at = { x: (p.posX ?? x) - (b.outer.minX || 0), y: p.elev || 0 };
     if (p.posX == null) x += b.outer.outerW + (p.gap ?? 30);
     return { piece: p, built: b, at };
   });
@@ -552,7 +552,7 @@ const Viewer3D = forwardRef(function Viewer3D(
           leg.castShadow = true;
           g.add(leg);
         } else if (e.type === 'box') {
-          addMesh(g, e.box, e.color, [0, 0, 0]);
+          addMesh(g, e.box, e.color, [0, 0, 0], null, e.finish);
         } else if (e.type === 'shoe' || e.type === 'basket' || e.type === 'pants') {
           g.add(accessoryMesh(e));
         }
