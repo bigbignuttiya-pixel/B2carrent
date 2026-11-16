@@ -26,67 +26,6 @@ export const CATEGORIES = {
 // Same fleet as B2 Rental (copied from its live database, ids B2- → PS-)
 export const INITIAL_VEHICLES = [
   {
-    "id": "PS-C216",
-    "name": "Honda City turbo",
-    "type": "Car",
-    "brand": "Honda",
-    "image": "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-C216/4e94ecd5-cbde-4591-9fa5-b3cf4de9e04b.jpg",
-    "seats": 5,
-    "rating": 5,
-    "status": "Available",
-    "deposit": 3000,
-    "gallery": [
-      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-C216/4e94ecd5-cbde-4591-9fa5-b3cf4de9e04b.jpg"
-    ],
-    "mileage": 0,
-    "badgeTag": "มาใหม่",
-    "category": "Sedan",
-    "engineCc": "125 cc",
-    "features": [
-      "สภาพใหม่ 100%",
-      "ตรวจเช็กระยะพร้อม",
-      "ประกันภัยคุ้มครองมาตรฐาน"
-    ],
-    "fuelType": "เบนซิน 95",
-    "plateNumber": "7235",
-    "pricePerDay": 400,
-    "reviewsCount": 0,
-    "transmission": "Automatic",
-    "nextServiceKm": 5000
-  },
-  {
-    "id": "PS-M106",
-    "name": "Honda PCX 160 ABS (2024)",
-    "type": "Motorcycle",
-    "brand": "Honda",
-    "image": "/vehicles/honda-pcx-160.png",
-    "seats": 2,
-    "rating": 4.9,
-    "status": "Available",
-    "deposit": 500,
-    "gallery": [
-      "/vehicles/honda-pcx-160.png",
-      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/7305b30e-6e9f-440a-b23a-dc4e7fbe5054.jpg",
-      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/91fab474-ee2c-499c-a45b-2cdc803a2426.jpg"
-    ],
-    "mileage": 0,
-    "badgeTag": "ฮิตยอดนิยม",
-    "category": "Scooter",
-    "engineCc": "160 cc",
-    "features": [
-      "กุญแจ Smart Key",
-      "พอร์ตชาร์จ USB",
-      "กล่องเก็บของ U-Box 30 ลิตร",
-      "ฟรีหมวกกันน็อก มอก. 2 ใบ"
-    ],
-    "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "9778",
-    "pricePerDay": 400,
-    "reviewsCount": 142,
-    "transmission": "Automatic (CVT)",
-    "nextServiceKm": 0
-  },
-  {
     "id": "PS-M105",
     "name": "Honda PCX 160 ABS (2024)",
     "type": "Motorcycle",
@@ -119,7 +58,7 @@ export const INITIAL_VEHICLES = [
     "nextServiceKm": 0
   },
   {
-    "id": "PS-M108",
+    "id": "PS-M106",
     "name": "Honda PCX 160 ABS (2024)",
     "type": "Motorcycle",
     "brand": "Honda",
@@ -144,71 +83,7 @@ export const INITIAL_VEHICLES = [
       "ฟรีหมวกกันน็อก มอก. 2 ใบ"
     ],
     "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "รอระบุทะเบียน (B2-M108)",
-    "pricePerDay": 400,
-    "reviewsCount": 142,
-    "transmission": "Automatic (CVT)",
-    "nextServiceKm": 0
-  },
-  {
-    "id": "PS-M107",
-    "name": "Honda PCX 160 ABS (2024)",
-    "type": "Motorcycle",
-    "brand": "Honda",
-    "image": "/vehicles/honda-pcx-160.png",
-    "seats": 2,
-    "rating": 4.9,
-    "status": "Available",
-    "deposit": 500,
-    "gallery": [
-      "/vehicles/honda-pcx-160.png",
-      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/7305b30e-6e9f-440a-b23a-dc4e7fbe5054.jpg",
-      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/91fab474-ee2c-499c-a45b-2cdc803a2426.jpg"
-    ],
-    "mileage": 0,
-    "badgeTag": "ฮิตยอดนิยม",
-    "category": "Scooter",
-    "engineCc": "160 cc",
-    "features": [
-      "กุญแจ Smart Key",
-      "พอร์ตชาร์จ USB",
-      "กล่องเก็บของ U-Box 30 ลิตร",
-      "ฟรีหมวกกันน็อก มอก. 2 ใบ"
-    ],
-    "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "132",
-    "pricePerDay": 400,
-    "reviewsCount": 142,
-    "transmission": "Automatic (CVT)",
-    "nextServiceKm": 0
-  },
-  {
-    "id": "PS-M101",
-    "name": "Honda PCX 160 ABS (2024)",
-    "type": "Motorcycle",
-    "brand": "Honda",
-    "image": "/vehicles/honda-pcx-160.png",
-    "seats": 2,
-    "rating": 4.9,
-    "status": "Available",
-    "deposit": 500,
-    "gallery": [
-      "/vehicles/honda-pcx-160.png",
-      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/7305b30e-6e9f-440a-b23a-dc4e7fbe5054.jpg",
-      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/91fab474-ee2c-499c-a45b-2cdc803a2426.jpg"
-    ],
-    "mileage": 0,
-    "badgeTag": "ฮิตยอดนิยม",
-    "category": "Scooter",
-    "engineCc": "160 cc",
-    "features": [
-      "กุญแจ Smart Key",
-      "พอร์ตชาร์จ USB",
-      "กล่องเก็บของ U-Box 30 ลิตร",
-      "ฟรีหมวกกันน็อก มอก. 2 ใบ"
-    ],
-    "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "7847",
+    "plateNumber": "9778",
     "pricePerDay": 400,
     "reviewsCount": 142,
     "transmission": "Automatic (CVT)",
@@ -247,6 +122,132 @@ export const INITIAL_VEHICLES = [
     "nextServiceKm": 0
   },
   {
+    "id": "PS-M107",
+    "name": "Honda PCX 160 ABS (2024)",
+    "type": "Motorcycle",
+    "brand": "Honda",
+    "image": "/vehicles/honda-pcx-160.png",
+    "seats": 2,
+    "rating": 4.9,
+    "status": "Available",
+    "deposit": 500,
+    "gallery": [
+      "/vehicles/honda-pcx-160.png",
+      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/7305b30e-6e9f-440a-b23a-dc4e7fbe5054.jpg",
+      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/91fab474-ee2c-499c-a45b-2cdc803a2426.jpg"
+    ],
+    "mileage": 0,
+    "badgeTag": "ฮิตยอดนิยม",
+    "category": "Scooter",
+    "engineCc": "160 cc",
+    "features": [
+      "กุญแจ Smart Key",
+      "พอร์ตชาร์จ USB",
+      "กล่องเก็บของ U-Box 30 ลิตร",
+      "ฟรีหมวกกันน็อก มอก. 2 ใบ"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "132",
+    "pricePerDay": 400,
+    "reviewsCount": 142,
+    "transmission": "Automatic (CVT)",
+    "nextServiceKm": 0
+  },
+  {
+    "id": "PS-M108",
+    "name": "Honda PCX 160 ABS (2024)",
+    "type": "Motorcycle",
+    "brand": "Honda",
+    "image": "/vehicles/honda-pcx-160.png",
+    "seats": 2,
+    "rating": 4.9,
+    "status": "Available",
+    "deposit": 500,
+    "gallery": [
+      "/vehicles/honda-pcx-160.png",
+      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/7305b30e-6e9f-440a-b23a-dc4e7fbe5054.jpg",
+      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/91fab474-ee2c-499c-a45b-2cdc803a2426.jpg"
+    ],
+    "mileage": 0,
+    "badgeTag": "ฮิตยอดนิยม",
+    "category": "Scooter",
+    "engineCc": "160 cc",
+    "features": [
+      "กุญแจ Smart Key",
+      "พอร์ตชาร์จ USB",
+      "กล่องเก็บของ U-Box 30 ลิตร",
+      "ฟรีหมวกกันน็อก มอก. 2 ใบ"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "รอระบุทะเบียน (B2-M108)",
+    "pricePerDay": 400,
+    "reviewsCount": 142,
+    "transmission": "Automatic (CVT)",
+    "nextServiceKm": 0
+  },
+  {
+    "id": "PS-M101",
+    "name": "Honda PCX 160 ABS (2024)",
+    "type": "Motorcycle",
+    "brand": "Honda",
+    "image": "/vehicles/honda-pcx-160.png",
+    "seats": 2,
+    "rating": 4.9,
+    "status": "Available",
+    "deposit": 500,
+    "gallery": [
+      "/vehicles/honda-pcx-160.png",
+      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/7305b30e-6e9f-440a-b23a-dc4e7fbe5054.jpg",
+      "https://fxnvwjugcapmyybvgymv.supabase.co/storage/v1/object/public/vehicle-photos/B2-M101/91fab474-ee2c-499c-a45b-2cdc803a2426.jpg"
+    ],
+    "mileage": 0,
+    "badgeTag": "ฮิตยอดนิยม",
+    "category": "Scooter",
+    "engineCc": "160 cc",
+    "features": [
+      "กุญแจ Smart Key",
+      "พอร์ตชาร์จ USB",
+      "กล่องเก็บของ U-Box 30 ลิตร",
+      "ฟรีหมวกกันน็อก มอก. 2 ใบ"
+    ],
+    "fuelType": "เบนซิน 95 ",
+    "plateNumber": "7847",
+    "pricePerDay": 450,
+    "reviewsCount": 142,
+    "transmission": "Automatic (CVT)",
+    "nextServiceKm": 0
+  },
+  {
+    "id": "PS-M113",
+    "name": "Honda Scoopy 110 (สีขาว)",
+    "type": "Motorcycle",
+    "brand": "Honda",
+    "image": "/vehicles/honda-scoopy-white.png",
+    "seats": 2,
+    "rating": 5,
+    "status": "Available",
+    "deposit": 500,
+    "gallery": [
+      "/vehicles/honda-scoopy-white.png"
+    ],
+    "mileage": 0,
+    "badgeTag": "มาใหม่",
+    "category": "Scooter",
+    "engineCc": "110 cc",
+    "features": [
+      "ดีไซน์เรโทรน่ารัก สีขาวครีม",
+      "น้ำหนักเบา ขับง่าย คล่องตัวในเมือง",
+      "ประหยัดน้ำมัน",
+      "ที่เก็บของใต้เบาะ"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "รอระบุทะเบียน (B2-M113)",
+    "pricePerDay": 300,
+    "reviewsCount": 0,
+    "transmission": "Automatic (CVT)",
+    "nextServiceKm": 5000
+  },
+  {
     "id": "PS-M109",
     "name": "Honda Giorno+ 125 CBS",
     "type": "Motorcycle",
@@ -279,6 +280,96 @@ export const INITIAL_VEHICLES = [
     "nextServiceKm": 0
   },
   {
+    "id": "PS-M110",
+    "name": "Yamaha Grand Filano Hybrid 125",
+    "type": "Motorcycle",
+    "brand": "Yamaha",
+    "image": "/vehicles/yamaha-grand-filano.png",
+    "seats": 2,
+    "rating": 5,
+    "status": "Available",
+    "deposit": 500,
+    "gallery": [
+      "/vehicles/yamaha-grand-filano.png"
+    ],
+    "mileage": 0,
+    "badgeTag": "มาใหม่",
+    "category": "Scooter",
+    "engineCc": "125 cc ไฮบริด",
+    "features": [
+      "ระบบไฮบริด ประหยัดน้ำมัน",
+      "กุญแจ Smart Key",
+      "ใต้เบาะกว้าง ใส่ของได้เยอะ",
+      "ไฟ LED ดีไซน์หรูคลาสสิก"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "รอระบุทะเบียน (B2-M110)",
+    "pricePerDay": 350,
+    "reviewsCount": 0,
+    "transmission": "Automatic (CVT)",
+    "nextServiceKm": 5000
+  },
+  {
+    "id": "PS-M111",
+    "name": "Yamaha Grand Filano Hybrid 125",
+    "type": "Motorcycle",
+    "brand": "Yamaha",
+    "image": "/vehicles/yamaha-grand-filano.png",
+    "seats": 2,
+    "rating": 5,
+    "status": "Available",
+    "deposit": 500,
+    "gallery": [
+      "/vehicles/yamaha-grand-filano.png"
+    ],
+    "mileage": 0,
+    "badgeTag": "มาใหม่",
+    "category": "Scooter",
+    "engineCc": "125 cc ไฮบริด",
+    "features": [
+      "ระบบไฮบริด ประหยัดน้ำมัน",
+      "กุญแจ Smart Key",
+      "ใต้เบาะกว้าง ใส่ของได้เยอะ",
+      "ไฟ LED ดีไซน์หรูคลาสสิก"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "รอระบุทะเบียน (B2-M111)",
+    "pricePerDay": 350,
+    "reviewsCount": 0,
+    "transmission": "Automatic (CVT)",
+    "nextServiceKm": 5000
+  },
+  {
+    "id": "PS-M112",
+    "name": "Honda Scoopy 110 (สีขาว)",
+    "type": "Motorcycle",
+    "brand": "Honda",
+    "image": "/vehicles/honda-scoopy-white.png",
+    "seats": 2,
+    "rating": 5,
+    "status": "Available",
+    "deposit": 500,
+    "gallery": [
+      "/vehicles/honda-scoopy-white.png"
+    ],
+    "mileage": 0,
+    "badgeTag": "มาใหม่",
+    "category": "Scooter",
+    "engineCc": "110 cc",
+    "features": [
+      "ดีไซน์เรโทรน่ารัก สีขาวครีม",
+      "น้ำหนักเบา ขับง่าย คล่องตัวในเมือง",
+      "ประหยัดน้ำมัน",
+      "ที่เก็บของใต้เบาะ"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "รอระบุทะเบียน (B2-M112)",
+    "pricePerDay": 300,
+    "reviewsCount": 0,
+    "transmission": "Automatic (CVT)",
+    "nextServiceKm": 5000
+  },
+  {
     "id": "PS-M102",
     "name": "Honda Giorno+ 125 CBS",
     "type": "Motorcycle",
@@ -308,99 +399,6 @@ export const INITIAL_VEHICLES = [
     "pricePerDay": 350,
     "reviewsCount": 98,
     "transmission": "Automatic",
-    "nextServiceKm": 0
-  },
-  {
-    "id": "PS-C206",
-    "name": "Honda City Hatchback 1.0 Turbo",
-    "type": "Car",
-    "brand": "Honda",
-    "image": "/vehicles/honda-city-hatchback.png",
-    "seats": 5,
-    "rating": 5,
-    "status": "Available",
-    "deposit": 3000,
-    "gallery": [
-      "/vehicles/honda-city-hatchback.png",
-      "/vehicles/honda-city-hatchback-2.png"
-    ],
-    "mileage": 0,
-    "badgeTag": "ยอดนิยม",
-    "category": "Hatchback",
-    "engineCc": "1,000 cc เทอร์โบ",
-    "features": [
-      "เกียร์อัตโนมัติ ขับง่าย",
-      "ประหยัดน้ำมัน",
-      "เบาะหลังพับได้ ใส่สัมภาระสะดวก",
-      "ประกันภัยชั้น 1"
-    ],
-    "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "7231",
-    "pricePerDay": 1100,
-    "reviewsCount": 0,
-    "transmission": "Automatic CVT",
-    "nextServiceKm": 0
-  },
-  {
-    "id": "PS-C207",
-    "name": "Honda City Hatchback 1.0 Turbo",
-    "type": "Car",
-    "brand": "Honda",
-    "image": "/vehicles/honda-city-hatchback.png",
-    "seats": 5,
-    "rating": 5,
-    "status": "Available",
-    "deposit": 3000,
-    "gallery": [
-      "/vehicles/honda-city-hatchback.png",
-      "/vehicles/honda-city-hatchback-2.png"
-    ],
-    "mileage": 0,
-    "badgeTag": "ยอดนิยม",
-    "category": "Hatchback",
-    "engineCc": "1,000 cc เทอร์โบ",
-    "features": [
-      "เกียร์อัตโนมัติ ขับง่าย",
-      "ประหยัดน้ำมัน",
-      "เบาะหลังพับได้ ใส่สัมภาระสะดวก",
-      "ประกันภัยชั้น 1"
-    ],
-    "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "7236",
-    "pricePerDay": 1100,
-    "reviewsCount": 0,
-    "transmission": "Automatic CVT",
-    "nextServiceKm": 0
-  },
-  {
-    "id": "PS-C205",
-    "name": "Honda City Hatchback 1.0 Turbo",
-    "type": "Car",
-    "brand": "Honda",
-    "image": "/vehicles/honda-city-hatchback.png",
-    "seats": 5,
-    "rating": 5,
-    "status": "Available",
-    "deposit": 3000,
-    "gallery": [
-      "/vehicles/honda-city-hatchback.png",
-      "/vehicles/honda-city-hatchback-2.png"
-    ],
-    "mileage": 0,
-    "badgeTag": "ยอดนิยม",
-    "category": "Hatchback",
-    "engineCc": "1,000 cc เทอร์โบ",
-    "features": [
-      "เกียร์อัตโนมัติ ขับง่าย",
-      "ประหยัดน้ำมัน",
-      "เบาะหลังพับได้ ใส่สัมภาระสะดวก",
-      "ประกันภัยชั้น 1"
-    ],
-    "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "7233",
-    "pricePerDay": 1100,
-    "reviewsCount": 0,
-    "transmission": "Automatic CVT",
     "nextServiceKm": 0
   },
   {
@@ -466,10 +464,10 @@ export const INITIAL_VEHICLES = [
     "nextServiceKm": 0
   },
   {
-    "id": "PS-C208",
-    "name": "Toyota Yaris Ativ 1.2",
+    "id": "PS-C207",
+    "name": "Honda City Hatchback 1.0 Turbo",
     "type": "Car",
-    "brand": "toyota",
+    "brand": "Honda",
     "image": "/vehicles/honda-city-hatchback.png",
     "seats": 5,
     "rating": 5,
@@ -481,7 +479,7 @@ export const INITIAL_VEHICLES = [
     ],
     "mileage": 0,
     "badgeTag": "ยอดนิยม",
-    "category": "Sedan",
+    "category": "Hatchback",
     "engineCc": "1,000 cc เทอร์โบ",
     "features": [
       "เกียร์อัตโนมัติ ขับง่าย",
@@ -490,40 +488,70 @@ export const INITIAL_VEHICLES = [
       "ประกันภัยชั้น 1"
     ],
     "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "3380",
-    "pricePerDay": 1100,
-    "driveHubName": "มี",
+    "plateNumber": "7236",
+    "pricePerDay": 900,
     "reviewsCount": 0,
     "transmission": "Automatic CVT",
     "nextServiceKm": 0
   },
   {
-    "id": "PS-C210",
-    "name": "Honda City 1.0 Turbo",
+    "id": "PS-C206",
+    "name": "Honda City Hatchback 1.0 Turbo",
     "type": "Car",
     "brand": "Honda",
-    "image": "/vehicles/honda-city.png",
+    "image": "/vehicles/honda-city-hatchback.png",
     "seats": 5,
     "rating": 5,
     "status": "Available",
     "deposit": 3000,
     "gallery": [
-      "/vehicles/honda-city.png"
+      "/vehicles/honda-city-hatchback.png",
+      "/vehicles/honda-city-hatchback-2.png"
     ],
     "mileage": 0,
-    "badgeTag": "ซีดานประหยัด",
-    "category": "Sedan",
+    "badgeTag": "ยอดนิยม",
+    "category": "Hatchback",
     "engineCc": "1,000 cc เทอร์โบ",
     "features": [
       "เกียร์อัตโนมัติ ขับง่าย",
       "ประหยัดน้ำมัน",
-      "ท้ายรถกว้าง ใส่กระเป๋าได้เยอะ",
+      "เบาะหลังพับได้ ใส่สัมภาระสะดวก",
       "ประกันภัยชั้น 1"
     ],
     "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "7235",
+    "plateNumber": "7231",
     "pricePerDay": 1100,
-    "driveHubName": "มี",
+    "reviewsCount": 0,
+    "transmission": "Automatic CVT",
+    "nextServiceKm": 0
+  },
+  {
+    "id": "PS-C205",
+    "name": "Honda City Hatchback 1.0 Turbo",
+    "type": "Car",
+    "brand": "Honda",
+    "image": "/vehicles/honda-city-hatchback.png",
+    "seats": 5,
+    "rating": 5,
+    "status": "Available",
+    "deposit": 3000,
+    "gallery": [
+      "/vehicles/honda-city-hatchback.png",
+      "/vehicles/honda-city-hatchback-2.png"
+    ],
+    "mileage": 0,
+    "badgeTag": "ยอดนิยม",
+    "category": "Hatchback",
+    "engineCc": "1,000 cc เทอร์โบ",
+    "features": [
+      "เกียร์อัตโนมัติ ขับง่าย",
+      "ประหยัดน้ำมัน",
+      "เบาะหลังพับได้ ใส่สัมภาระสะดวก",
+      "ประกันภัยชั้น 1"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "7233",
+    "pricePerDay": 1100,
     "reviewsCount": 0,
     "transmission": "Automatic CVT",
     "nextServiceKm": 0
@@ -533,13 +561,13 @@ export const INITIAL_VEHICLES = [
     "name": "Honda City 1.0 Turbo",
     "type": "Car",
     "brand": "Honda",
-    "image": "/vehicles/honda-city.png",
+    "image": "/vehicles/honda-city-white.png",
     "seats": 5,
     "rating": 5,
     "status": "Available",
     "deposit": 3000,
     "gallery": [
-      "/vehicles/honda-city.png"
+      "/vehicles/honda-city-white.png"
     ],
     "mileage": 0,
     "badgeTag": "ซีดานประหยัด",
@@ -553,7 +581,38 @@ export const INITIAL_VEHICLES = [
     ],
     "fuelType": "เบนซิน 95 / E20",
     "plateNumber": "7232",
-    "pricePerDay": 1100,
+    "pricePerDay": 850,
+    "driveHubName": "มี",
+    "reviewsCount": 0,
+    "transmission": "Automatic CVT",
+    "nextServiceKm": 0
+  },
+  {
+    "id": "PS-C210",
+    "name": "Honda City 1.0 Turbo",
+    "type": "Car",
+    "brand": "Honda",
+    "image": "/vehicles/honda-city-white.png",
+    "seats": 5,
+    "rating": 5,
+    "status": "Available",
+    "deposit": 3000,
+    "gallery": [
+      "/vehicles/honda-city-white.png"
+    ],
+    "mileage": 0,
+    "badgeTag": "ซีดานประหยัด",
+    "category": "Sedan",
+    "engineCc": "1,000 cc เทอร์โบ",
+    "features": [
+      "เกียร์อัตโนมัติ ขับง่าย",
+      "ประหยัดน้ำมัน",
+      "ท้ายรถกว้าง ใส่กระเป๋าได้เยอะ",
+      "ประกันภัยชั้น 1"
+    ],
+    "fuelType": "เบนซิน 95 / E20",
+    "plateNumber": "7235",
+    "pricePerDay": 850,
     "driveHubName": "มี",
     "reviewsCount": 0,
     "transmission": "Automatic CVT",
@@ -584,7 +643,37 @@ export const INITIAL_VEHICLES = [
     ],
     "fuelType": "เบนซิน 95 / E20 (23.3 กม./ลิตร)",
     "plateNumber": "รอระบุทะเบียน (B2-C201)",
-    "pricePerDay": 1200,
+    "pricePerDay": 900,
+    "reviewsCount": 115,
+    "transmission": "Automatic Super CVT-i",
+    "nextServiceKm": 0
+  },
+  {
+    "id": "PS-C217",
+    "name": "Toyota Yaris Ativ 1.2 Premium",
+    "type": "Car",
+    "brand": "Toyota",
+    "image": "/vehicles/toyota-yaris-ativ.png",
+    "seats": 5,
+    "rating": 4.86,
+    "status": "Available",
+    "deposit": 3000,
+    "gallery": [
+      "/vehicles/toyota-yaris-ativ.png"
+    ],
+    "mileage": 0,
+    "badgeTag": "ประหยัดน้ำมัน",
+    "category": "Sedan",
+    "engineCc": "1,200 cc",
+    "features": [
+      "Toyota Safety Sense",
+      "หน้าจอ Apple CarPlay / Android Auto",
+      "กล้องมองหลังพร้อมเซนเซอร์",
+      "เบาะหนังทรงสปอร์ต"
+    ],
+    "fuelType": "เบนซิน 95 / E20 (23.3 กม./ลิตร)",
+    "plateNumber": "รอระบุทะเบียน (B2-C217)",
+    "pricePerDay": 900,
     "reviewsCount": 115,
     "transmission": "Automatic Super CVT-i",
     "nextServiceKm": 0
@@ -613,8 +702,8 @@ export const INITIAL_VEHICLES = [
       "ประกันภัยชั้น 1"
     ],
     "fuelType": "เบนซิน 95 / E20",
-    "plateNumber": "รอระบุทะเบียน (B2-C212)",
-    "pricePerDay": 1000,
+    "plateNumber": "3380",
+    "pricePerDay": 800,
     "driveHubName": "มี",
     "reviewsCount": 0,
     "transmission": "Automatic CVT",
@@ -645,7 +734,7 @@ export const INITIAL_VEHICLES = [
     ],
     "fuelType": "⚡ ไฟฟ้า 100% (วิ่งไกล 480 กม.)",
     "plateNumber": "7238",
-    "pricePerDay": 1800,
+    "pricePerDay": 1300,
     "driveHubName": "มี",
     "reviewsCount": 160,
     "transmission": "Automatic Single Speed",
@@ -677,7 +766,7 @@ export const INITIAL_VEHICLES = [
     ],
     "fuelType": "⚡ ไฮบริดปลั๊กอิน (น้ำมัน + ไฟฟ้า)",
     "plateNumber": "8271",
-    "pricePerDay": 1800,
+    "pricePerDay": 1050,
     "driveHubName": "มี",
     "reviewsCount": 0,
     "transmission": "Automatic (E-CVT)",
@@ -690,7 +779,7 @@ export const INITIAL_VEHICLES = [
     "brand": "BYD",
     "image": "/vehicles/byd-seal-5.png",
     "seats": 5,
-    "rating": 5.0,
+    "rating": 5,
     "status": "Available",
     "deposit": 3000,
     "gallery": [
@@ -709,7 +798,7 @@ export const INITIAL_VEHICLES = [
     ],
     "fuelType": "⚡ ไฮบริดปลั๊กอิน (น้ำมัน + ไฟฟ้า)",
     "plateNumber": "รอระบุทะเบียน (B2-C214)",
-    "pricePerDay": 1800,
+    "pricePerDay": 1000,
     "reviewsCount": 0,
     "transmission": "Automatic (E-CVT)",
     "nextServiceKm": 0
@@ -739,7 +828,7 @@ export const INITIAL_VEHICLES = [
     ],
     "fuelType": "ดีเซล B7 / B20",
     "plateNumber": "975",
-    "pricePerDay": 2800,
+    "pricePerDay": 1400,
     "driveHubName": "มี",
     "reviewsCount": 88,
     "transmission": "Automatic 6-Speed 4WD",
@@ -770,7 +859,7 @@ export const INITIAL_VEHICLES = [
     ],
     "fuelType": "ดีเซล B7",
     "plateNumber": "2318",
-    "pricePerDay": 2500,
+    "pricePerDay": 1500,
     "reviewsCount": 0,
     "transmission": "Automatic",
     "nextServiceKm": 0
