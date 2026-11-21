@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Save, Trash2, Plus, Info, RotateCcw } from 'lucide-react';
+import { Save, Trash2, Plus, RotateCcw } from 'lucide-react';
 import { buildPromptPayPayload, isValidPromptPayId } from '../lib/promptpay';
 import { inputCls } from '../components/ui';
+import LineNotify from './LineNotify';
 
 export default function Settings({ settings, coupons, onSave, onSaveCoupons, onResetDemo }) {
   const [form, setForm] = useState(settings);
@@ -61,7 +62,6 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
             </label>
             <label><span className="text-zinc-500 block mb-1">ชื่อแฟนเพจ (แสดงใน footer)</span><input className={inputCls} value={form.facebookName} onChange={(e) => set({ facebookName: e.target.value })} placeholder="PUNSO Car Rental" /></label>
             <label className="sm:col-span-2"><span className="text-zinc-500 block mb-1">ที่อยู่ร้าน</span><textarea className={`${inputCls} h-16`} value={form.storeAddress} onChange={(e) => set({ storeAddress: e.target.value })} /></label>
-            <p className="sm:col-span-2 text-[10px] text-zinc-500 flex gap-1.5"><Info className="w-3.5 h-3.5 shrink-0" /> การแจ้งเตือน LINE เมื่อมีการจองใหม่ ต้องทำผ่าน LINE Messaging API บนเซิร์ฟเวอร์ (เช่น Supabase Edge Function) — ห้ามใส่ Token ไว้ในหน้าเว็บ เพราะทุกคนจะมองเห็นได้</p>
           </div>
           <div className="flex justify-end gap-2">
             {dirty && <button onClick={() => setForm(settings)} className="px-4 py-2.5 bg-zinc-100 text-zinc-600 rounded-xl text-xs font-bold">ยกเลิกการแก้ไข</button>}
@@ -70,6 +70,8 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
             </button>
           </div>
         </section>
+
+        <LineNotify />
 
         <section className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 space-y-4">
           <h3 className="text-base font-bold text-zinc-900 border-b border-zinc-200 pb-3">โค้ดส่วนลด</h3>
