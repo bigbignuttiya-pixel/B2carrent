@@ -212,10 +212,13 @@ declare
   today date := (now() at time zone 'Asia/Bangkok')::date;
   slip text := nullif(p->>'slipPath', '');
   addons text[];
+  pay text := case when lower(coalesce(p->>'paymentMethod', '')) = 'cash' then 'cash' else 'promptpay' end;
   row public.punso_bookings;
 begin
   if length(name) < 3 or length(name) > 120 then raise exception 'invalid_name'; end if;
   if phone !~ '^0[0-9]{8,9}$' then raise exception 'invalid_phone'; end if;
+  if pay = 'cash' and slip is not null then raise exception 'invalid_slip'; end if;
+  if pay = 'cash' and coalesce((select data->>'allowCash' from public.punso_settings where id = 1), 'true') = 'false' then raise exception 'cash_not_allowed'; end if;
   if slip is not null and slip !~ '^pending/[A-Za-z0-9_-]+\.jpg$' then raise exception 'invalid_slip'; end if;
   begin
     s := (p->>'startDate')::date; e := (p->>'endDate')::date;
@@ -248,7 +251,7 @@ begin
       'pickupLocation', left(p->>'location', 200), 'returnLocation', left(p->>'location', 200),
       'pickupTime', to_char(st, 'HH24:MI'), 'returnTime', to_char(et, 'HH24:MI'), 'totalDays', days,
       'addons', to_jsonb(coalesce(addons, '{}')), 'subtotal', q->'subtotal', 'discount', q->'discount',
-      'couponCode', q->>'couponCode', 'paymentMethod', 'PromptPay QR', 'slipPath', slip
+      'couponCode', q->>'couponCode', 'paymentMethod', case when pay = 'cash' then 'เงินสด (ชำระวันรับรถ)' else 'PromptPay QR' end, 'slipPath', slip
     )))
   returning * into row;
   return public.punso_booking_json(row);
@@ -314,6 +317,7 @@ begin
   exception when others then raise exception 'invalid_dates';
   end;
   if price < 0 or price > 10000000 then raise exception 'invalid_price'; end if;
+  if coalesce(p->>'paymentMethod', '') not in ('', 'เงินสด', 'โอนเงิน', 'พร้อมเพย์') then raise exception 'invalid_payment'; end if;
   if s < today - 60 or e - s > 120 or (e + et) <= (s + st) then raise exception 'invalid_dates'; end if;
   days := greatest(1, ceil(extract(epoch from ((e + et) - (s + st))) / 86400.0)::int);
 
@@ -336,7 +340,7 @@ begin
       'returnLocation', coalesce(nullif(left(p->>'location', 200), ''), 'ร้าน PUNSO'),
       'pickupTime', to_char(st, 'HH24:MI'), 'returnTime', to_char(et, 'HH24:MI'), 'totalDays', days,
       'addons', '[]'::jsonb, 'subtotal', price, 'discount', 0,
-      'paymentMethod', 'ชำระผ่าน ' || src, 'idCard', '-'
+      'paymentMethod', coalesce(nullif(p->>'paymentMethod', ''), 'ชำระผ่าน ' || src), 'depositReceived', case when (p->>'depositReceived') = 'true' then true end, 'idCard', '-'
     )))
   returning * into row;
   return public.punso_booking_json(row);
@@ -441,7 +445,7 @@ insert into public.punso_vehicles (id, data, sort_order) values ('PS-C215', '{"i
 insert into public.punso_vehicles (id, data, sort_order) values ('PS-C214', '{"id":"PS-C214","name":"BYD Seal 5 DM-i","type":"Car","brand":"BYD","image":"/vehicles/byd-seal-5.png","seats":5,"rating":5,"status":"Available","deposit":3000,"gallery":["/vehicles/byd-seal-5.png","/vehicles/byd-seal-5-rear.png"],"mileage":0,"badgeTag":"⚡ ไฮบริดปลั๊กอิน","category":"Sedan","engineCc":"1,500 cc + มอเตอร์ไฟฟ้า","features":["รถเก๋งซีดาน ห้องโดยสารกว้าง นั่งสบาย","ขับด้วยไฟฟ้าในเมือง ประหยัดมาก","เดินทางไกลได้ไม่ต้องกังวลจุดชาร์จ","ประกันภัยชั้น 1"],"fuelType":"⚡ ไฮบริดปลั๊กอิน (น้ำมัน + ไฟฟ้า)","plateNumber":"รอระบุทะเบียน (B2-C214)","pricePerDay":1000,"reviewsCount":0,"transmission":"Automatic (E-CVT)","nextServiceKm":0}'::jsonb, 24) on conflict (id) do nothing;
 insert into public.punso_vehicles (id, data, sort_order) values ('PS-C203', '{"id":"PS-C203","name":"Toyota Fortuner Legender 2.8 4WD","type":"Car","brand":"Toyota","image":"/vehicles/toyota-fortuner.png","seats":7,"rating":4.93,"status":"Available","deposit":3000,"gallery":["/vehicles/toyota-fortuner.png"],"mileage":0,"badgeTag":"7 ที่นั่ง VIP","category":"SUV","engineCc":"2,800 cc ดีเซลเทอร์โบ","features":["ขับเคลื่อน 4 ล้อ 4WD","ชุดเครื่องเสียง JBL 11 ลำโพง","กล้องมองรอบทิศทาง 360 องศา","ประตูท้ายเปิด-ปิดไฟฟ้า"],"fuelType":"ดีเซล B7 / B20","plateNumber":"975","pricePerDay":1400,"driveHubName":"มี","reviewsCount":88,"transmission":"Automatic 6-Speed 4WD","nextServiceKm":0}'::jsonb, 25) on conflict (id) do nothing;
 insert into public.punso_vehicles (id, data, sort_order) values ('PS-C213', '{"id":"PS-C213","name":"Mitsubishi Pajero Sport 2.4","type":"Car","brand":"Mitsubishi","image":"/vehicles/mitsubishi-pajero-sport.png","seats":7,"rating":5,"status":"Available","deposit":3000,"gallery":["/vehicles/mitsubishi-pajero-sport.png"],"mileage":0,"badgeTag":"7 ที่นั่ง","category":"SUV","engineCc":"2,400 cc ดีเซลเทอร์โบ","features":["7 ที่นั่ง เหมาะกับครอบครัว","ขับทางชันได้สบาย","ห้องโดยสารกว้าง","ประกันภัยชั้น 1"],"fuelType":"ดีเซล B7","plateNumber":"2318","pricePerDay":1500,"reviewsCount":0,"transmission":"Automatic","nextServiceKm":0}'::jsonb, 26) on conflict (id) do nothing;
-insert into public.punso_settings (id, data) values (1, '{"promptPayId":"0800000000","accountName":"บริษัท ปันโซ คาร์ เร้นท์ทัล จำกัด (PUNSO Car Rental Co., Ltd.)","lineOaId":"@punso","facebookUrl":"","facebookName":"PUNSO Car Rental","storePhone":"080-000-0000","storeAddress":"123/45 ถนนพัฒนาการคูขวาง ต.ในเมือง อ.เมือง จ.นครศรีธรรมราช 80000","openHours":"07:00 - 21:00 ทุกวัน","paymentWindowMin":15}'::jsonb) on conflict (id) do nothing;
+insert into public.punso_settings (id, data) values (1, '{"promptPayId":"0800000000","accountName":"บริษัท ปันโซ คาร์ เร้นท์ทัล จำกัด (PUNSO Car Rental Co., Ltd.)","lineOaId":"@punso","facebookUrl":"","facebookName":"PUNSO Car Rental","storePhone":"080-000-0000","storeAddress":"123/45 ถนนพัฒนาการคูขวาง ต.ในเมือง อ.เมือง จ.นครศรีธรรมราช 80000","openHours":"07:00 - 21:00 ทุกวัน","paymentWindowMin":15,"allowCash":true}'::jsonb) on conflict (id) do nothing;
 insert into public.punso_coupons (code, percent, active, label, only_category) values ('PUNSO2026', 10, true, 'ส่วนลดช่วงเทศกาล 10%', null) on conflict (code) do nothing;
 insert into public.punso_coupons (code, percent, active, label, only_category) values ('EVGREEN', 15, true, 'ส่วนลดรถ EV 15%', 'EV') on conflict (code) do nothing;
 insert into public.punso_addon_prices (id, price, unit, trips, only_for) values ('driver', 500, 'day', 1, 'Car') on conflict (id) do update set price = excluded.price, unit = excluded.unit, trips = excluded.trips, only_for = excluded.only_for;

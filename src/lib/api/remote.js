@@ -114,6 +114,15 @@ export const remoteApi = {
     return unwrap(await supabase.rpc('admin_add_booking', { p }));
   },
 
+  async setDepositReceived(id, received) {
+    const { data: row, error } = await supabase.from('bookings').select('data').eq('id', id).single();
+    unwrap({ data: row, error });
+    const data = { ...row.data };
+    if (received) data.depositReceived = true;
+    else delete data.depositReceived;
+    unwrap(await supabase.from('bookings').update({ data }).eq('id', id).select('id').single());
+  },
+
   async setBookingStatus(id, status) {
     unwrap(await supabase.from('bookings').update({ status }).eq('id', id).select('id').single());
   },

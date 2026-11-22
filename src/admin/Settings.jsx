@@ -47,6 +47,10 @@ export default function Settings({ settings, coupons, onSave, onSaveCoupons, onR
             <label className="sm:col-span-2"><span className="text-slate-400 block mb-1">ชื่อบัญชีรับเงิน (แสดงบนหน้าชำระเงิน)</span>
               <input className={inputCls} value={form.accountName} onChange={(e) => set({ accountName: e.target.value })} />
             </label>
+            <label className="sm:col-span-2 flex items-start gap-2 cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-3">
+              <input type="checkbox" className="mt-0.5 accent-yellow-400 w-4 h-4" checked={form.allowCash !== false} onChange={(e) => set({ allowCash: e.target.checked })} />
+              <span><b className="text-white">ให้ลูกค้าเลือก "จ่ายเงินสดวันรับรถ" ได้</b><span className="text-slate-400 block">ลูกค้าไม่ต้องโอน/แนบสลิป การจองจะรอร้านโทรยืนยันก่อน — ปิดได้ถ้าเจอลูกค้าจองแล้วไม่มา</span></span>
+            </label>
           </div>
         </section>
 

@@ -1106,6 +1106,7 @@ export const DEFAULT_SETTINGS = {
   storeAddress: '123/45 ถนนพัฒนาการคูขวาง ต.ในเมือง อ.เมือง จ.นครศรีธรรมราช 80000',
   openHours: '07:00 - 21:00 ทุกวัน',
   paymentWindowMin: 15,
+  allowCash: true, // customers may choose "cash on pickup" (turn off in Settings)
 };
 
 // Top-of-page photo slider: the recommended travel destinations

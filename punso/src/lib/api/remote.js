@@ -114,6 +114,15 @@ export const remoteApi = {
     return unwrap(await supabase.rpc('punso_admin_add_booking', { p }));
   },
 
+  async setDepositReceived(id, received) {
+    const { data: row, error } = await supabase.from('punso_bookings').select('data').eq('id', id).single();
+    unwrap({ data: row, error });
+    const data = { ...row.data };
+    if (received) data.depositReceived = true;
+    else delete data.depositReceived;
+    unwrap(await supabase.from('punso_bookings').update({ data }).eq('id', id).select('id').single());
+  },
+
   async setBookingStatus(id, status) {
     unwrap(await supabase.from('punso_bookings').update({ status }).eq('id', id).select('id').single());
   },

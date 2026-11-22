@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
 import { ADDONS, depositOf } from '../data';
-import { priceQuote, baht, formatThaiDate } from '../lib/pricing';
+import { priceQuote, baht, formatThaiDate, isCashBooking } from '../lib/pricing';
 import { buildPromptPayPayload } from '../lib/promptpay';
 import { Modal, inputCls } from '../components/ui';
 import { compressImage } from '../lib/image';
@@ -63,6 +63,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
   const [couponInput, setCouponInput] = useState('');
   const [coupon, setCoupon] = useState(null);
   const [agree, setAgree] = useState(false);
+  const [pay, setPay] = useState('promptpay');
   const [slip, setSlip] = useState(null);
   const [deadline, setDeadline] = useState(0);
   const [now, setNow] = useState(Date.now());
@@ -79,6 +80,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
     setCouponInput('');
     setCoupon(null);
     setAgree(false);
+    setPay('promptpay');
     setSlip(null);
     setResult(null);
     setBusy(false);
@@ -96,6 +98,9 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
   const payload = useMemo(() => buildPromptPayPayload(settings.promptPayId, amount), [settings.promptPayId, amount]);
 
   if (!vehicle) return null;
+  const cashOk = settings.allowCash !== false;
+  const cashPick = cashOk && pay === 'cash';
+  const cashResult = isCashBooking(result);
 
   const remaining = Math.max(0, deadline - now);
   const expired = step === 2 && remaining === 0;
@@ -143,10 +148,12 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
       info: { ...info, phone: info.phone.replace(/[^0-9]/g, '') },
       addons,
       couponCode: coupon?.code || '',
+      paymentMethod: cashOk && pay === 'cash' ? 'cash' : 'promptpay',
     });
     setBusy(false);
     if (!booking) return;
     setResult(booking);
+    if (isCashBooking(booking)) return setStep(3); // nothing to pay now — straight to the confirmation
     setDeadline(Date.now() + settings.paymentWindowMin * 60000);
     setNow(Date.now());
     setStep(2);
@@ -310,6 +317,24 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
               <div className="text-[10px] text-zinc-500">* เงินมัดจำ {baht(depositOf(vehicle))} ชำระวันรับรถ และคืนเต็มจำนวนเมื่อคืนรถ</div>
             </div>
 
+            {cashOk && (
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-zinc-600 block">วิธีชำระค่าเช่า</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    ['promptpay', '📱 พร้อมเพย์ QR', 'จ่ายตอนนี้ แนบสลิป ยืนยันไว'],
+                    ['cash', '💵 เงินสด', 'จ่ายวันรับรถ ร้านโทรยืนยันก่อน'],
+                  ].map(([id, label, sub]) => (
+                    <label key={id} className={`flex items-start gap-2 rounded-xl border p-3 cursor-pointer text-[11px] ${pay === id ? 'border-yellow-400 bg-yellow-400/10' : 'border-zinc-200 bg-white hover:border-zinc-300'}`}>
+                      <input type="radio" name="pay" value={id} checked={pay === id} onChange={() => setPay(id)} className="mt-0.5 accent-yellow-400" />
+                      <span><b className="text-zinc-900 block text-xs">{label}</b><span className="text-zinc-500">{sub}</span></span>
+                    </label>
+                  ))}
+                </div>
+                {cashPick && <p className="text-[10px] text-amber-700">ชำระค่าเช่า {baht(quote.total)} + เงินมัดจำ {baht(depositOf(vehicle))} เป็นเงินสดในวันรับรถ • ร้านจะโทรยืนยันการจองก่อน</p>}
+              </div>
+            )}
+
             <label className="flex items-start gap-2 text-[11px] text-zinc-600 cursor-pointer">
               <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 accent-yellow-400" />
               <span>ข้าพเจ้ายอมรับเงื่อนไขการเช่า นโยบายยกเลิกฟรีก่อน 48 ชม. และยินยอมให้เก็บข้อมูลส่วนบุคคลตาม PDPA เพื่อการให้บริการ</span>
@@ -317,7 +342,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
             {err('agree')}
 
             <button type="submit" disabled={busy} className="w-full bg-gradient-to-r from-zinc-900 to-zinc-900 hover:from-zinc-800 hover:to-zinc-800 disabled:opacity-60 text-yellow-300 font-extrabold py-3.5 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 border border-yellow-400/30">
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4 text-yellow-600" />} {busy ? 'กำลังจองคิวรถ…' : 'ยืนยันการจอง & ไปหน้าชำระเงิน PromptPay'}
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4 text-yellow-600" />} {busy ? 'กำลังจองคิวรถ…' : cashPick ? 'ยืนยันการจอง (จ่ายเงินสดวันรับรถ)' : 'ยืนยันการจอง & ไปหน้าชำระเงิน PromptPay'}
             </button>
           </div>
         </form>
@@ -414,7 +439,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
           </div>
           <div className="no-print">
             <h4 className="text-2xl font-black text-zinc-900">ได้รับคำขอจองของคุณแล้ว!</h4>
-            <p className="text-xs text-zinc-500 mt-1">ทีมงานจะตรวจสอบการชำระเงินและยืนยันทาง SMS/LINE ภายใน 5 นาที</p>
+            <p className="text-xs text-zinc-500 mt-1">{cashResult ? 'ร้านจะโทรยืนยันการจองกับคุณ — ชำระเงินสดในวันรับรถ' : 'ทีมงานจะตรวจสอบการชำระเงินและยืนยันทาง SMS/LINE ภายใน 5 นาที'}</p>
             <button onClick={() => copy(result.id, 'คัดลอกรหัสจองแล้ว')} className="mt-2 inline-flex items-center gap-1.5 font-mono text-yellow-600 font-bold text-sm bg-white border border-zinc-200 px-3 py-1 rounded-lg">
               {result.id} <Copy className="w-3.5 h-3.5" />
             </button>
@@ -441,13 +466,13 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
               </div>
             ))}
             <div className="flex justify-between pt-1">
-              <span className="text-zinc-500">ยอดชำระทั้งสิ้น</span>
+              <span className="text-zinc-500">{cashResult ? 'ชำระเงินสดวันรับรถ' : 'ยอดชำระทั้งสิ้น'}</span>
               <span className="text-yellow-600 text-base font-bold">{baht(result.totalPrice)}</span>
             </div>
-            <div className="text-[10px] text-zinc-500 pt-1">สถานะ: รอตรวจสอบการชำระเงิน • ติดต่อ {settings.storePhone}</div>
+            <div className="text-[10px] text-zinc-500 pt-1">สถานะ: {cashResult ? 'รอร้านยืนยัน • ชำระเงินสดวันรับรถ' : 'รอตรวจสอบการชำระเงิน'} • ติดต่อ {settings.storePhone}</div>
           </div>
 
-          {!result.hasSlip && (
+          {!result.hasSlip && !cashResult && (
             <div className="max-w-md mx-auto text-[11px] text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2 flex gap-2 text-left no-print">
               <AlertTriangle className="w-4 h-4 shrink-0" /> ยังไม่ได้แนบสลิป — สามารถแนบได้ที่หน้า “ตรวจสถานะการจอง” หรือส่งทาง LINE {lineLabel(settings.lineOaId)}
             </div>
@@ -459,7 +484,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
             <ul className="text-[11px] text-zinc-700 space-y-1">
               <li>✅ บัตรประชาชน / Passport ของผู้เช่า</li>
               <li>✅ ใบขับขี่ที่ยังไม่หมดอายุ</li>
-              {!result.hasSlip && <li>✅ สลิปการโอนเงิน</li>}
+              {!result.hasSlip && !cashResult && <li>✅ สลิปการโอนเงิน</li>}
             </ul>
             <div className="flex flex-wrap gap-2">
               {lineChatUrl(settings.lineOaId) && (

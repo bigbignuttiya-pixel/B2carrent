@@ -207,10 +207,13 @@ declare
   today date := (now() at time zone 'Asia/Bangkok')::date;
   slip text := nullif(p->>'slipPath', '');
   addons text[];
+  pay text := case when lower(coalesce(p->>'paymentMethod', '')) = 'cash' then 'cash' else 'promptpay' end;
   row public.bookings;
 begin
   if length(name) < 3 or length(name) > 120 then raise exception 'invalid_name'; end if;
   if phone !~ '^0[0-9]{8,9}$' then raise exception 'invalid_phone'; end if;
+  if pay = 'cash' and slip is not null then raise exception 'invalid_slip'; end if;
+  if pay = 'cash' and coalesce((select data->>'allowCash' from public.settings where id = 1), 'true') = 'false' then raise exception 'cash_not_allowed'; end if;
   if slip is not null and slip !~ '^pending/[A-Za-z0-9_-]+\.jpg$' then raise exception 'invalid_slip'; end if;
   begin
     s := (p->>'startDate')::date; e := (p->>'endDate')::date;
@@ -243,7 +246,7 @@ begin
       'pickupLocation', left(p->>'location', 200), 'returnLocation', left(p->>'location', 200),
       'pickupTime', to_char(st, 'HH24:MI'), 'returnTime', to_char(et, 'HH24:MI'), 'totalDays', days,
       'addons', to_jsonb(coalesce(addons, '{}')), 'subtotal', q->'subtotal', 'discount', q->'discount',
-      'couponCode', q->>'couponCode', 'paymentMethod', 'PromptPay QR', 'slipPath', slip
+      'couponCode', q->>'couponCode', 'paymentMethod', case when pay = 'cash' then 'เงินสด (ชำระวันรับรถ)' else 'PromptPay QR' end, 'slipPath', slip
     )))
   returning * into row;
   return public.booking_json(row);
@@ -309,6 +312,7 @@ begin
   exception when others then raise exception 'invalid_dates';
   end;
   if price < 0 or price > 10000000 then raise exception 'invalid_price'; end if;
+  if coalesce(p->>'paymentMethod', '') not in ('', 'เงินสด', 'โอนเงิน', 'พร้อมเพย์') then raise exception 'invalid_payment'; end if;
   if s < today - 60 or e - s > 120 or (e + et) <= (s + st) then raise exception 'invalid_dates'; end if;
   days := greatest(1, ceil(extract(epoch from ((e + et) - (s + st))) / 86400.0)::int);
 
@@ -331,7 +335,7 @@ begin
       'returnLocation', coalesce(nullif(left(p->>'location', 200), ''), 'ร้านบีทูรถเช่า'),
       'pickupTime', to_char(st, 'HH24:MI'), 'returnTime', to_char(et, 'HH24:MI'), 'totalDays', days,
       'addons', '[]'::jsonb, 'subtotal', price, 'discount', 0,
-      'paymentMethod', 'ชำระผ่าน ' || src, 'idCard', '-'
+      'paymentMethod', coalesce(nullif(p->>'paymentMethod', ''), 'ชำระผ่าน ' || src), 'depositReceived', case when (p->>'depositReceived') = 'true' then true end, 'idCard', '-'
     )))
   returning * into row;
   return public.booking_json(row);

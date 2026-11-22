@@ -31,6 +31,8 @@ const blank = () => ({
   totalPrice: '',
   externalRef: '',
   note: '',
+  paymentMethod: '',
+  depositReceived: false,
 });
 
 export default function ExternalBookingModal({ open, onClose, vehicles, bookings, onSubmit }) {
@@ -151,6 +153,19 @@ export default function ExternalBookingModal({ open, onClose, vehicles, bookings
             <Field label="เบอร์โทร"><input value={f.phone} onChange={set('phone')} inputMode="tel" placeholder="เว้นว่างได้" className={inputCls} /></Field>
             <Field label="ยอดเงิน (บาท)"><input value={f.totalPrice} onChange={set('totalPrice')} inputMode="numeric" placeholder="0" className={inputCls} /></Field>
             <Field label={f.source === 'DriveHub' ? 'เลขที่จอง DriveHub' : 'เลขอ้างอิง'}><input value={f.externalRef} onChange={set('externalRef')} placeholder="เว้นว่างได้" className={inputCls} /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <Field label="วิธีชำระ">
+              <select value={f.paymentMethod} onChange={set('paymentMethod')} className={inputCls}>
+                <option value="">ชำระผ่าน {f.source}</option>
+                <option value="เงินสด">เงินสด</option>
+                <option value="โอนเงิน">โอนเงิน</option>
+                <option value="พร้อมเพย์">พร้อมเพย์</option>
+              </select>
+            </Field>
+            <label className="flex items-center gap-2 text-xs text-zinc-600 cursor-pointer pb-2.5">
+              <input type="checkbox" className="accent-yellow-400 w-4 h-4" checked={f.depositReceived} onChange={(e) => setF((x) => ({ ...x, depositReceived: e.target.checked }))} /> รับเงินมัดจำแล้ว
+            </label>
           </div>
           <Field label="หมายเหตุ"><textarea value={f.note} onChange={set('note')} rows={2} className={inputCls} placeholder="เช่น รับที่สนามบิน, เที่ยวบิน FD3xxx" /></Field>
 
