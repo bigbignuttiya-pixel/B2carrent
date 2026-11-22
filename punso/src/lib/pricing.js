@@ -79,3 +79,6 @@ export const formatThaiDate = (iso) => {
     return iso;
   }
 };
+
+// Booking the customer pays in cash on pickup (no slip, no QR)
+export const isCashBooking = (b) => /เงินสด/.test(b?.paymentMethod || '');

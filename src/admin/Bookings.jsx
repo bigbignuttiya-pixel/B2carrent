@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Download, Plus, Link2, X, Phone, MapPin, Calendar, CreditCard, FileImage, Clock } from 'lucide-react';
 import { BOOKING_STATUS, ADDONS } from '../data';
-import { baht, formatThaiDate } from '../lib/pricing';
+import { baht, formatThaiDate, isCashBooking } from '../lib/pricing';
 import { StatusBadge } from '../components/ui';
 import { SourceBadge } from './ExternalBookingModal';
 
@@ -11,7 +11,7 @@ const NEXT_ACTIONS = {
   'Picked Up': [['Completed', 'รับคืนรถสำเร็จ', 'bg-blue-700 hover:bg-blue-600 text-yellow-300']],
 };
 
-export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
+export function BookingDrawer({ booking, onClose, onStatus, onDeposit, getSlipUrl }) {
   const [slipUrl, setSlipUrl] = useState(null);
   const [slipLoading, setSlipLoading] = useState(false);
   useEffect(() => {
@@ -85,7 +85,12 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
             <div className="flex items-center gap-2 text-slate-500 pt-1"><CreditCard className="w-3.5 h-3.5" /> {b.paymentMethod}</div>
           </div>
 
-          {!b.source && <div>
+          <label className="flex items-center gap-2 cursor-pointer bg-slate-950 border border-slate-800 rounded-2xl p-3">
+            <input type="checkbox" className="accent-yellow-400 w-4 h-4" checked={Boolean(b.depositReceived)} onChange={(e) => onDeposit?.(b.id, e.target.checked)} />
+            <span className="text-slate-300">💰 รับเงินมัดจำแล้ว{isCashBooking(b) ? ' / รับเงินสดค่าเช่าแล้ว' : ''}</span>
+          </label>
+
+          {!b.source && !isCashBooking(b) && <div>
             <div className="font-bold text-slate-300 mb-2 flex items-center gap-1.5"><FileImage className="w-4 h-4" /> สลิปการโอน</div>
             {slipUrl ? (
               <a href={slipUrl} target="_blank" rel="noreferrer"><img src={slipUrl} alt="สลิป" className="rounded-xl border border-slate-700 max-h-80 mx-auto" /></a>
@@ -97,7 +102,7 @@ export function BookingDrawer({ booking, onClose, onStatus, getSlipUrl }) {
           </div>}
 
           <div className="space-y-2 pt-2">
-            {actions.map(([to, label, cls]) => (
+            {actions.map(([to, label, cls]) => [to, to === 'Confirmed' && isCashBooking(b) ? 'ยืนยันการจอง (ลูกค้าจ่ายเงินสดวันรับรถ)' : label, cls]).map(([to, label, cls]) => (
               <button key={to} onClick={() => onStatus(b.id, to)} className={`w-full py-3 rounded-xl font-black ${cls}`}>{label}</button>
             ))}
             {canCancel && (
@@ -192,7 +197,7 @@ export default function Bookings({ bookings, onOpen, onStatus, onAddExternal }) 
                     <td className="p-4 font-mono font-bold text-yellow-400 whitespace-nowrap">
                       {b.id}
                       {b.source && <SourceBadge source={b.source} className="ml-2" />}
-                      {b.status === 'Pending' && b.hasSlip && <span className="ml-2 text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">มีสลิป</span>}
+                      {b.status === 'Pending' && b.hasSlip && <span className="ml-2 text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">มีสลิป</span>} {isCashBooking(b) && <span className="ml-2 text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">💵 เงินสด</span>}
                     </td>
                     <td className="p-4">
                       <div className="font-bold text-white whitespace-nowrap">{b.customerName}</div>

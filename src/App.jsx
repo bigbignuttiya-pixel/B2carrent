@@ -290,7 +290,7 @@ export default function App() {
 
   const rememberPhone = (phone) => setMyPhones((cur) => (cur.includes(phone) ? cur : [phone, ...cur].slice(0, 5)));
 
-  const submitBooking = async ({ vehicle, info, addons, couponCode, slip }) => {
+  const submitBooking = async ({ vehicle, info, addons, couponCode, slip, paymentMethod }) => {
     const booking = await run(
       () =>
         api.createBooking({
@@ -308,6 +308,7 @@ export default function App() {
           idCard: info.idCard,
           license: info.license,
           note: info.note,
+          paymentMethod: paymentMethod === 'cash' ? 'cash' : 'promptpay',
           slip,
         }),
       null
@@ -349,6 +350,11 @@ export default function App() {
     const labels = { Confirmed: 'อนุมัติการจองแล้ว', 'Picked Up': 'บันทึกการส่งมอบรถแล้ว', Completed: 'บันทึกรับคืนรถแล้ว', Cancelled: 'ยกเลิกรายการแล้ว' };
     await run(() => api.setBookingStatus(id, status), `${id}: ${labels[status] || status}`, status === 'Cancelled' ? 'info' : 'success');
     await Promise.all([refreshAdmin(), refreshPublic()]);
+  };
+
+  const setDepositReceived = async (id, received) => {
+    await run(() => api.setDepositReceived(id, received), received ? `${id}: บันทึกรับเงินมัดจำแล้ว` : `${id}: ยกเลิกสถานะรับมัดจำ`, 'info');
+    await refreshAdmin();
   };
 
   const addExternalBooking = async (payload) => {
@@ -604,7 +610,7 @@ export default function App() {
 
       <ExternalBookingModal open={externalOpen} onClose={() => setExternalOpen(false)} vehicles={vehicles} bookings={bookings} onSubmit={addExternalBooking} />
 
-      <BookingDrawer booking={drawerBooking} onClose={() => setDrawerBookingId(null)} onStatus={changeBookingStatus} getSlipUrl={api.getSlipUrl} />
+      <BookingDrawer booking={drawerBooking} onClose={() => setDrawerBookingId(null)} onStatus={changeBookingStatus} onDeposit={setDepositReceived} getSlipUrl={api.getSlipUrl} />
 
       {viewMode === 'admin' && (
         <footer className="bg-slate-950 border-t border-slate-900 py-6 mt-auto text-center text-xs text-slate-500 no-print">

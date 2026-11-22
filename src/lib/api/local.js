@@ -97,8 +97,8 @@ export const localApi = {
       couponCode: coupon?.code || '',
       status: 'Pending',
       createdAt: nowStamp(),
-      paymentMethod: 'PromptPay QR',
-      slip: p.slip || null,
+      paymentMethod: p.paymentMethod === 'cash' ? 'เงินสด (ชำระวันรับรถ)' : 'PromptPay QR',
+      slip: p.paymentMethod === 'cash' ? null : p.slip || null,
     };
     write('bookings', [booking, ...all]);
     return withSlipFlag(booking);
@@ -159,10 +159,15 @@ export const localApi = {
       totalPrice: price,
       status: 'Confirmed',
       createdAt: nowStamp(),
-      paymentMethod: `ชำระผ่าน ${source}`,
+      paymentMethod: p.paymentMethod || `ชำระผ่าน ${source}`,
+      depositReceived: p.depositReceived || undefined,
     };
     write('bookings', [booking, ...all]);
     return withSlipFlag(booking);
+  },
+
+  async setDepositReceived(id, received) {
+    updateBooking(id, (b) => ({ ...b, depositReceived: received || undefined }));
   },
 
   async setBookingStatus(id, status) {

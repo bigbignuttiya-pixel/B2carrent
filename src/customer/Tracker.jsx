@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Search, AlertTriangle, MapPin, Calendar, Upload, XCircle, Check, ShieldAlert } from 'lucide-react';
 import { BOOKING_FLOW } from '../data';
-import { baht, formatThaiDate } from '../lib/pricing';
+import { baht, formatThaiDate, isCashBooking } from '../lib/pricing';
 import { StatusBadge } from '../components/ui';
 import { compressImage } from '../lib/image';
 
@@ -147,7 +147,7 @@ export default function Tracker({ myBookings, onSearch, onCancel, onAttachSlip, 
 
                 {(b.status === 'Pending' || cancellable) && (
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {b.status === 'Pending' && (
+                    {b.status === 'Pending' && !isCashBooking(b) && (
                       <label className="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer bg-blue-700/80 text-yellow-300 border border-yellow-400/30 flex items-center gap-1.5 hover:bg-blue-600">
                         <Upload className="w-3.5 h-3.5" /> {b.hasSlip ? 'เปลี่ยนสลิป' : 'แนบสลิปโอนเงิน'}
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => attach(b, e.target.files?.[0])} />
@@ -164,6 +164,7 @@ export default function Tracker({ myBookings, onSearch, onCancel, onAttachSlip, 
                         ยกเลิกการจอง {freeCancel ? '(ฟรี)' : '(มีค่าธรรมเนียม)'}
                       </button>
                     )}
+                    {isCashBooking(b) && b.status === 'Pending' && <span className="text-[11px] text-amber-300 flex items-center gap-1">💵 ชำระเงินสดวันรับรถ • รอร้านโทรยืนยัน</span>}
                     {b.hasSlip && <span className="text-[11px] text-emerald-400 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> แนบสลิปแล้ว รอตรวจสอบ</span>}
                   </div>
                 )}
