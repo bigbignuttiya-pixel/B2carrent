@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
+import { X, QrCode, CheckCircle2, Copy, Upload, Timer, Tag, Printer, FileText, RefreshCw, Check, AlertTriangle, Loader2, MessageCircle, Banknote } from 'lucide-react';
 import { ADDONS, depositOf } from '../data';
 import { priceQuote, baht, formatThaiDate, isCashBooking } from '../lib/pricing';
 import { buildPromptPayPayload } from '../lib/promptpay';
@@ -342,7 +342,7 @@ export default function BookingModal({ vehicle, searchParams, rentalDays, checkC
             {err('agree')}
 
             <button type="submit" disabled={busy} className="w-full bg-gradient-to-r from-zinc-900 to-zinc-900 hover:from-zinc-800 hover:to-zinc-800 disabled:opacity-60 text-yellow-300 font-extrabold py-3.5 rounded-xl text-xs shadow-lg flex items-center justify-center gap-2 border border-yellow-400/30">
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4 text-yellow-600" />} {busy ? 'กำลังจองคิวรถ…' : cashPick ? 'ยืนยันการจอง (จ่ายเงินสดวันรับรถ)' : 'ยืนยันการจอง & ไปหน้าชำระเงิน PromptPay'}
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : cashPick ? <Banknote className="w-4 h-4 text-yellow-600" /> : <QrCode className="w-4 h-4 text-yellow-600" />} {busy ? 'กำลังจองคิวรถ…' : cashPick ? 'ยืนยันการจอง (จ่ายเงินสดวันรับรถ)' : 'ยืนยันการจอง & ไปหน้าชำระเงิน PromptPay'}
             </button>
           </div>
         </form>
