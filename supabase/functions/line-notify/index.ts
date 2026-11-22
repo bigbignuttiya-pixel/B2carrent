@@ -69,6 +69,19 @@ Deno.serve(async (req) => {
   const S = SHOPS[shop];
   if (!S) return json({ error: "unknown shop" }, 400);
   const raw = await req.text();
+
+  // LINE webhook — LINE gives up after a short wait, so answer at once (before any database read)
+  // and do the work in the background; a cold start plus database reads can exceed LINE's timeout.
+  const sig = req.headers.get("x-line-signature");
+  if (sig) {
+    const work = handleLine(S, raw, sig).catch((e) => console.error("line webhook", e));
+    // deno-lint-ignore no-explicit-any
+    const rt = (globalThis as any).EdgeRuntime;
+    if (rt?.waitUntil) { rt.waitUntil(work); return json({ ok: true }); }
+    await work;
+    return json({ ok: true });
+  }
+
   const { data: c } = await db.from(S.cfg).select("*").eq("id", 1).single();
 
   // 1) from the database trigger
@@ -83,10 +96,17 @@ Deno.serve(async (req) => {
     return json({ ok: errs.length === 0, errs });
   }
 
-  // 2) LINE webhook
-  const sig = req.headers.get("x-line-signature");
-  if (sig) {
-    if (!c || !(await verifySig(c.channel_secret, raw, sig))) return json({ error: "bad signature" }, 401);
+  // 3) admin actions from the back office
+  const auth = req.headers.get("authorization");
+  if (auth) return adminAction(S, c, shop, raw, auth);
+  return json({ error: "bad request" }, 400);
+});
+
+// deno-lint-ignore no-explicit-any
+async function handleLine(S: any, raw: string, sig: string) {
+  {
+    const { data: c } = await db.from(S.cfg).select("*").eq("id", 1).single();
+    if (!c || !(await verifySig(c.channel_secret, raw, sig))) { console.warn("line webhook: bad signature"); return; }
     const { events = [] } = JSON.parse(raw || "{}");
     let targets: any[] = c.targets || [];
     for (const e of events) {
@@ -112,28 +132,37 @@ Deno.serve(async (req) => {
       }
     }
     await db.from(S.cfg).update({ targets, updated_at: new Date().toISOString() }).eq("id", 1);
-    return json({ ok: true });
   }
+}
 
-  // 3) admin actions from the back office
-  const auth = req.headers.get("authorization");
-  if (auth) {
-    const u = createClient(URL_, ANON, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } });
-    const { data: isAdmin } = await u.rpc(S.isAdmin);
-    if (!isAdmin) return json({ error: "admin only" }, 403);
-    if (!c?.channel_token) return json({ ok: false, error: "ยังไม่ได้ใส่ Channel access token" });
-    const body = JSON.parse(raw || "{}");
-    if (body.action === "setup") {
-      const ep = `${URL_}/functions/v1/line-notify?shop=${shop}`;
-      const r = await fetch("https://api.line.me/v2/bot/channel/webhook/endpoint", { method: "PUT", headers: { "Content-Type": "application/json", Authorization: "Bearer " + c.channel_token }, body: JSON.stringify({ endpoint: ep }) });
-      if (!r.ok) return json({ ok: false, error: `ตั้ง Webhook ไม่สำเร็จ (${r.status}) — ตรวจ Channel access token อีกครั้ง` });
-      const bi = await fetch("https://api.line.me/v2/bot/info", { headers: { Authorization: "Bearer " + c.channel_token } });
-      const info = bi.ok ? await bi.json() : {};
-      return json({ ok: true, bot: info.displayName || "", basicId: info.basicId || "" });
-    }
-    if (!(c.targets || []).length) return json({ ok: false, error: "ยังไม่มีผู้รับ — แอดเพื่อน LINE ร้านแล้วพิมพ์ \"เชื่อมต่อ\" ตามด้วยรหัสจากหลังบ้าน" });
-    const errs = await pushAll(S, c, `🔔 ทดสอบแจ้งเตือนจาก ${S.name}\nถ้าเห็นข้อความนี้ แปลว่าระบบแจ้งการจองเข้า LINE พร้อมใช้งานแล้ว ✅`);
-    return json({ ok: errs.length === 0, error: errs.join(" | ") || undefined });
+// Is LINE's "Use webhook" switch on? (the endpoint can be set by API, the switch only in the console)
+async function webhookActive(token: string) {
+  const r = await fetch("https://api.line.me/v2/bot/channel/webhook/endpoint", { headers: { Authorization: "Bearer " + token } });
+  return r.ok ? Boolean((await r.json()).active) : null;
+}
+const USE_WEBHOOK_OFF = "⚠️ LINE ยังปิด \"Use webhook\" อยู่ — เข้า LINE Developers → Channel ร้าน → แท็บ Messaging API → Webhook settings → เปิด Use webhook (ไม่เช่นนั้นพิมพ์ \"เชื่อมต่อ\" แล้วระบบจะไม่ได้รับ)";
+
+// 3) admin actions from the back office
+// deno-lint-ignore no-explicit-any
+async function adminAction(S: any, c: any, shop: string, raw: string, auth: string) {
+  const u = createClient(URL_, ANON, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } });
+  const { data: isAdmin } = await u.rpc(S.isAdmin);
+  if (!isAdmin) return json({ error: "admin only" }, 403);
+  if (!c?.channel_token) return json({ ok: false, error: "ยังไม่ได้ใส่ Channel access token" });
+  const body = JSON.parse(raw || "{}");
+  if (body.action === "setup") {
+    const ep = `${URL_}/functions/v1/line-notify?shop=${shop}`;
+    const r = await fetch("https://api.line.me/v2/bot/channel/webhook/endpoint", { method: "PUT", headers: { "Content-Type": "application/json", Authorization: "Bearer " + c.channel_token }, body: JSON.stringify({ endpoint: ep }) });
+    if (!r.ok) return json({ ok: false, error: `ตั้ง Webhook ไม่สำเร็จ (${r.status}) — ตรวจ Channel access token อีกครั้ง` });
+    const bi = await fetch("https://api.line.me/v2/bot/info", { headers: { Authorization: "Bearer " + c.channel_token } });
+    const info = bi.ok ? await bi.json() : {};
+    if ((await webhookActive(c.channel_token)) === false) return json({ ok: false, error: `บันทึกแล้ว เชื่อมกับบอท "${info.displayName || ""}" ${info.basicId || ""} แต่ ${USE_WEBHOOK_OFF}` });
+    return json({ ok: true, bot: info.displayName || "", basicId: info.basicId || "" });
   }
-  return json({ error: "bad request" }, 400);
-});
+  if (!(c.targets || []).length) {
+    const off = (await webhookActive(c.channel_token)) === false;
+    return json({ ok: false, error: off ? USE_WEBHOOK_OFF : "ยังไม่มีผู้รับ — แอดเพื่อน LINE ร้านแล้วพิมพ์ \"เชื่อมต่อ\" ตามด้วยรหัสจากหลังบ้าน" });
+  }
+  const errs = await pushAll(S, c, `🔔 ทดสอบแจ้งเตือนจาก ${S.name}\nถ้าเห็นข้อความนี้ แปลว่าระบบแจ้งการจองเข้า LINE พร้อมใช้งานแล้ว ✅`);
+  return json({ ok: errs.length === 0, error: errs.join(" | ") || undefined });
+}
